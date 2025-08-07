@@ -19,8 +19,9 @@ from __future__ import annotations
 import asyncio
 from typing import AsyncGenerator
 from typing import ClassVar
+from typing import Coroutine
 from typing import Type
-
+from opentelemetry import context
 from typing_extensions import override
 
 from ..events.event import Event
@@ -47,6 +48,17 @@ def _create_branch_ctx_for_sub_agent(
   return invocation_context
 
 
+async def _run_in_context(
+    coro: Coroutine, otel_context: context.Context
+) -> Event:
+  """Set the otel context and run the coroutine."""
+  token = context.attach(otel_context)
+  try:
+    return await coro
+  finally:
+    context.detach(token)
+
+
 async def _merge_agent_run(
     agent_runs: list[AsyncGenerator[Event, None]],
 ) -> AsyncGenerator[Event, None]:
@@ -61,8 +73,11 @@ async def _merge_agent_run(
   Yields:
       Event: The next event from the merged generator.
   """
+  otel_context = context.get_current()
   tasks = [
-      asyncio.create_task(events_for_one_agent.__anext__())
+      asyncio.create_task(
+          _run_in_context(events_for_one_agent.__anext__(), otel_context)
+      )
       for events_for_one_agent in agent_runs
   ]
   pending_tasks = set(tasks)
@@ -78,7 +93,9 @@ async def _merge_agent_run(
         # Find the generator that produced this event and move it on.
         for i, original_task in enumerate(tasks):
           if task == original_task:
-            new_task = asyncio.create_task(agent_runs[i].__anext__())
+            new_task = asyncio.create_task(
+                _run_in_context(agent_runs[i].__anext__(), otel_context)
+            )
             tasks[i] = new_task
             pending_tasks.add(new_task)
             break  # stop iterating once found
