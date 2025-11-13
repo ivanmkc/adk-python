@@ -56,10 +56,35 @@ class AnswerTemplate(str, enum.Enum):
   PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   METHOD_DEFINITION = "METHOD_DEFINITION"
 
-TEMPLATE_REGEX = {
-    AnswerTemplate.CLASS_DEFINITION: r"^\s*class\s+\w+(\(.*\))?:\s*$",
-    AnswerTemplate.PARAMETER_DEFINITION: r"^\s*\w+:\s*\S+.*$",
-    AnswerTemplate.METHOD_DEFINITION: r"^\s*(async\s+)?def\s+\w+\(.*\n(?:.*\n)*\s*\)\s*->\s*.*:$",
+TEMPLATES = {
+    AnswerTemplate.CLASS_DEFINITION: {
+        "regex": r"^\s*class\s+\w+(\(.*\))?:\s*$",
+        "description": "A Python class definition.",
+        "examples": [
+            "class MyClass:",
+            "class MyClass(object):",
+            "class MyClass(BaseClass, Mixin):",
+        ],
+    },
+    AnswerTemplate.PARAMETER_DEFINITION: {
+        "regex": r"^\s*\w+:\s*\S+.*$",
+        "description": "A Python parameter definition (e.g., 'my_param: str').",
+        "examples": [
+            "my_param: str",
+            "my_param: Optional[int] = None",
+            "my_param: list[str]",
+        ],
+    },
+    AnswerTemplate.METHOD_DEFINITION: {
+        "regex": r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$",
+        "description": "A Python method definition.",
+        "examples": [
+            "def my_method(self):",
+            "async def my_method(self, arg1: str):",
+            "def my_method(self, *args, **kwargs):",
+            "async def my_method(\n    self,\n    arg1: str,\n) -> str:",
+        ],
+    },
 }
 
 
@@ -133,19 +158,26 @@ def _normalize_whitespace(text: str) -> str:
 
 def validate_answer_against_template(answer: str, template: AnswerTemplate):
   """Validates that the answer matches the regex for the given template."""
-  regex = TEMPLATE_REGEX.get(template)
-  if not regex:
-    raise TemplateMismatchError(f"No regex defined for template '{template.value}'")
+  template_info = TEMPLATES.get(template)
+  if not template_info:
+    raise TemplateMismatchError(f"No template defined for '{template.value}'")
+  
+  regex = template_info["regex"]
   if not re.match(regex, answer):
-    raise TemplateMismatchError(f"Answer '{answer}' does not match the format for template '{template.value}'")
+    raise TemplateMismatchError(
+        f"Answer '{answer}' does not match the format for template '{template.value}'. "
+        f"Expected format: {template_info['description']}"
+    )
 
 
 def validate_string_match(generated_answer: str, expected_code_snippet: str):
-  """Validates that the generated answer exactly matches the expected code snippet after stripping whitespace."""
-  if generated_answer.strip() != expected_code_snippet.strip():
+  """Validates that the generated answer exactly matches the expected code snippet after normalizing whitespace."""
+  normalized_generated = _normalize_whitespace(generated_answer)
+  normalized_expected = _normalize_whitespace(expected_code_snippet)
+  if normalized_generated != normalized_expected:
     raise StringMatchError(
-        "Generated answer does not exactly match code block. "
-        f"Generated: '{generated_answer.strip()}', Expected: '{expected_code_snippet.strip()}'"
+        "Generated answer does not exactly match code block (ignoring whitespace). "
+        f"Generated: '{normalized_generated}', Expected: '{normalized_expected}'"
     )
 
 

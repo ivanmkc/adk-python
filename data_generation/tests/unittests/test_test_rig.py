@@ -16,43 +16,15 @@
 
 import pytest
 
-from data_generation.test_rig import AnswerTemplate, validate_answer_against_template
+from data_generation.test_rig import AnswerTemplate, TEMPLATES, validate_answer_against_template
 
 
-@pytest.mark.parametrize(
-    "template, valid_answers",
-    [
-        (
-            AnswerTemplate.CLASS_DEFINITION,
-            [
-                "class MyClass:",
-                "class MyClass(object):",
-                "class MyClass(BaseClass, Mixin):",
-                "  class MyClass:",
-            ],
-        ),
-        (
-            AnswerTemplate.PARAMETER_DEFINITION,
-            [
-                "my_param: str",
-                "my_param: Optional[int] = None",
-                "  my_param: list[str]",
-            ],
-        ),
-        (
-            AnswerTemplate.METHOD_DEFINITION,
-            [
-                "def my_method(self):",
-                "async def my_method(self, arg1: str):",
-                "  def my_method(self, *args, **kwargs):",
-            ],
-        ),
-    ],
-)
-def test_validate_answer_against_template_valid(template, valid_answers):
-  """Tests that valid answers match the template's regex."""
-  for answer in valid_answers:
-    assert validate_answer_against_template(answer, template)
+@pytest.mark.parametrize("template", AnswerTemplate)
+def test_validate_answer_against_template_valid_examples(template):
+  """Tests that the examples for each template are valid."""
+  template_info = TEMPLATES[template]
+  for example in template_info["examples"]:
+    validate_answer_against_template(example, template)
 
 
 @pytest.mark.parametrize(
@@ -87,4 +59,5 @@ def test_validate_answer_against_template_valid(template, valid_answers):
 def test_validate_answer_against_template_invalid(template, invalid_answers):
   """Tests that invalid answers do not match the template's regex."""
   for answer in invalid_answers:
-    assert not validate_answer_against_template(answer, template)
+    with pytest.raises(Exception):
+      validate_answer_against_template(answer, template)

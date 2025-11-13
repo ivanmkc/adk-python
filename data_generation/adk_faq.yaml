@@ -77,3 +77,52 @@
   "file": "src/google/adk/agents/loop_agent.py"
   "line_of_code_start": 61
   "line_of_code_end": 61
+- "category": "Configuration Parameters"
+  "question": "How do I specify the model for an `LlmAgent`?"
+  "rationale": |
+    Use the `model` string parameter in the `LlmAgent`'s configuration (e.g.,
+    'gemini-1.5-pro'). This can be inherited from a parent agent if not set.
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "model: Union[str, BaseLlm] = ''"
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": 186
+  "line_of_code_end": 186
+- "category": "Configuration Parameters"
+  "question": "Where can I configure LLM generation parameters like temperature and safety settings?"
+  "rationale": |
+    In the `LlmAgent`, these are configured through the `generate_content_config`
+    parameter, which accepts a `types.GenerateContentConfig` object.
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "generate_content_config: Optional[types.GenerateContentConfig] = None"
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": 276
+  "line_of_code_end": 276
+- "category": "Configuration Parameters"
+  "question": "How are tools attached to an `LlmAgent`?"
+  "rationale": |
+    Tools are provided as a list to the `tools` parameter of an `LlmAgent`. The
+    list can contain `FunctionTool` instances, `BaseToolset` instances, or other
+    `BaseTool` subclasses.
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "tools: list[ToolUnion] = Field(default_factory=list)"
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": 273
+  "line_of_code_end": 273
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the core method that defines an agent's execution logic?"
+  "rationale": |
+    Subclasses of `BaseAgent` must implement the `_run_async_impl(self, ctx:
+    InvocationContext)` method to define their primary, asynchronous execution logic.
+  "template": "METHOD_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "async def _run_async_impl(\n      self, ctx: InvocationContext\n  ) -> AsyncGenerator[Event, None]:"
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": 330
+  "line_of_code_end": 332
