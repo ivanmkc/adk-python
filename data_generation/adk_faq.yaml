@@ -6,7 +6,7 @@
     All agents must inherit from `google.adk.agents.base_agent.BaseAgent`, which provides the core interface for execution and configuration.
   "template": "CLASS_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "class BaseAgent(BaseModel):"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 82
@@ -17,7 +17,7 @@
     Every agent, regardless of its type, must be initialized with a unique `name` (string) parameter.
   "template": "PARAMETER_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "name: str"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 107
@@ -28,7 +28,7 @@
     Use the `SequentialAgent`. Its mandatory `sub_agents` parameter takes a list of agent instances to be executed in the provided order.
   "template": "CLASS_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "class SequentialAgent(BaseAgent):"
   "file": "src/google/adk/agents/sequential_agent.py"
   "line_of_code_start": 47
@@ -39,7 +39,7 @@
     The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop and interaction with services.
   "template": "CLASS_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "class Runner:"
   "file": "src/google/adk/runners.py"
   "line_of_code_start": 69
@@ -50,7 +50,7 @@
     `async def run_async(self, session_id: str, user_input: str | None = None, ..., ) -> AsyncGenerator[Event, None]: ...`
   "template": "METHOD_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": |
         async def run_async(
               self,
@@ -72,7 +72,7 @@
     The loop will terminate when this limit is reached.
   "template": "PARAMETER_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "max_iterations: Optional[int] = None"
   "file": "src/google/adk/agents/loop_agent.py"
   "line_of_code_start": 61
@@ -84,7 +84,7 @@
     'gemini-1.5-pro'). This can be inherited from a parent agent if not set.
   "template": "PARAMETER_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "model: Union[str, BaseLlm] = ''"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 186
@@ -96,7 +96,7 @@
     parameter, which accepts a `types.GenerateContentConfig` object.
   "template": "PARAMETER_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "generate_content_config: Optional[types.GenerateContentConfig] = None"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 276
@@ -109,7 +109,7 @@
     `BaseTool` subclasses.
   "template": "PARAMETER_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
+    - "answer_template": "StringMatchAnswer"
       "answer": "tools: list[ToolUnion] = Field(default_factory=list)"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 273
@@ -121,8 +121,10 @@
     InvocationContext)` method to define their primary, asynchronous execution logic.
   "template": "METHOD_DEFINITION"
   "answers":
-    - "answer_type": "StringMatchAnswer"
-      "answer": "async def _run_async_impl(\n      self, ctx: InvocationContext\n  ) -> AsyncGenerator[Event, None]:"
+    - "answer_template": "StringMatchAnswer"
+      "answer": "async def _run_async_impl(
+      self, ctx: InvocationContext
+  ) -> AsyncGenerator[Event, None]:"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 330
   "line_of_code_end": 332

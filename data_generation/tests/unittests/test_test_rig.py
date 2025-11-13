@@ -23,7 +23,7 @@ from data_generation.test_rig import AnswerTemplate, TEMPLATES, validate_answer_
 def test_validate_answer_against_template_valid_examples(template):
   """Tests that the examples for each template are valid."""
   template_info = TEMPLATES[template]
-  for example in template_info["examples"]:
+  for example in template_info.examples:
     validate_answer_against_template(example, template)
 
 

@@ -16,6 +16,7 @@
 
 import argparse
 import abc
+import asyncio
 import enum
 import re
 import sys
@@ -48,7 +49,7 @@ class LineNumberError(ValidationError):
   pass
 
 
-# --- Pydantic Data Models for adk_faq.yaml ---
+# --- Template Definitions ---
 
 class AnswerTemplate(str, enum.Enum):
   """Enum for the different types of answer templates."""
@@ -56,49 +57,54 @@ class AnswerTemplate(str, enum.Enum):
   PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   METHOD_DEFINITION = "METHOD_DEFINITION"
 
+class TemplateInfo(pydantic.BaseModel):
+  """Model for storing information about an answer template."""
+  regex: str
+  description: str
+  examples: list[str]
+
 TEMPLATES = {
-    AnswerTemplate.CLASS_DEFINITION: {
-        "regex": r"^\s*class\s+\w+(\(.*\))?:\s*$",
-        "description": "A Python class definition.",
-        "examples": [
+    AnswerTemplate.CLASS_DEFINITION: TemplateInfo(
+        regex=r"^\s*class\s+\w+(\(.*\))?:\s*$",
+        description="A Python class definition.",
+        examples=[
             "class MyClass:",
             "class MyClass(object):",
             "class MyClass(BaseClass, Mixin):",
         ],
-    },
-    AnswerTemplate.PARAMETER_DEFINITION: {
-        "regex": r"^\s*\w+:\s*\S+.*$",
-        "description": "A Python parameter definition (e.g., 'my_param: str').",
-        "examples": [
+    ),
+    AnswerTemplate.PARAMETER_DEFINITION: TemplateInfo(
+        regex=r"^\s*\w+:\s*\S+.*$",
+        description="A Python parameter definition (e.g., 'my_param: str').",
+        examples=[
             "my_param: str",
             "my_param: Optional[int] = None",
             "my_param: list[str]",
         ],
-    },
-    AnswerTemplate.METHOD_DEFINITION: {
-        "regex": r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$",
-        "description": "A Python method definition.",
-        "examples": [
+    ),
+    AnswerTemplate.METHOD_DEFINITION: TemplateInfo(
+        regex=r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$",
+        description="A Python method definition.",
+        examples=[
             "def my_method(self):",
             "async def my_method(self, arg1: str):",
             "def my_method(self, *args, **kwargs):",
             "async def my_method(\n    self,\n    arg1: str,\n) -> str:",
         ],
-    },
+    ),
 }
 
 
+# --- Pydantic Data Models for adk_faq.yaml ---
 
 class StringMatchAnswer(pydantic.BaseModel):
   """Represents an answer that is a string match."""
-
-  answer_type: Literal["StringMatchAnswer"]
+  answer_template: Literal["StringMatchAnswer"]
   answer: str
 
 
 class FaqItem(pydantic.BaseModel):
   """Represents a single FAQ entry."""
-
   category: str
   question: str
   rationale: str
@@ -117,19 +123,17 @@ class FaqItem(pydantic.BaseModel):
 
 class FaqFile(pydantic.BaseModel):
   """Represents the entire adk_faq.yaml file."""
-
   commit_hash: str
   faq: list[FaqItem]
 
 
 # --- Answer Generation ---
 
-
 class AnswerGenerator(abc.ABC):
   """Abstract base class for answer generators."""
 
   @abc.abstractmethod
-  def generate_answer(self, faq_item: FaqItem, template: str) -> str:
+  async def generate_answer(self, faq_item: FaqItem, template_info: TemplateInfo) -> str:
     """Generates an answer for a given FAQ item."""
     pass
 
@@ -137,7 +141,7 @@ class AnswerGenerator(abc.ABC):
 class GroundTruthAnswerGenerator(AnswerGenerator):
   """An answer generator that returns the ground truth answer from the FAQ item."""
 
-  def generate_answer(self, faq_item: FaqItem, template: str) -> str:
+  async def generate_answer(self, faq_item: FaqItem, template_info: TemplateInfo) -> str:
     """Returns the first answer from the FAQ item."""
     if not faq_item.answers:
       return ""
@@ -162,11 +166,11 @@ def validate_answer_against_template(answer: str, template: AnswerTemplate):
   if not template_info:
     raise TemplateMismatchError(f"No template defined for '{template.value}'")
   
-  regex = template_info["regex"]
+  regex = template_info.regex
   if not re.match(regex, answer):
     raise TemplateMismatchError(
         f"Answer '{answer}' does not match the format for template '{template.value}'. "
-        f"Expected format: {template_info['description']}"
+        f"Expected format: {template_info.description}"
     )
 
 
@@ -181,7 +185,7 @@ def validate_string_match(generated_answer: str, expected_code_snippet: str):
     )
 
 
-def run_validation(faq_file_path: Path) -> bool:
+async def run_validation(faq_file_path: Path) -> bool:
   """Loads, parses, and validates the FAQ file against the codebase.
 
   Args:
@@ -231,7 +235,8 @@ def run_validation(faq_file_path: Path) -> bool:
       answer_to_validate = item.answers[0].answer
       validate_answer_against_template(answer_to_validate, item.template)
 
-      generated_answer = answer_generator.generate_answer(item, item.template)
+      template_info = TEMPLATES[item.template]
+      generated_answer = await answer_generator.generate_answer(item, template_info)
       validate_string_match(generated_answer, code_block)
 
       result = True
@@ -273,7 +278,7 @@ def main():
   )
   args = parser.parse_args()
 
-  if not run_validation(args.faq_file):
+  if not asyncio.run(run_validation(args.faq_file)):
     sys.exit(1)
 
 
