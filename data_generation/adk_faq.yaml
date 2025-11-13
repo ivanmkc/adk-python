@@ -1,0 +1,79 @@
+"commit_hash": "6bb0b7417ea6cb88a28ebf6dd297eb3e6cd1c851"
+"faq":
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the foundational class for all agents in the ADK?"
+  "rationale": |
+    All agents must inherit from `google.adk.agents.base_agent.BaseAgent`, which provides the core interface for execution and configuration.
+  "template": "CLASS_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "class BaseAgent(BaseModel):"
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": 82
+  "line_of_code_end": 82
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the mandatory parameter when initializing any Agent?"
+  "rationale": |
+    Every agent, regardless of its type, must be initialized with a unique `name` (string) parameter.
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "name: str"
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": 107
+  "line_of_code_end": 107
+- "category": "Core Class Signatures & Initialization"
+  "question": "How do I define a sequence of agents that run in order?"
+  "rationale": |
+    Use the `SequentialAgent`. Its mandatory `sub_agents` parameter takes a list of agent instances to be executed in the provided order.
+  "template": "CLASS_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "class SequentialAgent(BaseAgent):"
+  "file": "src/google/adk/agents/sequential_agent.py"
+  "line_of_code_start": 47
+  "line_of_code_end": 47
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the main class for orchestrating agent execution?"
+  "rationale": |
+    The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop and interaction with services.
+  "template": "CLASS_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "class Runner:"
+  "file": "src/google/adk/runners.py"
+  "line_of_code_start": 69
+  "line_of_code_end": 69
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the `Runner.run_async` method?"
+  "rationale": |
+    `async def run_async(self, session_id: str, user_input: str | None = None, ..., ) -> AsyncGenerator[Event, None]: ...`
+  "template": "METHOD_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": |
+        async def run_async(
+              self,
+              *,
+              user_id: str,
+              session_id: str,
+              invocation_id: Optional[str] = None,
+              new_message: Optional[types.Content] = None,
+              state_delta: Optional[dict[str, Any]] = None,
+              run_config: Optional[RunConfig] = None,
+          ) -> AsyncGenerator[Event, None]:
+  "file": "src/google/adk/runners.py"
+  "line_of_code_start": 341
+  "line_of_code_end": 351
+- "category": "Configuration Parameters"
+  "question": "How do I limit the number of iterations for a `LoopAgent`?"
+  "rationale": |
+    Set the `max_iterations` integer parameter in the `LoopAgent`'s configuration.
+    The loop will terminate when this limit is reached.
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_type": "StringMatchAnswer"
+      "answer": "max_iterations: Optional[int] = None"
+  "file": "src/google/adk/agents/loop_agent.py"
+  "line_of_code_start": 61
+  "line_of_code_end": 61
