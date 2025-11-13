@@ -15,53 +15,57 @@
 """A test rig to validate the adk_faq.yaml file against the codebase."""
 
 import argparse
-import abc
 import asyncio
 import enum
 import re
 import sys
 from pathlib import Path
-from typing import Union, Literal, Callable
+from typing import Literal
 
 import pydantic
 import yaml
 
 # --- Custom Exceptions ---
 
+
 class ValidationError(Exception):
   """Base class for validation errors."""
-  pass
+
 
 class TemplateMismatchError(ValidationError):
   """Raised when an answer does not match its template."""
-  pass
+
 
 class StringMatchError(ValidationError):
   """Raised when the generated answer does not match the code block."""
-  pass
+
 
 class FileAccessError(ValidationError):
   """Raised when a file cannot be accessed."""
-  pass
+
 
 class LineNumberError(ValidationError):
   """Raised when line numbers are out of bounds."""
-  pass
 
 
 # --- Template Definitions ---
 
+
 class AnswerTemplate(str, enum.Enum):
   """Enum for the different types of answer templates."""
+
   CLASS_DEFINITION = "CLASS_DEFINITION"
   PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   METHOD_DEFINITION = "METHOD_DEFINITION"
 
+
 class TemplateInfo(pydantic.BaseModel):
   """Model for storing information about an answer template."""
+
   regex: str
   description: str
   examples: list[str]
+
 
 TEMPLATES = {
     AnswerTemplate.CLASS_DEFINITION: TemplateInfo(
@@ -83,13 +87,15 @@ TEMPLATES = {
         ],
     ),
     AnswerTemplate.METHOD_DEFINITION: TemplateInfo(
-        regex=r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$",
+        regex=(
+            r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$"
+        ),
         description="A Python method definition.",
         examples=[
             "def my_method(self):",
             "async def my_method(self, arg1: str):",
             "def my_method(self, *args, **kwargs):",
-            "async def my_method(\n    self,\n    arg1: str,\n) -> str:",
+            "async def my_method(\\n    self,\\n    arg1: str,\\n) -> str:",
         ],
     ),
 }
@@ -97,14 +103,18 @@ TEMPLATES = {
 
 # --- Pydantic Data Models for adk_faq.yaml ---
 
+
 class StringMatchAnswer(pydantic.BaseModel):
   """Represents an answer that is a string match."""
+
   answer_template: Literal["StringMatchAnswer"]
   answer: str
+  module_path: str
 
 
 class FaqItem(pydantic.BaseModel):
   """Represents a single FAQ entry."""
+
   category: str
   question: str
   rationale: str
@@ -117,35 +127,17 @@ class FaqItem(pydantic.BaseModel):
   @pydantic.validator("line_of_code_end")
   def start_must_be_before_end(cls, v, values):
     if "line_of_code_start" in values and v < values["line_of_code_start"]:
-      raise ValueError("line_of_code_end must not be before line_of_code_start")
+      raise ValueError(
+          "line_of_code_end must not be before line_of_code_start"
+      )
     return v
 
 
 class FaqFile(pydantic.BaseModel):
   """Represents the entire adk_faq.yaml file."""
+
   commit_hash: str
   faq: list[FaqItem]
-
-
-# --- Answer Generation ---
-
-class AnswerGenerator(abc.ABC):
-  """Abstract base class for answer generators."""
-
-  @abc.abstractmethod
-  async def generate_answer(self, faq_item: FaqItem, template_info: TemplateInfo) -> str:
-    """Generates an answer for a given FAQ item."""
-    pass
-
-
-class GroundTruthAnswerGenerator(AnswerGenerator):
-  """An answer generator that returns the ground truth answer from the FAQ item."""
-
-  async def generate_answer(self, faq_item: FaqItem, template_info: TemplateInfo) -> str:
-    """Returns the first answer from the FAQ item."""
-    if not faq_item.answers:
-      return ""
-    return faq_item.answers[0].answer
 
 
 # --- Validator Logic ---
@@ -160,17 +152,30 @@ def _normalize_whitespace(text: str) -> str:
   return " ".join(text.split())
 
 
+def validate_module_path(module_path: str, file_path: Path):
+  """Validates that the module_path correctly corresponds to the file_path."""
+  # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
+  expected_module_path = (
+      str(file_path).removeprefix("src/").removesuffix(".py").replace("/", ".")
+  )
+  if module_path != expected_module_path:
+    raise ValidationError(
+        f"Module path '{module_path}' does not match the file path"
+        f" '{file_path}'. Expected '{expected_module_path}'."
+    )
+
+
 def validate_answer_against_template(answer: str, template: AnswerTemplate):
   """Validates that the answer matches the regex for the given template."""
   template_info = TEMPLATES.get(template)
   if not template_info:
     raise TemplateMismatchError(f"No template defined for '{template.value}'")
-  
+
   regex = template_info.regex
   if not re.match(regex, answer):
     raise TemplateMismatchError(
-        f"Answer '{answer}' does not match the format for template '{template.value}'. "
-        f"Expected format: {template_info.description}"
+        f"Answer '{answer}' does not match the format for template"
+        f" '{template.value}'. Expected format: {template_info.description}"
     )
 
 
@@ -180,8 +185,9 @@ def validate_string_match(generated_answer: str, expected_code_snippet: str):
   normalized_expected = _normalize_whitespace(expected_code_snippet)
   if normalized_generated != normalized_expected:
     raise StringMatchError(
-        "Generated answer does not exactly match code block (ignoring whitespace). "
-        f"Generated: '{normalized_generated}', Expected: '{normalized_expected}'"
+        "Generated answer does not exactly match code block (ignoring"
+        " whitespace). Generated:"
+        f" '{normalized_generated}', Expected: '{normalized_expected}'"
     )
 
 
@@ -198,26 +204,30 @@ async def run_validation(faq_file_path: Path) -> bool:
   try:
     with open(faq_file_path, "r", encoding="utf-8") as f:
       data = yaml.safe_load(f)
-    faq_data = FaqFile.parse_obj(data)
+    faq_data = FaqFile.model_validate(data)
   except FileNotFoundError:
     print(f"{FAIL_COLOR}ERROR: File not found: {faq_file_path}{RESET_COLOR}")
     return False
   except (yaml.YAMLError, pydantic.ValidationError) as e:
-    print(f"{FAIL_COLOR}ERROR: Failed to parse or validate YAML structure.{RESET_COLOR}")
+    print(
+        f"{FAIL_COLOR}ERROR: Failed to parse or validate YAML"
+        f" structure.{RESET_COLOR}"
+    )
     print(e)
     return False
 
   passed_count = 0
   failed_count = 0
-  answer_generator = GroundTruthAnswerGenerator()
 
   for i, item in enumerate(faq_data.faq):
-    result = False
-    error_message = ""
+    any_answer_passed = False
+    all_errors = []
 
     try:
       # Resolve the file path relative to the repository root
-      repo_root = Path(__file__).parent.parent # Go up from data_generation/test_rig.py to repo root
+      repo_root = (
+          Path(__file__).parent.parent
+      )  # Go up from data_generation/test_rig.py to repo root
       full_file_path = repo_root / item.file
 
       if not full_file_path.exists():
@@ -225,37 +235,41 @@ async def run_validation(faq_file_path: Path) -> bool:
 
       with open(full_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-      
-      code_block = "".join(lines[item.line_of_code_start - 1 : item.line_of_code_end])
+
+      code_block = "".join(
+          lines[item.line_of_code_start - 1 : item.line_of_code_end]
+      )
       docstring_start = code_block.find('"""')
       if docstring_start != -1:
         code_block = code_block[:docstring_start]
       code_block = code_block.strip()
 
-      answer_to_validate = item.answers[0].answer
-      validate_answer_against_template(answer_to_validate, item.template)
+      # Iterate through all possible answers. If any of them pass, the item is considered valid.
+      for answer_obj in item.answers:
+        try:
+          validate_answer_against_template(answer_obj.answer, item.template)
+          validate_module_path(answer_obj.module_path, item.file)
+          validate_string_match(answer_obj.answer, code_block)
+          any_answer_passed = True
+          break  # Found a passing answer, no need to check others
+        except ValidationError as e:
+          all_errors.append(
+              f"  - Answer '{_normalize_whitespace(answer_obj.answer)}'"
+              f" failed: {e}"
+          )
 
-      template_info = TEMPLATES[item.template]
-      generated_answer = await answer_generator.generate_answer(item, template_info)
-      validate_string_match(generated_answer, code_block)
-
-      result = True
-
-    except IndexError:
-      error_message = f"Line numbers are out of bounds for file {item.file}."
-    except ValidationError as e:
-      error_message = str(e)
+    except (IndexError, FileAccessError) as e:
+      all_errors.append(str(e))
     except Exception as e:
-      error_message = f"An unexpected error occurred: {e}"
+      all_errors.append(f"An unexpected error occurred: {e}")
 
-    if result:
-      print(
-          f"{i+1:02d}: {SUCCESS_COLOR}PASS{RESET_COLOR} - {item.question}"
-      )
+    if any_answer_passed:
+      print(f"{i+1:02d}: {SUCCESS_COLOR}PASS{RESET_COLOR} - {item.question}")
       passed_count += 1
     else:
+      error_message = "\n".join(all_errors)
       print(
-          f"{i+1:02d}: {FAIL_COLOR}FAIL{RESET_COLOR} - {item.question} ({error_message})"
+          f"{i+1:02d}: {FAIL_COLOR}FAIL{RESET_COLOR} - {item.question}\n{error_message}"
       )
       failed_count += 1
 

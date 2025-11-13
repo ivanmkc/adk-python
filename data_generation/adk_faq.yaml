@@ -8,6 +8,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "class BaseAgent(BaseModel):"
+      "module_path": "google.adk.agents.base_agent"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 82
   "line_of_code_end": 82
@@ -19,6 +20,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "name: str"
+      "module_path": "google.adk.agents.base_agent"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 107
   "line_of_code_end": 107
@@ -30,6 +32,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "class SequentialAgent(BaseAgent):"
+      "module_path": "google.adk.agents.sequential_agent"
   "file": "src/google/adk/agents/sequential_agent.py"
   "line_of_code_start": 47
   "line_of_code_end": 47
@@ -41,6 +44,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "class Runner:"
+      "module_path": "google.adk.runners"
   "file": "src/google/adk/runners.py"
   "line_of_code_start": 69
   "line_of_code_end": 69
@@ -62,6 +66,7 @@
               state_delta: Optional[dict[str, Any]] = None,
               run_config: Optional[RunConfig] = None,
           ) -> AsyncGenerator[Event, None]:
+      "module_path": "google.adk.runners"
   "file": "src/google/adk/runners.py"
   "line_of_code_start": 341
   "line_of_code_end": 351
@@ -74,6 +79,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "max_iterations: Optional[int] = None"
+      "module_path": "google.adk.agents.loop_agent"
   "file": "src/google/adk/agents/loop_agent.py"
   "line_of_code_start": 61
   "line_of_code_end": 61
@@ -86,6 +92,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "model: Union[str, BaseLlm] = ''"
+      "module_path": "google.adk.agents.llm_agent"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 186
   "line_of_code_end": 186
@@ -98,6 +105,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "generate_content_config: Optional[types.GenerateContentConfig] = None"
+      "module_path": "google.adk.agents.llm_agent"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 276
   "line_of_code_end": 276
@@ -111,6 +119,7 @@
   "answers":
     - "answer_template": "StringMatchAnswer"
       "answer": "tools: list[ToolUnion] = Field(default_factory=list)"
+      "module_path": "google.adk.agents.llm_agent"
   "file": "src/google/adk/agents/llm_agent.py"
   "line_of_code_start": 273
   "line_of_code_end": 273
@@ -122,9 +131,8 @@
   "template": "METHOD_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
-      "answer": "async def _run_async_impl(
-      self, ctx: InvocationContext
-  ) -> AsyncGenerator[Event, None]:"
+      "answer": "async def _run_async_impl(\n      self, ctx: InvocationContext\n  ) -> AsyncGenerator[Event, None]:"
+      "module_path": "google.adk.agents.base_agent"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 330
   "line_of_code_end": 332
