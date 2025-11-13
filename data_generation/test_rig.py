@@ -15,6 +15,7 @@
 """A test rig to validate the adk_faq.yaml file against the codebase."""
 
 import argparse
+import abc
 import asyncio
 import enum
 import re
@@ -57,6 +58,7 @@ class AnswerTemplate(str, enum.Enum):
   CLASS_DEFINITION = "CLASS_DEFINITION"
   PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   METHOD_DEFINITION = "METHOD_DEFINITION"
+  TYPE_ALIAS_DEFINITION = "TYPE_ALIAS_DEFINITION"
 
 
 class TemplateInfo(pydantic.BaseModel):
@@ -96,6 +98,14 @@ TEMPLATES = {
             "async def my_method(self, arg1: str):",
             "def my_method(self, *args, **kwargs):",
             "async def my_method(\\n    self,\\n    arg1: str,\\n) -> str:",
+        ],
+    ),
+    AnswerTemplate.TYPE_ALIAS_DEFINITION: TemplateInfo(
+        regex=r"^\s*\w+:\s*TypeAlias\s*=\s*[\s\S]*$",
+        description="A Python TypeAlias definition.",
+        examples=[
+            "MyType: TypeAlias = Union[str, int]",
+            "AnotherType: TypeAlias = Callable[[str], None]",
         ],
     ),
 }
@@ -140,6 +150,30 @@ class FaqFile(pydantic.BaseModel):
   faq: list[FaqItem]
 
 
+# --- Answer Generation ---
+
+
+class AnswerGenerator(abc.ABC):
+  """Abstract base class for answer generators."""
+
+  @abc.abstractmethod
+  async def generate_answer(
+      self, answer: StringMatchAnswer, template_info: TemplateInfo
+  ) -> str:
+    """Generates an answer for a given FAQ item."""
+    pass
+
+
+class GroundTruthAnswerGenerator(AnswerGenerator):
+  """An answer generator that returns the ground truth answer from the FAQ item."""
+
+  async def generate_answer(
+      self, answer: StringMatchAnswer, template_info: TemplateInfo
+  ) -> str:
+    """Returns the first answer from the FAQ item."""
+    return answer.answer
+
+
 # --- Validator Logic ---
 
 SUCCESS_COLOR = "\033[92m"
@@ -149,7 +183,7 @@ RESET_COLOR = "\033[0m"
 
 def _normalize_whitespace(text: str) -> str:
   """Collapses all whitespace into single spaces."""
-  return " ".join(text.split())
+  return re.sub(r"\s+", " ", text).strip()
 
 
 def validate_module_path(module_path: str, file_path: Path):
@@ -218,6 +252,7 @@ async def run_validation(faq_file_path: Path) -> bool:
 
   passed_count = 0
   failed_count = 0
+  answer_generator = GroundTruthAnswerGenerator()
 
   for i, item in enumerate(faq_data.faq):
     any_answer_passed = False
@@ -247,9 +282,13 @@ async def run_validation(faq_file_path: Path) -> bool:
       # Iterate through all possible answers. If any of them pass, the item is considered valid.
       for answer_obj in item.answers:
         try:
-          validate_answer_against_template(answer_obj.answer, item.template)
+          template_info = TEMPLATES[item.template]
+          generated_answer = await answer_generator.generate_answer(
+              answer_obj, template_info
+          )
+          validate_answer_against_template(generated_answer, item.template)
           validate_module_path(answer_obj.module_path, item.file)
-          validate_string_match(answer_obj.answer, code_block)
+          validate_string_match(generated_answer, code_block)
           any_answer_passed = True
           break  # Found a passing answer, no need to check others
         except ValidationError as e:

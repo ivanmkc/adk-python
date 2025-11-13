@@ -2,8 +2,8 @@
 "faq":
 - "category": "Core Class Signatures & Initialization"
   "question": "What is the foundational class for all agents in the ADK?"
-  "rationale": |
-    All agents must inherit from `google.adk.agents.base_agent.BaseAgent`, which provides the core interface for execution and configuration.
+  "rationale": "    All agents must inherit from `google.adk.agents.base_agent.BaseAgent`, which provides the core interface for execution and configuration.
+  "
   "template": "CLASS_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -14,8 +14,8 @@
   "line_of_code_end": 82
 - "category": "Core Class Signatures & Initialization"
   "question": "What is the mandatory parameter when initializing any Agent?"
-  "rationale": |
-    Every agent, regardless of its type, must be initialized with a unique `name` (string) parameter.
+  "rationale": "    Every agent, regardless of its type, must be initialized with a unique `name` (string) parameter.
+  "
   "template": "PARAMETER_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -26,8 +26,8 @@
   "line_of_code_end": 107
 - "category": "Core Class Signatures & Initialization"
   "question": "How do I define a sequence of agents that run in order?"
-  "rationale": |
-    Use the `SequentialAgent`. Its mandatory `sub_agents` parameter takes a list of agent instances to be executed in the provided order.
+  "rationale": "    Use the `SequentialAgent`. Its mandatory `sub_agents` parameter takes a list of agent instances to be executed in the provided order.
+  "
   "template": "CLASS_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -38,8 +38,8 @@
   "line_of_code_end": 47
 - "category": "Core Class Signatures & Initialization"
   "question": "What is the main class for orchestrating agent execution?"
-  "rationale": |
-    The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop and interaction with services.
+  "rationale": "    The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop and interaction with services.
+  "
   "template": "CLASS_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -50,13 +50,12 @@
   "line_of_code_end": 69
 - "category": "Core Class Signatures & Initialization"
   "question": "What is the type signature for the `Runner.run_async` method?"
-  "rationale": |
-    `async def run_async(self, session_id: str, user_input: str | None = None, ..., ) -> AsyncGenerator[Event, None]: ...`
+  "rationale": "    `async def run_async(self, session_id: str, user_input: str | None = None, ..., ) -> AsyncGenerator[Event, None]: ...`
+  "
   "template": "METHOD_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
-      "answer": |
-        async def run_async(
+      "answer": "async def run_async(
               self,
               *,
               user_id: str,
@@ -65,16 +64,16 @@
               new_message: Optional[types.Content] = None,
               state_delta: Optional[dict[str, Any]] = None,
               run_config: Optional[RunConfig] = None,
-          ) -> AsyncGenerator[Event, None]:
+          ) -> AsyncGenerator[Event, None]:"
       "module_path": "google.adk.runners"
   "file": "src/google/adk/runners.py"
   "line_of_code_start": 341
   "line_of_code_end": 351
 - "category": "Configuration Parameters"
   "question": "How do I limit the number of iterations for a `LoopAgent`?"
-  "rationale": |
-    Set the `max_iterations` integer parameter in the `LoopAgent`'s configuration.
+  "rationale": "    Set the `max_iterations` integer parameter in the `LoopAgent`'s configuration.
     The loop will terminate when this limit is reached.
+  "
   "template": "PARAMETER_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -85,9 +84,9 @@
   "line_of_code_end": 61
 - "category": "Configuration Parameters"
   "question": "How do I specify the model for an `LlmAgent`?"
-  "rationale": |
-    Use the `model` string parameter in the `LlmAgent`'s configuration (e.g.,
+  "rationale": "    Use the `model` string parameter in the `LlmAgent`'s configuration (e.g.,
     'gemini-1.5-pro'). This can be inherited from a parent agent if not set.
+  "
   "template": "PARAMETER_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -98,9 +97,9 @@
   "line_of_code_end": 186
 - "category": "Configuration Parameters"
   "question": "Where can I configure LLM generation parameters like temperature and safety settings?"
-  "rationale": |
-    In the `LlmAgent`, these are configured through the `generate_content_config`
+  "rationale": "    In the `LlmAgent`, these are configured through the `generate_content_config`
     parameter, which accepts a `types.GenerateContentConfig` object.
+  "
   "template": "PARAMETER_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -111,10 +110,10 @@
   "line_of_code_end": 276
 - "category": "Configuration Parameters"
   "question": "How are tools attached to an `LlmAgent`?"
-  "rationale": |
-    Tools are provided as a list to the `tools` parameter of an `LlmAgent`. The
+  "rationale": "    Tools are provided as a list to the `tools` parameter of an `LlmAgent`. The
     list can contain `FunctionTool` instances, `BaseToolset` instances, or other
     `BaseTool` subclasses.
+  "
   "template": "PARAMETER_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
@@ -125,14 +124,74 @@
   "line_of_code_end": 273
 - "category": "Hooks and Lifecycle Methods"
   "question": "What is the core method that defines an agent's execution logic?"
-  "rationale": |
-    Subclasses of `BaseAgent` must implement the `_run_async_impl(self, ctx:
+  "rationale": "    Subclasses of `BaseAgent` must implement the `_run_async_impl(self, ctx:
     InvocationContext)` method to define their primary, asynchronous execution logic.
+  "
   "template": "METHOD_DEFINITION"
   "answers":
     - "answer_template": "StringMatchAnswer"
-      "answer": "async def _run_async_impl(\n      self, ctx: InvocationContext\n  ) -> AsyncGenerator[Event, None]:"
+      "answer": "async def _run_async_impl(
+      self, ctx: InvocationContext
+  ) -> AsyncGenerator[Event, None]:"
       "module_path": "google.adk.agents.base_agent"
   "file": "src/google/adk/agents/base_agent.py"
   "line_of_code_start": 330
   "line_of_code_end": 332
+- "category": "Hooks and Lifecycle Methods"
+  "question": "How can I execute code before or after any agent runs?"
+  "rationale": "    `BaseAgent` provides `before_agent_callback` and `after_agent_callback`.
+    These receive a `CallbackContext` and can be used to preprocess inputs or post-process
+    outputs.
+  "
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_template": "StringMatchAnswer"
+      "answer": "before_agent_callback: Optional[BeforeAgentCallback] = None"
+      "module_path": "google.adk.agents.base_agent"
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": 133
+  "line_of_code_end": 133
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the type signature for an agent callback?"
+  "rationale": "Callbacks are `Callable`s that take a `CallbackContext` and return either
+    `None` or `CallbackContext` (e.g., `Callable[[CallbackContext], Coroutine[Any,
+    Any, None | CallbackContext]]`)."
+  "template": "TYPE_ALIAS_DEFINITION"
+  "answers":
+    - "answer_template": "StringMatchAnswer"
+      "answer": "BeforeAgentCallback: TypeAlias = Union[
+            _SingleAgentCallback,
+            list[_SingleAgentCallback],
+        ]"
+      "module_path": "google.adk.agents.base_agent"
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": 57
+  "line_of_code_end": 60
+- "category": "Hooks and Lifecycle Methods"
+  "question": "Are there more specific hooks for `LlmAgent`?"
+  "rationale": "    Yes, `LlmAgent` offers `before_model_callback`, `after_model_callback`,
+    `before_tool_callback`, and `after_tool_callback` for fine-grained control over
+    the LLM and tool interaction loop.
+  "
+  "template": "PARAMETER_DEFINITION"
+  "answers":
+    - "answer_template": "StringMatchAnswer"
+      "answer": "before_model_callback: Optional[BeforeModelCallback] = None"
+      "module_path": "google.adk.agents.llm_agent"
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": 348
+  "line_of_code_end": 348
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the difference between an agent callback and a global plugin?"
+  "rationale": "    Agent callbacks are specific to one agent instance. Plugins are registered
+    on the `Runner` and apply globally to all agents. Plugins also run *before* agent
+    callbacks and can short-circuit the execution flow.
+  "
+  "template": "CLASS_DEFINITION"
+  "answers":
+    - "answer_template": "StringMatchAnswer"
+      "answer": "class BasePlugin(ABC):"
+      "module_path": "google.adk.plugins.base_plugin"
+  "file": "src/google/adk/plugins/base_plugin.py"
+  "line_of_code_start": 41
+  "line_of_code_end": 41
