@@ -1,0 +1,741 @@
+"commit_hash": "6bb0b7417ea6cb88a28ebf6dd297eb3e6cd1c851"
+"faq":
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the foundational class for all agents in the ADK?"
+  "answer": |
+    All agents must inherit from `google.adk.agents.base_agent.BaseAgent`, which provides the core interface for execution and configuration.
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "88"
+  "line_of_code_end": "94"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseAgent(BaseModel)"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the mandatory parameter when initializing any Agent?"
+  "answer": |
+    Every agent, regardless of its type, must be initialized with a unique `name` (string) parameter.
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "118"
+  "line_of_code_end": "124"
+  "test_assertion":
+    "method": "contains"
+    "value": "name: str"
+- "category": "Core Class Signatures & Initialization"
+  "question": "How do I define a sequence of agents that run in order?"
+  "answer": |
+    Use the `SequentialAgent`. Its mandatory `sub_agents` parameter takes a list of agent instances to be executed in the provided order.
+  "file": "src/google/adk/agents/sequential_agent.py"
+  "line_of_code_start": "41"
+  "line_of_code_end": "44"
+  "test_assertion":
+    "method": "contains"
+    "value": "class SequentialAgent(BaseAgent):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the main class for orchestrating agent execution?"
+  "answer": |
+    The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop and interaction with services.
+  "file": "src/google/adk/runners.py"
+  "line_of_code_start": "61"
+  "line_of_code_end": "62"
+  "test_assertion":
+    "method": "contains"
+    "value": "class Runner:"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the `Runner.run_async` method?"
+  "answer": |
+    `async def run_async(self, session_id: str, user_input: str | None = None, ..., ) -> AsyncGenerator[Event, None]: ...`
+  "file": "src/google/adk/runners.py"
+  "line_of_code_start": "283"
+  "line_of_code_end": "321"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def run_async("
+- "category": "Configuration Parameters"
+  "question": "How do I limit the number of iterations for a `LoopAgent`?"
+  "answer": |
+    Set the `max_iterations` integer parameter in the `LoopAgent`'s configuration.
+    The loop will terminate when this limit is reached.
+  "file": "src/google/adk/agents/loop_agent.py"
+  "line_of_code_start": "52"
+  "line_of_code_end": "58"
+  "test_assertion":
+    "method": "contains"
+    "value": "max_iterations: Optional[int] = None"
+- "category": "Configuration Parameters"
+  "question": "How do I specify the model for an `LlmAgent`?"
+  "answer": |
+    Use the `model` string parameter in the `LlmAgent`'s configuration (e.g.,
+    'gemini-1.5-pro'). This can be inherited from a parent agent if not set.
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "221"
+  "line_of_code_end": "226"
+  "test_assertion":
+    "method": "contains"
+    "value": "model: Union[str, BaseLlm] = ''"
+- "category": "Configuration Parameters"
+  "question": "Where can I configure LLM generation parameters like temperature and safety settings?"
+  "answer": |
+    In the `LlmAgent`, these are configured through the `generate_content_config`
+    parameter, which accepts a `types.GenerateContentConfig` object.
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "310"
+  "line_of_code_end": "319"
+  "test_assertion":
+    "method": "contains"
+    "value": "generate_content_config: Optional[types.GenerateContentConfig] = None"
+- "category": "Configuration Parameters"
+  "question": "How are tools attached to an `LlmAgent`?"
+  "answer": |
+    Tools are provided as a list to the `tools` parameter of an `LlmAgent`. The
+    list can contain `FunctionTool` instances, `BaseToolset` instances, or other
+    `BaseTool` subclasses.
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "307"
+  "line_of_code_end": "309"
+  "test_assertion":
+    "method": "contains"
+    "value": "tools: list[ToolUnion] = Field(default_factory=list)"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the core method that defines an agent's execution logic?"
+  "answer": |
+    Subclasses of `BaseAgent` must implement the `_run_async_impl(self, ctx:
+    InvocationContext)` method to define their primary, asynchronous execution logic.
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "413"
+  "line_of_code_end": "423"
+  "test_assertion":
+    "method": "contains"
+    "value": "def _run_async_impl"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "How can I execute code before or after any agent runs?"
+  "answer": |
+    `BaseAgent` provides `before_agent_callback` and `after_agent_callback`.
+    These receive a `CallbackContext` and can be used to preprocess inputs or post-process
+    outputs.
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "144"
+  "line_of_code_end": "158"
+  "test_assertion":
+    "method": "contains"
+    "value": "before_agent_callback: Optional[BeforeAgentCallback] = None"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the type signature for an agent callback?"
+  "answer": |
+    Callbacks are `Callable`s that take a `CallbackContext` and return either
+    `None` or `CallbackContext` (e.g., `Callable[[CallbackContext], Coroutine[Any,
+    Any, None | CallbackContext]]`).
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "58"
+  "line_of_code_end": "62"
+  "test_assertion":
+    "method": "contains"
+    "value": "BeforeAgentCallback"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "Are there more specific hooks for `LlmAgent`?"
+  "answer": |
+    Yes, `LlmAgent` offers `before_model_callback`, `after_model_callback`,
+    `before_tool_callback`, and `after_tool_callback` for fine-grained control over
+    the LLM and tool interaction loop.
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "410"
+  "line_of_code_end": "426"
+  "test_assertion":
+    "method": "contains"
+    "value": "before_model_callback"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the difference between an agent callback and a global plugin?"
+  "answer": |
+    Agent callbacks are specific to one agent instance. Plugins are registered
+    on the `Runner` and apply globally to all agents. Plugins also run *before* agent
+    callbacks and can short-circuit the execution flow.
+  "file": "src/google/adk/plugins/base_plugin.py"
+  "line_of_code_start": "38"
+  "line_of_code_end": "40"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BasePlugin(ABC):"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "How can a plugin stop the execution of agent-specific callbacks?"
+  "answer": |
+    If a plugin's callback method returns any value other than `None`, the `PluginManager`
+    halts further processing for that event, and all agent-specific callbacks for
+    that event are skipped.
+  "file": "src/google/adk/plugins/plugin_manager.py"
+  "line_of_code_start": "308"
+  "line_of_code_end": "336"
+  "test_assertion":
+    "method": "contains"
+    "value": "if result is not None:"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How do I access the current conversation state within an agent or callback?"
+  "answer": |
+    The state is accessed via the `InvocationContext` (in `_run_async_impl`)
+    or `CallbackContext` (in callbacks). The correct way to load state is `self._load_agent_state(ctx,
+    YourAgentStateClass)`.
+  "file": "src/google/adk/agents/base_agent.py"
+  "line_of_code_start": "179"
+  "line_of_code_end": "192"
+  "test_assertion":
+    "method": "contains"
+    "value": "def _load_agent_state"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How do I write back to the agent's state?"
+  "answer": |
+    After modifying your state object, you must write it back to the context
+    using `ctx.set_agent_state(self.name, agent_state=your_state_object)`.
+  "file": "src/google/adk/context.py"
+  "line_of_code_start": "100"
+  "line_of_code_end": "101"
+  "test_assertion":
+    "method": "contains"
+    "value": "def set_agent_state"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the best practice for an `LlmAgent` to save its final output to the session state?"
+  "answer": |
+    Use the `output_key` string parameter on the `LlmAgent`. The framework
+    will automatically write the agent's final text output to `session.state[output_key]`.
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "370"
+  "line_of_code_end": "377"
+  "test_assertion":
+    "method": "contains"
+    "value": "output_key: Optional[str] = None"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How is `session.state` actually modified? Can I change it directly?"
+  "answer": |
+    No, `session.state` is immutable within a turn. Changes are requested by
+    including a `state_delta` dictionary in an `Event` object. The `SessionService`
+    is responsible for applying this delta to the state between turns.
+  "file": "src/google/adk/sessions/base_session_service.py"
+  "line_of_code_start": "120"
+  "line_of_code_end": "123"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def append_event"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How can a tool access the agent's state or other services?"
+  "answer": |
+    A tool can access services by including a parameter of type `ToolContext`
+    in its function signature. The ADK will automatically inject this context object,
+    which provides access to memory, authentication, and more.
+  "file": "src/google/adk/tools/tool_context.py"
+  "line_of_code_start": "27"
+  "line_of_code_end": "28"
+  "test_assertion":
+    "method": "contains"
+    "value": "class ToolContext(CallbackContext):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What's the easiest way to create a tool from a Python function?"
+  "answer": |
+    Wrap the function with the `FunctionTool` class. It automatically generates
+    the necessary JSON schema for the LLM from the function's signature, type hints,
+    and docstring.
+  "file": "src/google/adk/tools/function_tool.py"
+  "line_of_code_start": "28"
+  "line_of_code_end": "33"
+  "test_assertion":
+    "method": "contains"
+    "value": "class FunctionTool(BaseTool):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for a tool's execution method?"
+  "answer": |
+    `async def run_async(self, **kwargs: Any) -> AsyncGenerator[str | dict[str,
+    Any], None]: ...`
+  "file": "src/google/adk/tools/base_tool.py"
+  "line_of_code_start": "88"
+  "line_of_code_end": "102"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def run_async"
+- "category": "Configuration Parameters"
+  "question": "How are tools configured in YAML files?"
+  "answer": |
+    Tools are defined under the `tools` key. You can specify a built-in tool
+    by its name or a custom tool by its fully qualified import path (e.g., `my.module.my_function`).
+  "file": "src/google/adk/tools/tool_configs.py"
+  "line_of_code_start": "39"
+  "line_of_code_end": "41"
+  "test_assertion":
+    "method": "contains"
+    "value": "class ToolConfig(BaseModel):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is a `Toolset`?"
+  "answer": |
+    A `BaseToolset` is a class that manages a collection of tools. It can be
+    used to dynamically filter which tools are available to an agent based on the
+    current context.
+  "file": "src/google/adk/tools/base_toolset.py"
+  "line_of_code_start": "51"
+  "line_of_code_end": "55"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseToolset(ABC):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "Can a tool be executed by the model itself instead of in my Python code?"
+  "answer": "Yes. Some tools, like `GoogleSearchTool`, don't have a Python `run_async` implementation. They work by modifying the `LlmRequest` to activate a native capability of the underlying model."
+  "file": "src/google/adk/tools/google_search_tool.py"
+  "line_of_code_start": "25"
+  "line_of_code_end": "30"
+  "test_assertion":
+    "method": "contains"
+    "value": "class GoogleSearchTool(BaseTool):"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "What is the purpose of the `PluginManager`?"
+  "answer": "The `PluginManager` is the central orchestrator for the plugin system. It handles registering plugins and invoking their callback hooks in the correct order of precedence."
+  "file": "src/google/adk/plugins/plugin_manager.py"
+  "line_of_code_start": "50"
+  "line_of_code_end": "51"
+  "test_assertion":
+    "method": "contains"
+    "value": "class PluginManager:"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "Can I create a plugin that just observes events without changing behavior?"
+  "answer": "Yes, this is a primary use case. An 'observational' plugin (like `LoggingPlugin`) implements callback hooks for data gathering but always returns `None` to avoid interfering with the execution flow."
+  "file": "src/google/adk/plugins/logging_plugin.py"
+  "line_of_code_start": "38"
+  "line_of_code_end": "40"
+  "test_assertion":
+    "method": "contains"
+    "value": "class LoggingPlugin(BasePlugin):"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How is session persistence handled?"
+  "answer": "The `Runner` delegates session management to a `SessionService`. The default is `InMemorySessionService`, but you can implement the `BaseSessionService` interface to create a custom service that persists sessions to a database or other storage."
+  "file": "src/google/adk/sessions/base_session_service.py"
+  "line_of_code_start": "41"
+  "line_of_code_end": "46"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseSessionService(abc.ABC):"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the `InvocationContext` object?"
+  "answer": "The `InvocationContext` is a critical internal object that carries the entire state of a single agent invocation, including the session, agent-specific states, and references to all available services."
+  "file": "src/google/adk/context.py"
+  "line_of_code_start": "47"
+  "line_of_code_end": "48"
+  "test_assertion":
+    "method": "contains"
+    "value": "class InvocationContext(BaseModel):"
+- "category": "Hooks and Lifecycle Methods"
+  "question": "How do I provide a system-wide instruction that applies to all `LlmAgent` calls?"
+  "answer": "Use the `GlobalInstructionPlugin`. It intercepts every `LlmRequest` and prepends a configured global instruction, ensuring consistent behavior across all agents."
+  "file": "src/google/adk/plugins/global_instruction_plugin.py"
+  "line_of_code_start": "28"
+  "line_of_code_end": "30"
+  "test_assertion":
+    "method": "contains"
+    "value": "class GlobalInstructionPlugin(BasePlugin):"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the `CallbackContext` object?"
+  "answer": "The `CallbackContext` is passed to all `before_*` and `after_*` callbacks. It is a subset of the `InvocationContext` and provides access to the current event, session, and agent state."
+  "file": "src/google/adk/context.py"
+  "line_of_code_start": "15"
+  "line_of_code_end": "16"
+  "test_assertion":
+    "method": "contains"
+    "value": "class CallbackContext:"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How do I manage different states for different scopes (e.g., user vs. session)?"
+  "answer": "The `InMemorySessionService` supports `app`, `user`, and `session` level states. These are separate dictionaries that get merged at runtime to form the final `session.state`."
+  "file": "src/google/adk/sessions/in_memory_session_service.py"
+  "line_of_code_start": "201"
+  "line_of_code_end": "204"
+  "test_assertion":
+    "method": "contains"
+    "value": "def _merge_state"
+- "category": "Data Structure Access & Best Practices"
+  "question": "Where does the ADK define the data model for a `Session`?"
+  "answer": "The `Session` data model is a Pydantic class defined in `src/google/adk/sessions/session.py`. It includes the session ID, user ID, the list of events, and the state dictionary."
+  "file": "src/google/adk/sessions/session.py"
+  "line_of_code_start": "23"
+  "line_of_code_end": "25"
+  "test_assertion":
+    "method": "contains"
+    "value": "class Session(BaseModel):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the core interface for all LLM integrations?"
+  "answer": "All model wrappers must implement the `BaseLlm` abstract class, which defines the common interface for generating content."
+  "file": "src/google/adk/models/base_llm.py"
+  "line_of_code_start": "29"
+  "line_of_code_end": "31"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseLlm(BaseModel):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the primary method in `BaseLlm`?"
+  "answer": |
+    `def generate_content_async(self, request: LlmRequest, ...) -> AsyncGenerator[LlmResponse,
+    None]: ...`
+  "file": "src/google/adk/models/base_llm.py"
+  "line_of_code_start": "45"
+  "line_of_code_end": "158"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def generate_content_async"
+- "category": "Configuration Parameters"
+  "question": "How does the ADK select which LLM implementation to use?"
+  "answer": "The `LLMRegistry` maps a model name prefix (e.g., 'gemini-') to a specific `BaseLlm` implementation. The `LlmAgent` uses this registry to instantiate the correct model class."
+  "file": "src/google/adk/models/__init__.py"
+  "line_of_code_start": "29"
+  "line_of_code_end": "29"
+  "test_assertion":
+    "method": "contains"
+    "value": "LLMRegistry.register"
+- "category": "Core Class Signatures & Initialization"
+  "question": "How do I evaluate an agent against a test set?"
+  "answer": "Use the `AgentEvaluator.evaluate` method, providing it the path to your agent module and the directory containing your `.test.json` and `test_config.json` files."
+  "file": "src/google/adk/evaluation/agent_evaluator.py"
+  "line_of_code_start": "228"
+  "line_of_code_end": "263"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def evaluate"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the structure of an agent evaluation test file?"
+  "answer": "The `.test.json` file contains an `EvalSet` object, which is a list of `EvalCase` objects. Each `EvalCase` defines a `conversation` with user queries and expected agent responses or tool calls."
+  "file": "tests/integration/fixture/home_automation_agent/simple_test.test.json"
+  "line_of_code_start": "2"
+  "line_of_code_end": "6"
+  "test_assertion":
+    "method": "contains"
+    "value": "eval_set_id"
+- "category": "CLI"
+  "question": "How can I run an agent interactively from the command line?"
+  "answer": "Use the `adk run` command, followed by the path to your agent's directory. This provides a simple REPL for local development."
+  "file": "src/google/adk/cli/cli.py"
+  "line_of_code_start": "131"
+  "line_of_code_end": "161"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def run_cli"
+- "category": "CLI"
+  "question": "What is the command to create a new agent project from a template?"
+  "answer": "Use the `adk create` command. It will interactively prompt you for configuration details and generate the necessary boilerplate files."
+  "file": "src/google/adk/cli/cli_create.py"
+  "line_of_code_start": "318"
+  "line_of_code_end": "344"
+  "test_assertion":
+    "method": "contains"
+    "value": "def run_cmd"
+- "category": "CLI"
+  "question": "How do I start the ADK web server to interact with my agent via an API?"
+  "answer": "Use the `adk web` or `adk api_server` command, followed by the path to your agents directory. This starts a FastAPI server."
+  "file": "src/google/adk/cli/cli_tools_click.py"
+  "line_of_code_start": "608"
+  "line_of_code_end": "609"
+  "test_assertion":
+    "method": "contains"
+    "value": "@main.command(\"web\")"
+- "category": "CLI"
+  "question": "What is the purpose of the `AdkWebServer` class?"
+  "answer": "The `AdkWebServer` class in `adk_web_server.py` defines the entire REST API for the ADK, including endpoints for session management, agent execution (HTTP, SSE, WebSockets), and evaluation."
+  "file": "src/google/adk/cli/adk_web_server.py"
+  "line_of_code_start": "458"
+  "line_of_code_end": "459"
+  "test_assertion":
+    "method": "contains"
+    "value": "class AdkWebServer:"
+- "category": "CLI"
+  "question": "How can I deploy my agent to Google Cloud?"
+  "answer": "The `adk deploy` command can package and deploy agents to Cloud Run, GKE, and Agent Engine by generating Dockerfiles and using `gcloud` and other SDKs."
+  "file": "src/google/adk/cli/cli_deploy.py"
+  "line_of_code_start": "408"
+  "line_of_code_end": "502"
+  "test_assertion":
+    "method": "contains"
+    "value": "def to_cloud_run"
+- "category": "Configuration Parameters"
+  "question": "How are backend services like session and artifact storage configured for the web server?"
+  "answer": "The `fast_api.py` module initializes these services based on URI schemes (e.g., `sqlite://`, `gs://`, or in-memory by default), making the backend storage pluggable."
+  "file": "src/google/adk/cli/fast_api.py"
+  "line_of_code_start": "41"
+  "line_of_code_end": "83"
+  "test_assertion":
+    "method": "contains"
+    "value": "def get_fast_api_app"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the core interface for agent memory?"
+  "answer": "The `BaseMemoryService` abstract class defines the contract for all memory implementations, with `add_session_to_memory` and `search_memory` as the key methods."
+  "file": "src/google/adk/memory/base_memory_service.py"
+  "line_of_code_start": "38"
+  "line_of_code_end": "43"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseMemoryService(ABC):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the `search_memory` method?"
+  "answer": |
+    `async def search_memory(self, user_id: str, query: str, ...) -> SearchMemoryResponse:
+    ...`
+  "file": "src/google/adk/memory/base_memory_service.py"
+  "line_of_code_start": "63"
+  "line_of_code_end": "77"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def search_memory"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What data structure is returned from a memory search?"
+  "answer": "A `search_memory` call returns a `SearchMemoryResponse` object, which contains a list of `MemoryEntry` objects."
+  "file": "src/google/adk/memory/base_memory_service.py"
+  "line_of_code_start": "25"
+  "line_of_code_end": "31"
+  "test_assertion":
+    "method": "contains"
+    "value": "class SearchMemoryResponse(BaseModel):"
+- "category": "Configuration Parameters"
+  "question": "What memory backends are available for production use?"
+  "answer": "The ADK provides `VertexAiRagMemoryService` for leveraging Vertex AI RAG and `VertexAiMemoryBankService` for the dedicated Vertex AI Memory Bank."
+  "file": "src/google/adk/memory/base_memory_service.py"
+  "line_of_code_start": "38"
+  "line_of_code_end": "43"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseMemoryService(ABC):"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What is the core interface for handling file-like data?"
+  "answer": "The `BaseArtifactService` abstract class defines the contract for saving, loading, and managing versioned, file-like data, known as artifacts."
+  "file": "src/google/adk/artifacts/base_artifact_service.py"
+  "line_of_code_start": "51"
+  "line_of_code_end": "52"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseArtifactService(ABC):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the `save_artifact` method?"
+  "answer": |
+    `async def save_artifact(self, *, app_name: str, user_id: str, filename:
+    str, artifact: types.Part, ...) -> int: ...`
+  "file": "src/google/adk/artifacts/base_artifact_service.py"
+  "line_of_code_start": "55"
+  "line_of_code_end": "83"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def save_artifact"
+- "category": "Data Structure Access & Best Practices"
+  "question": "What object is used to represent the content of an artifact?"
+  "answer": "Artifact content is passed around as a `google.genai.types.Part` object, which can contain either text or binary data (`inline_data`)."
+  "file": "src/google/adk/artifacts/base_artifact_service.py"
+  "line_of_code_start": "15"
+  "line_of_code_end": "15"
+  "test_assertion":
+    "method": "contains"
+    "value": "from google.genai import types"
+- "category": "Configuration Parameters"
+  "question": "What artifact storage backends are available?"
+  "answer": "The ADK provides `InMemoryArtifactService` for local development, `FileArtifactService` for local file system persistence, and `GCSArtifactService` for Google Cloud Storage."
+  "file": "src/google/adk/artifacts/file_artifact_service.py"
+  "line_of_code_start": "171"
+  "line_of_code_end": "172"
+  "test_assertion":
+    "method": "contains"
+    "value": "class FileArtifactService(BaseArtifactService):"
+- "category": "Data Structure Access & Best Practices"
+  "question": "How are artifacts scoped to a user or a specific session?"
+  "answer": "Artifacts are saved with a `user_id` and an optional `session_id`. If `session_id` is `None`, the artifact is user-scoped. Filenames can also be prefixed with `user:` to explicitly save to the user scope even within a session."
+  "file": "src/google/adk/artifacts/file_artifact_service.py"
+  "line_of_code_start": "131"
+  "line_of_code_end": "133"
+  "test_assertion":
+    "method": "contains"
+    "value": "def _is_user_scoped"
+- "category": "Authentication"
+  "question": "What is the central class for managing authentication?"
+  "answer": "The `CredentialManager` is the orchestrator for the auth process. It handles loading, validating, exchanging, and refreshing credentials."
+  "file": "src/google/adk/auth/credential_manager.py"
+  "line_of_code_start": "38"
+  "line_of_code_end": "40"
+  "test_assertion":
+    "method": "contains"
+    "value": "class CredentialManager:"
+- "category": "Authentication"
+  "question": "How does a tool or agent request a credential?"
+  "answer": "By calling the `credential_manager.get_auth_credential()` method. The manager will return a valid token or `None` if user interaction is required."
+  "file": "src/google/adk/auth/credential_manager.py"
+  "line_of_code_start": "131"
+  "line_of_code_end": "134"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def get_auth_credential"
+- "category": "Authentication"
+  "question": "How is the user-facing part of an OAuth2 flow handled?"
+  "answer": "The `AuthHandler` class is responsible for generating the authorization URI for the user and exchanging the resulting authorization code for an access token."
+  "file": "src/google/adk/auth/auth_handler.py"
+  "line_of_code_start": "32"
+  "line_of_code_end": "37"
+  "test_assertion":
+    "method": "contains"
+    "value": "class AuthHandler:"
+- "category": "Configuration Parameters"
+  "question": "How do I configure authentication for a tool?"
+  "answer": "A tool's configuration can include an `AuthConfig` object, which specifies the `AuthScheme` (e.g., 'oauth2') and the necessary credentials."
+  "file": "src/google/adk/auth/auth_tool.py"
+  "line_of_code_start": "21"
+  "line_of_code_end": "26"
+  "test_assertion":
+    "method": "contains"
+    "value": "class AuthConfig(BaseModelWithConfig):"
+- "category": "Authentication"
+  "question": "What library is used for the underlying OAuth2 implementation?"
+  "answer": "The ADK uses the `authlib` library to handle the details of the OAuth2 token exchange and validation."
+  "file": "src/google/adk/auth/exchanger/oauth2_credential_exchanger.py"
+  "line_of_code_start": "28"
+  "line_of_code_end": "30"
+  "test_assertion":
+    "method": "contains"
+    "value": "from authlib.integrations.requests_client import OAuth2Session"
+- "category": "Code Execution"
+  "question": "What is the core interface for executing code?"
+  "answer": "The `BaseCodeExecutor` abstract class defines the contract for all code execution implementations, with the `execute_code` method as the primary entry point."
+  "file": "src/google/adk/code_executors/base_code_executor.py"
+  "line_of_code_start": "26"
+  "line_of_code_end": "27"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseCodeExecutor(BaseModel):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the type signature for the `execute_code` method?"
+  "answer": |
+    `def execute_code(self, invocation_context: InvocationContext, code_execution_input:
+    CodeExecutionInput) -> CodeExecutionResult: ...`
+  "file": "src/google/adk/code_executors/base_code_executor.py"
+  "line_of_code_start": "81"
+  "line_of_code_end": "94"
+  "test_assertion":
+    "method": "contains"
+    "value": "def execute_code"
+- "category": "Code Execution"
+  "question": "How can an agent use the LLM's built-in code execution capabilities?"
+  "answer": "By using the `BuiltInCodeExecutor`. This executor modifies the `LlmRequest` to include the `code_execution` tool, signaling the model to execute the code itself. This is only supported for Gemini 2.0+ models."
+  "file": "src/google/adk/code_executors/built_in_code_executor.py"
+  "line_of_code_start": "25"
+  "line_of_code_end": "31"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BuiltInCodeExecutor(BaseCodeExecutor):"
+- "category": "Code Execution"
+  "question": "Is it possible to execute code in a sandboxed environment on Google Cloud?"
+  "answer": "Yes, the `VertexAiCodeExecutor` uses the Vertex AI Code Interpreter Extension to execute code in a secure, managed environment. It also supports file inputs and outputs."
+  "file": "src/google/adk/code_executors/vertex_ai_code_executor.py"
+  "line_of_code_start": "101"
+  "line_of_code_end": "102"
+  "test_assertion":
+    "method": "contains"
+    "value": "class VertexAiCodeExecutor(BaseCodeExecutor):"
+- "category": "Code Execution"
+  "question": "Is there an option for local code execution?"
+  "answer": "Yes, the `UnsafeLocalCodeExecutor` executes Python code directly in the current process using `exec()`. As the name implies, this is unsafe and should only be used in trusted environments."
+  "file": "src/google/adk/code_executors/unsafe_local_code_executor.py"
+  "line_of_code_start": "47"
+  "line_of_code_end": "48"
+  "test_assertion":
+    "method": "contains"
+    "value": "class UnsafeLocalCodeExecutor(BaseCodeExecutor):"
+- "category": "Configuration Parameters"
+  "question": "How does an agent know which code executor to use?"
+  "answer": "The desired code executor is configured on the `LlmAgent` via its `code_executor` parameter."
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "395"
+  "line_of_code_end": "403"
+  "test_assertion":
+    "method": "contains"
+    "value": "code_executor: Optional[BaseCodeExecutor] = None"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What is the purpose of the `BaseLlmFlow` class?"
+  "answer": "The `BaseLlmFlow` is an abstract class that defines the core interaction loop between an agent and an LLM. It uses a pipeline of request and response processors to manage the conversation."
+  "file": "src/google/adk/flows/llm_flows/base_llm_flow.py"
+  "line_of_code_start": "61"
+  "line_of_code_end": "66"
+  "test_assertion":
+    "method": "contains"
+    "value": "class BaseLlmFlow(ABC):"
+- "category": "Core Class Signatures & Initialization"
+  "question": "What are the two main `LlmFlow` implementations?"
+  "answer": |
+    `SingleFlow` is used for isolated agents, while `AutoFlow` is the default
+    and adds processors to handle multi-agent transfers.
+  "file": "src/google/adk/flows/llm_flows/auto_flow.py"
+  "line_of_code_start": "21"
+  "line_of_code_end": "22"
+  "test_assertion":
+    "method": "contains"
+    "value": "class AutoFlow(SingleFlow):"
+- "category": "Configuration Parameters"
+  "question": "How does an `LlmAgent` select which `LlmFlow` to use?"
+  "answer": "The `LlmAgent._llm_flow` property automatically selects `SingleFlow` if the agent is configured to be isolated, otherwise it defaults to `AutoFlow`."
+  "file": "src/google/adk/agents/llm_agent.py"
+  "line_of_code_start": "800"
+  "line_of_code_end": "808"
+  "test_assertion":
+    "method": "contains"
+    "value": "def _llm_flow"
+- "category": "Agent-to-Agent Communication"
+  "question": "How does an agent communicate with a remote agent?"
+  "answer": "Using the `RemoteA2aAgent`, which acts as a client proxy. It discovers the remote agent's capabilities and endpoint via a well-known JSON file (an 'agent card')."
+  "file": "src/google/adk/agents/remote_a2a_agent.py"
+  "line_of_code_start": "101"
+  "line_of_code_end": "112"
+  "test_assertion":
+    "method": "contains"
+    "value": "class RemoteA2aAgent(BaseAgent):"
+- "category": "Agent-to-Agent Communication"
+  "question": "What is an 'agent card'?"
+  "answer": "An 'agent card' is a JSON file, typically located at `/.well-known/agent.json`, that describes a remote agent's capabilities, authentication requirements, and API endpoint."
+  "file": "src/google/adk/agents/remote_a2a_agent.py"
+  "line_of_code_start": "61"
+  "line_of_code_end": "64"
+  "test_assertion":
+    "method": "contains"
+    "value": "AGENT_CARD_WELL_KNOWN_PATH"
+- "category": "Configuration Parameters"
+  "question": "How do I configure an agent to call a remote agent?"
+  "answer": "Instantiate a `RemoteA2aAgent` and provide the URL to the remote agent's 'agent card' in its configuration. This remote agent can then be used as a sub-agent or tool."
+  "file": "contributing/samples/a2a_root/agent.py"
+  "line_of_code_start": "17"
+  "line_of_code_end": "23"
+  "test_assertion":
+    "method": "contains"
+    "value": "RemoteA2aAgent"
+- "category": "Telemetry"
+  "question": "How is telemetry and tracing configured in the ADK?"
+  "answer": "The `maybe_set_otel_providers` function in `telemetry.setup` configures OpenTelemetry providers for tracing, metrics, and logs. It can be customized with hooks and also reads standard OTel environment variables."
+  "file": "src/google/adk/telemetry/setup.py"
+  "line_of_code_start": "48"
+  "line_of_code_end": "75"
+  "test_assertion":
+    "method": "contains"
+    "value": "def maybe_set_otel_providers"
+- "category": "Telemetry"
+  "question": "How are agent invocations and tool calls traced?"
+  "answer": "The `tracing.py` module provides functions like `trace_agent_invocation` and `trace_tool_call` that create and enrich OpenTelemetry spans with semantic attributes (e.g., `gen_ai.agent.name`, `gen_ai.tool.name`)."
+  "file": "src/google/adk/telemetry/tracing.py"
+  "line_of_code_start": "88"
+  "line_of_code_end": "119"
+  "test_assertion":
+    "method": "contains"
+    "value": "def trace_agent_invocation"
+- "category": "Configuration Parameters"
+  "question": "Can I prevent sensitive prompt/response data from being included in traces?"
+  "answer": "Yes, by setting the environment variable `ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS` to 'false' or '0', you can disable the inclusion of potentially sensitive content in span attributes."
+  "file": "src/google/adk/telemetry/tracing.py"
+  "line_of_code_start": "29"
+  "line_of_code_end": "31"
+  "test_assertion":
+    "method": "contains"
+    "value": "ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS"
+- "category": "Utilities"
+  "question": "How can I dynamically insert values from the session state into my agent's instructions?"
+  "answer": "Use the `inject_session_state` utility. You can define your instruction as a template with placeholders like `{my_variable}` or `{artifact.my_file.txt}`, and this function will populate them from the current session's state and artifacts."
+  "file": "src/google/adk/utils/instructions_utils.py"
+  "line_of_code_start": "28"
+  "line_of_code_end": "56"
+  "test_assertion":
+    "method": "contains"
+    "value": "async def inject_session_state"
+- "category": "Utilities"
+  "question": "How can I check if a specific model supports using an output schema and tools simultaneously?"
+  "answer": "Use the `can_use_output_schema_with_tools` function. It takes a model name string or a `BaseLlm` instance and returns `True` if the combination is supported (currently, Gemini 2.0+ on Vertex AI)."
+  "file": "src/google/adk/utils/output_schema_utils.py"
+  "line_of_code_start": "28"
+  "line_of_code_end": "30"
+  "test_assertion":
+    "method": "contains"
+    "value": "def can_use_output_schema_with_tools"
