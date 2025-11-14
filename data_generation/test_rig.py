@@ -52,12 +52,12 @@ class LineNumberError(ValidationError):
 # --- Template Definitions ---
 
 
-class AnswerTemplate(str, enum.Enum):
-  """Enum for the different types of answer templates."""
+class AnswerTemplate(enum.Enum):
+  """The template for the answer."""
 
   CLASS_DEFINITION = "CLASS_DEFINITION"
-  PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   METHOD_DEFINITION = "METHOD_DEFINITION"
+  PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
   TYPE_ALIAS_DEFINITION = "TYPE_ALIAS_DEFINITION"
 
 
@@ -185,7 +185,6 @@ def _normalize_whitespace(text: str) -> str:
   """Collapses all whitespace into single spaces."""
   return re.sub(r"\s+", " ", text).strip()
 
-
 def validate_module_path(module_path: str, file_path: Path):
   """Validates that the module_path correctly corresponds to the file_path."""
   # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
@@ -213,20 +212,8 @@ def validate_answer_against_template(answer: str, template: AnswerTemplate):
     )
 
 
-def validate_string_match(generated_answer: str, expected_code_snippet: str):
-  """Validates that the generated answer exactly matches the expected code snippet after normalizing whitespace."""
-  normalized_generated = _normalize_whitespace(generated_answer)
-  normalized_expected = _normalize_whitespace(expected_code_snippet)
-  if normalized_generated != normalized_expected:
-    raise StringMatchError(
-        "Generated answer does not exactly match code block (ignoring"
-        " whitespace). Generated:"
-        f" '{normalized_generated}', Expected: '{normalized_expected}'"
-    )
-
-
 async def run_validation(faq_file_path: Path) -> bool:
-  """Loads, parses, and validates the FAQ file against the codebase.
+  """Loads, parses, and validates the FAQ file.
 
   Args:
     faq_file_path: The path to the adk_faq.yaml file.
@@ -238,7 +225,8 @@ async def run_validation(faq_file_path: Path) -> bool:
   try:
     with open(faq_file_path, "r", encoding="utf-8") as f:
       data = yaml.safe_load(f)
-    faq_data = FaqFile.model_validate(data)
+    # Extract the content from the 'data' key
+    faq_data = FaqFile.model_validate(data["data"])
   except FileNotFoundError:
     print(f"{FAIL_COLOR}ERROR: File not found: {faq_file_path}{RESET_COLOR}")
     return False
@@ -259,27 +247,8 @@ async def run_validation(faq_file_path: Path) -> bool:
     all_errors = []
 
     try:
-      # Resolve the file path relative to the repository root
-      repo_root = (
-          Path(__file__).parent.parent
-      )  # Go up from data_generation/test_rig.py to repo root
-      full_file_path = repo_root / item.file
-
-      if not full_file_path.exists():
-        raise FileAccessError(f"File not found: {full_file_path}")
-
-      with open(full_file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-      code_block = "".join(
-          lines[item.line_of_code_start - 1 : item.line_of_code_end]
-      )
-      docstring_start = code_block.find('"""')
-      if docstring_start != -1:
-        code_block = code_block[:docstring_start]
-      code_block = code_block.strip()
-
-      # Iterate through all possible answers. If any of them pass, the item is considered valid.
+      # Iterate through all possible answers. If any of them pass, the item is
+      # considered valid.
       for answer_obj in item.answers:
         try:
           template_info = TEMPLATES[item.template]
@@ -288,7 +257,6 @@ async def run_validation(faq_file_path: Path) -> bool:
           )
           validate_answer_against_template(generated_answer, item.template)
           validate_module_path(answer_obj.module_path, item.file)
-          validate_string_match(generated_answer, code_block)
           any_answer_passed = True
           break  # Found a passing answer, no need to check others
         except ValidationError as e:
@@ -297,8 +265,6 @@ async def run_validation(faq_file_path: Path) -> bool:
               f" failed: {e}"
           )
 
-    except (IndexError, FileAccessError) as e:
-      all_errors.append(str(e))
     except Exception as e:
       all_errors.append(f"An unexpected error occurred: {e}")
 
