@@ -12,42 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""03: An LlmAgent that uses output_schema to enforce JSON output."""
+"""14: An LlmAgent using an OpenAI model via LiteLlm."""
 
 from __future__ import annotations
 
-import json
-
+import os
 import pytest
 from google.adk.agents import LlmAgent
-from ._rigs import MODEL_NAME, BasicOutputSchema, run_agent_test
+from google.adk.models.lite_llm import LiteLlm
+from ._rigs import run_agent_test
 
+# Skip this test if the OPENAI_API_KEY is not set.
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+)
 
 root_agent = LlmAgent(
-    name="structured_output_agent",
-    model=MODEL_NAME,
-    instruction="Respond with a JSON object that conforms to the provided schema.",
-    output_schema=BasicOutputSchema,
+    model=LiteLlm(model="openai/gpt-3.5-turbo"),
+    name="openai_agent",
+    instruction="You are a helpful assistant.",
 )
 
 
 async def run_test() -> str:
   """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Generate a response.")
+  return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
   """Asserts the response is valid."""
   print(f"Agent response: {response}")
-  try:
-    data = json.loads(response)
-    assert "field_one" in data
-    assert "field_two" in data
-  except json.JSONDecodeError:
-    assert False, "Response was not valid JSON."
+  assert "Hello" in response
 
 
-async def test_agent_with_output_schema():
-  """Tests that an agent can produce a structured JSON output."""
+async def test_agent_with_litellm_openai():
+  """Tests that an agent can use an OpenAI model via LiteLlm."""
   response = await run_test()
   assert_test(response)

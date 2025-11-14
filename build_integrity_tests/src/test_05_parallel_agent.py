@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import pytest
 from google.adk.agents import ParallelAgent
 from ._rigs import create_basic_llm_agent, run_agent_test
 

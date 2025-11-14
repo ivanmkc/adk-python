@@ -12,42 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""03: An LlmAgent that uses output_schema to enforce JSON output."""
+"""15: An LlmAgent with an after_model_callback."""
 
 from __future__ import annotations
 
-import json
-
-import pytest
 from google.adk.agents import LlmAgent
-from ._rigs import MODEL_NAME, BasicOutputSchema, run_agent_test
+from ._rigs import MODEL_NAME, run_agent_test
+
+callback_was_called = False
+
+
+def my_callback(**kwargs):
+  """A simple callback that sets a flag."""
+  global callback_was_called
+  callback_was_called = True
+  print("Callback was executed.")
 
 
 root_agent = LlmAgent(
-    name="structured_output_agent",
+    name="callback_agent",
     model=MODEL_NAME,
-    instruction="Respond with a JSON object that conforms to the provided schema.",
-    output_schema=BasicOutputSchema,
+    instruction="You are a helpful assistant.",
+    after_model_callback=my_callback,
 )
 
 
 async def run_test() -> str:
   """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Generate a response.")
+  return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
+  """Asserts the response is valid and the callback was called."""
   print(f"Agent response: {response}")
-  try:
-    data = json.loads(response)
-    assert "field_one" in data
-    assert "field_two" in data
-  except json.JSONDecodeError:
-    assert False, "Response was not valid JSON."
+  assert "Hello" in response
+  assert callback_was_called, "The after_model_callback was not called."
 
 
-async def test_agent_with_output_schema():
-  """Tests that an agent can produce a structured JSON output."""
+async def test_after_model_callback():
+  """Tests that the after_model_callback is triggered."""
   response = await run_test()
   assert_test(response)

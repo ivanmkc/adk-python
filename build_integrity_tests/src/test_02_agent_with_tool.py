@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import pytest
 from google.adk.agents import LlmAgent
 from ._rigs import MODEL_NAME, basic_tool, run_agent_test
 

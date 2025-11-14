@@ -26,6 +26,8 @@ from google.adk.sessions import Session
 from google.genai import types
 from pydantic import BaseModel, Field
 
+from google.genai import types
+
 MODEL_NAME = "gemini-2.5-flash"
 
 
@@ -50,13 +52,25 @@ async def run_agent_test(
     agent: BaseAgent,
     input_message: str,
     initial_state: dict[str, Any] | None = None,
+    artifact_data: dict[str, str] | None = None,
 ) -> str:
   """Runs a test against a given agent and returns the final response."""
   app = App(name=f"test_app_{agent.name}", root_agent=agent)
   runner = InMemoryRunner(app=app)
+
   session = await runner.session_service.create_session(
       app_name=app.name, user_id="test-user", state=initial_state or {}
   )
+
+  if artifact_data:
+    for filename, value in artifact_data.items():
+      await runner.artifact_service.save_artifact(
+          app_name=app.name,
+          user_id="test-user",
+          session_id=session.id,
+          filename=filename,
+          artifact=types.Part(text=value),
+      )
 
   final_response = ""
   async for event in runner.run_async(
