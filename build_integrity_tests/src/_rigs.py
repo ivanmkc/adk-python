@@ -1,0 +1,78 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Reusable components for build integrity test snippets."""
+
+from __future__ import annotations
+
+import asyncio
+from typing import Any
+
+from google.adk.agents import BaseAgent, LlmAgent
+from google.adk.apps import App
+from google.adk.runners import InMemoryRunner
+from google.adk.sessions import Session
+from google.genai import types
+from pydantic import BaseModel, Field
+
+MODEL_NAME = "gemini-2.5-flash"
+
+
+def basic_tool(query: str) -> str:
+  """A simple tool that returns a fixed string."""
+  return f"The tool received the query: {query}"
+
+
+class BasicOutputSchema(BaseModel):
+  """A basic Pydantic model for testing output_schema."""
+
+  field_one: str = Field(description="The first field.")
+  field_two: int = Field(description="The second field.")
+
+
+def create_basic_llm_agent(name: str, instruction: str) -> LlmAgent:
+  """Creates a simple LlmAgent with a default model."""
+  return LlmAgent(name=name, model=MODEL_NAME, instruction=instruction)
+
+
+async def run_agent_test(
+    agent: BaseAgent,
+    input_message: str,
+    initial_state: dict[str, Any] | None = None,
+) -> str:
+  """Runs a test against a given agent and returns the final response."""
+  app = App(name=f"test_app_{agent.name}", root_agent=agent)
+  runner = InMemoryRunner(app=app)
+  session = await runner.session_service.create_session(
+      app_name=app.name, user_id="test-user", state=initial_state or {}
+  )
+
+  final_response = ""
+  async for event in runner.run_async(
+      user_id=session.user_id,
+      session_id=session.id,
+      new_message=types.Content(role="user", parts=[types.Part(text=input_message)]),
+  ):
+    # Capture the final text response from any agent.
+    if event.is_final_response() and event.content and event.content.parts:
+      text_parts = [
+          part.text
+          for part in event.content.parts
+          if hasattr(part, "text") and part.text is not None
+      ]
+      if text_parts:
+        final_response = "".join(text_parts)
+
+  assert final_response, f"Agent {agent.name} produced an empty final response."
+  return final_response

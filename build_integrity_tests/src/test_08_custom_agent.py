@@ -1,0 +1,83 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""08: A simple custom agent with conditional logic."""
+
+from __future__ import annotations
+
+from typing import AsyncGenerator
+
+from google.adk.agents import BaseAgent, LlmAgent
+from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events import Event
+from ._rigs import create_basic_llm_agent, run_agent_test
+
+
+class CustomConditionalAgent(BaseAgent):
+  """A custom agent that runs one of two sub-agents based on session state."""
+
+  agent_a: LlmAgent
+  agent_b: LlmAgent
+
+  async def _run_async_impl(
+      self, ctx: InvocationContext
+  ) -> AsyncGenerator[Event, None]:
+    should_run_a = ctx.session.state.get("run_agent_a", False)
+
+    if should_run_a:
+      async for event in self.agent_a.run_async(ctx):
+        yield event
+    else:
+      async for event in self.agent_b.run_async(ctx):
+        yield event
+
+
+agent_a = create_basic_llm_agent(
+    name="agent_a", instruction="Respond with only the text: Agent A was chosen."
+)
+agent_b = create_basic_llm_agent(
+    name="agent_b", instruction="Respond with only the text: Agent B was chosen."
+)
+
+root_agent = CustomConditionalAgent(
+    name="custom_conditional_agent",
+    agent_a=agent_a,
+    agent_b=agent_b,
+    sub_agents=[agent_a, agent_b],
+)
+
+
+async def run_test(run_a: bool) -> str:
+  """Runs the agent and returns the response."""
+  return await run_agent_test(
+      root_agent, "Run", initial_state={"run_agent_a": run_a}
+  )
+
+
+def assert_test(response: str, expected_agent: str):
+  """Asserts the response is valid."""
+  print(f"Agent response: {response}")
+  assert expected_agent in response
+
+
+async def test_custom_agent_condition_a():
+  """Tests that the custom agent runs agent_a when the condition is met."""
+  response = await run_test(run_a=True)
+  assert_test(response, "Agent A")
+
+
+async def test_custom_agent_condition_b():
+  """Tests that the custom agent runs agent_b when the condition is not met."""
+  response = await run_test(run_a=False)
+  assert_test(response, "Agent B")
