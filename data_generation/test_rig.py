@@ -90,7 +90,7 @@ TEMPLATES = {
     ),
     AnswerTemplate.METHOD_DEFINITION: TemplateInfo(
         regex=(
-            r"^\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$"
+            r"^(?:\s*@.*\n)*\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$"
         ),
         description="A Python method definition.",
         examples=[

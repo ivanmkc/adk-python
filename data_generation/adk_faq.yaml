@@ -56,6 +56,39 @@ data:
       "file": "src/google/adk/runners.py"
       "line_of_code_start": 341
       "line_of_code_end": 351
+    - "category": "Core Class Signatures & Initialization"
+      "question": "What is the core interface for all LLM integrations?"
+      "rationale": "All model wrappers must implement the `BaseLlm` abstract class, which defines the common interface for generating content."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BaseLlm(BaseModel):"
+          "module_path": "google.adk.models.base_llm"
+      "file": "src/google/adk/models/base_llm.py"
+      "line_of_code_start": 29
+      "line_of_code_end": 31
+    - "category": "Core Class Signatures & Initialization"
+      "question": "What is the type signature for the primary method in `BaseLlm`?"
+      "rationale": "def generate_content_async(self, request: LlmRequest, ...) -> AsyncGenerator[LlmResponse, None]: ..."
+      "template": "METHOD_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "async def generate_content_async(\n      self, llm_request: LlmRequest, stream: bool = False\n  ) -> AsyncGenerator[LlmResponse, None]:"
+          "module_path": "google.adk.models.base_llm"
+      "file": "src/google/adk/models/base_llm.py"
+      "line_of_code_start": 45
+      "line_of_code_end": 47
+    - "category": "Core Class Signatures & Initialization"
+      "question": "How do I evaluate an agent against a test set?"
+      "rationale": "Use the `AgentEvaluator.evaluate` method, providing it the path to your agent module and the directory containing your `.test.json` and `test_config.json` files."
+      "template": "METHOD_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "async def evaluate(\n      agent_module: str,\n      eval_dataset_file_path_or_dir: str,\n      num_runs: int = NUM_RUNS,\n      agent_name: Optional[str] = None,\n      initial_session_file: Optional[str] = None,\n      print_detailed_results: bool = True,\n  ):"
+          "module_path": "google.adk.evaluation.agent_evaluator"
+      "file": "src/google/adk/evaluation/agent_evaluator.py"
+      "line_of_code_start": 228
+      "line_of_code_end": 235
     - "category": "Configuration Parameters"
       "question": "How do I limit the number of iterations for a `LoopAgent`?"
       "rationale": "Set the `max_iterations` integer parameter in the `LoopAgent`'s configuration.\nThe loop will terminate when this limit is reached."
@@ -100,6 +133,17 @@ data:
       "file": "src/google/adk/agents/llm_agent.py"
       "line_of_code_start": 273
       "line_of_code_end": 273
+    - "category": "Configuration Parameters"
+      "question": "How does the ADK select which LLM implementation to use?"
+      "rationale": "The `LLMRegistry` maps a model name prefix (e.g., 'gemini-') to a specific `BaseLlm` implementation. The `LlmAgent` uses this registry to instantiate the correct model class."
+      "template": "METHOD_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "@staticmethod\n  def register(llm_cls: type[BaseLlm]):"
+          "module_path": "google.adk.models.registry"
+      "file": "src/google/adk/models/registry.py"
+      "line_of_code_start": 60
+      "line_of_code_end": 61
     - "category": "Hooks and Lifecycle Methods"
       "question": "What is the core method that defines an agent's execution logic?"
       "rationale": "Subclasses of `BaseAgent` must implement the `_run_async_impl(self, ctx:\nInvocationContext)` method to define their primary, asynchronous execution logic."
@@ -146,7 +190,14 @@ data:
       "line_of_code_end": 348
     - "category": "Hooks and Lifecycle Methods"
       "question": "What is the difference between an agent callback and a global plugin?"
-      "rationale": "Agent callbacks are specific to one agent instance. Plugins are registered\non the `Runner` and apply globally to all agents. Plugins also run *before* agent\ncallbacks and can short-circuit the execution flow."
+      "rationale": |
+        Use **agent callbacks** (`before_agent_callback`, `after_agent_callback`) for logic that is specific to a *single agent instance*. For example, formatting the output of a particular summarizer agent.
+
+        Use **plugins** for logic that applies *globally* to all agents in your application. This is ideal for cross-cutting concerns like logging all tool calls, implementing a universal caching strategy, or enforcing security policies on every model request.
+
+        **Key Differences:**
+        - **Scope:** Callbacks are per-agent; plugins are app-wide.
+        - **Execution Order:** For the same event, plugins always run *before* agent callbacks. A plugin can also short-circuit the execution, preventing agent callbacks from running at all.
       "template": "CLASS_DEFINITION"
       "answers":
         - "answer_template": "StringMatchAnswer"
@@ -155,20 +206,54 @@ data:
       "file": "src/google/adk/plugins/base_plugin.py"
       "line_of_code_start": 41
       "line_of_code_end": 41
-    - "category": "Data Structure Access & Best Practices"
-      "question": "How do I access the current conversation state within an agent or callback?"
-      "rationale": "The state is accessed via the `InvocationContext` (in `_run_async_impl`)\nor `CallbackContext` (in callbacks). The correct way to load state is `self._load_agent_state(ctx,\nYourAgentStateClass) `."
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "How can a plugin stop the execution of agent-specific callbacks?"
+      "rationale": "If a plugin's callback method returns any value other than `None`, the `PluginManager` halts further processing for that event, and all agent-specific callbacks for that event are skipped."
       "template": "METHOD_DEFINITION"
       "answers":
         - "answer_template": "StringMatchAnswer"
-          "answer": "def _load_agent_state(\n            self,\n            ctx: InvocationContext,\n            state_type: Type[AgentState],\n        ) -> Optional[AgentState]:"
-          "module_path": "google.adk.agents.base_agent"
-      "file": "src/google/adk/agents/base_agent.py"
-      "line_of_code_start": 162
-      "line_of_code_end": 166
+          "answer": "async def before_agent_callback(\n      self, *, agent: BaseAgent, callback_context: CallbackContext\n  ) -> Optional[types.Content]:"
+          "module_path": "google.adk.plugins.base_plugin"
+      "file": "src/google/adk/plugins/base_plugin.py"
+      "line_of_code_start": 68
+      "line_of_code_end": 70
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "What is the purpose of the `PluginManager`?"
+      "rationale": "The `PluginManager` is the central orchestrator for the plugin system. It handles registering plugins and invoking their callback hooks in the correct order of precedence."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class PluginManager:"
+          "module_path": "google.adk.plugins.plugin_manager"
+      "file": "src/google/adk/plugins/plugin_manager.py"
+      "line_of_code_start": 50
+      "line_of_code_end": 51
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "Can I create a plugin that just observes events without changing behavior?"
+      "rationale": "Yes, this is a primary use case. An 'observational' plugin (like `LoggingPlugin`) implements callback hooks for data gathering but always returns `None` to avoid interfering with the execution flow."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class LoggingPlugin(BasePlugin):"
+          "module_path": "google.adk.plugins.logging_plugin"
+      "file": "src/google/adk/plugins/logging_plugin.py"
+      "line_of_code_start": 38
+      "line_of_code_end": 40
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "How do I provide a system-wide instruction that applies to all `LlmAgent` calls?"
+      "rationale": "Use the `GlobalInstructionPlugin`. It intercepts every `LlmRequest` and prepends a configured global instruction, ensuring consistent behavior across all agents."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class GlobalInstructionPlugin(BasePlugin):"
+          "module_path": "google.adk.plugins.global_instruction_plugin"
+      "file": "src/google/adk/plugins/global_instruction_plugin.py"
+      "line_of_code_start": 28
+      "line_of_code_end": 30
+
     - "category": "Data Structure Access & Best Practices"
-      "question": "How do I write back to the agent's state?"
-      "rationale": "After modifying your state object, you must write it back to the context using `ctx.set_agent_state(self.name, agent_state=your_state_object)`."
+      "question": "How do I save an agent's state for the next turn?"
+      "rationale": "To persist state, call `ctx.set_agent_state(self.name, agent_state=your_state_object)` within your agent's logic. This makes the state available to the agent in subsequent turns of the same invocation."
       "template": "METHOD_DEFINITION"
       "answers":
         - "answer_template": "StringMatchAnswer"
@@ -177,6 +262,17 @@ data:
       "file": "src/google/adk/agents/invocation_context.py"
       "line_of_code_start": 224
       "line_of_code_end": 230
+    - "category": "Data Structure Access & Best Practices"
+      "question": "How do I read an agent's state from a previous turn?"
+      "rationale": "Within your agent's `_run_async_impl` method, call `self._load_agent_state(ctx, YourStateModel)`, where `YourStateModel` is your Pydantic class inheriting from `BaseAgentState`. This will deserialize the state from the previous turn into a model instance."
+      "template": "METHOD_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "def _load_agent_state(\n            self,\n            ctx: InvocationContext,\n            state_type: Type[AgentState],\n        ) -> Optional[AgentState]:"
+          "module_path": "google.adk.agents.base_agent"
+      "file": "src/google/adk/agents/base_agent.py"
+      "line_of_code_start": 162
+      "line_of_code_end": 166
     - "category": "Data Structure Access & Best Practices"
       "question": "What is the best practice for an `LlmAgent` to save its final output to the session state?"
       "rationale": "Use the `output_key` string parameter on the `LlmAgent`. The framework will automatically write the agent's final text output to `session.state[output_key]`."
@@ -188,6 +284,51 @@ data:
       "file": "src/google/adk/agents/llm_agent.py"
       "line_of_code_start": 318
       "line_of_code_end": 318
+    - "category": "Data Structure Access & Best Practices"
+      "question": "How is session persistence handled?"
+      "rationale": "The `Runner` delegates session management to a `SessionService`. The default is `InMemorySessionService`, but you can implement the `BaseSessionService` interface to create a custom service that persists sessions to a database or other storage."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BaseSessionService(abc.ABC):"
+          "module_path": "google.adk.sessions.base_session_service"
+      "file": "src/google/adk/sessions/base_session_service.py"
+      "line_of_code_start": 41
+      "line_of_code_end": 46
+    - "category": "Data Structure Access & Best Practices"
+      "question": "What is the `InvocationContext` object?"
+      "rationale": "The `InvocationContext` is a critical internal object that carries the entire state of a single agent invocation, including the session, agent-specific states, and references to all available services."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class InvocationContext(BaseModel):"
+          "module_path": "google.adk.agents.invocation_context"
+      "file": "src/google/adk/agents/invocation_context.py"
+      "line_of_code_start": 98
+      "line_of_code_end": 98
+    - "category": "Data Structure Access & Best Practices"
+      "question": "What is the `CallbackContext` object?"
+      "rationale": "The `CallbackContext` is passed to all `before_*` and `after_*` callbacks. It is a subset of the `InvocationContext` and provides access to the current event, session, and agent state."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class CallbackContext(ReadonlyContext):"
+          "module_path": "google.adk.agents.callback_context"
+      "file": "src/google/adk/agents/callback_context.py"
+      "line_of_code_start": 36
+      "line_of_code_end": 36
+
+    - "category": "Data Structure Access & Best Practices"
+      "question": "Where does the ADK define the data model for a `Session`?"
+      "rationale": "The `Session` data model is a Pydantic class defined in `src/google/adk/sessions/session.py`. It includes the session ID, user ID, the list of events, and the state dictionary."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class Session(BaseModel):"
+          "module_path": "google.adk.sessions.session"
+      "file": "src/google/adk/sessions/session.py"
+      "line_of_code_start": 23
+      "line_of_code_end": 25
     - "category": "Data Structure Access & Best Practices"
       "question": "How is `session.state` actually modified? Can I change it directly?"
       "rationale": "No, `session.state` is immutable within a turn. Changes are requested by including a `state_delta` dictionary in an `Event` object. The `SessionService` is responsible for applying this delta to the state between turns."
@@ -265,3 +406,168 @@ data:
       "file": "src/google/adk/tools/google_search_tool.py"
       "line_of_code_start": 25
       "line_of_code_end": 25
+    - "category": "Core Class Signatures & Initialization"
+      "question": "How do I run multiple agents at the same time?"
+      "rationale": "Use the `ParallelAgent`. Its `sub_agents` parameter takes a list of agent instances to be executed concurrently."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class ParallelAgent(BaseAgent):"
+          "module_path": "google.adk.agents.parallel_agent"
+      "file": "src/google/adk/agents/parallel_agent.py"
+      "line_of_code_start": 184
+      "line_of_code_end": 184
+    - "category": "Core Class Signatures & Initialization"
+      "question": "How do I add plugins or other advanced features to my agent?"
+      "rationale": "For advanced configurations, wrap your root agent in an `App` object. The `App` class provides parameters for adding plugins, configuring event compaction, and managing other application-level settings."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class App(BaseModel):"
+          "module_path": "google.adk.apps.app"
+      "file": "src/google/adk/apps/app.py"
+      "line_of_code_start": 101
+      "line_of_code_end": 101
+    - "category": "Data Structure Access & Best Practices"
+      "question": "What is the fundamental data structure for conversation history?"
+      "rationale": "The `Event` class is the core data structure used to represent a single turn in the conversation. It contains the content of the message, the author (user or agent), and any actions taken, such as tool calls."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class Event(LlmResponse):"
+          "module_path": "google.adk.events.event"
+      "file": "src/google/adk/events/event.py"
+      "line_of_code_start": 25
+      "line_of_code_end": 25
+    - "category": "Core Class Signatures & Initialization"
+      "question": "What is the main class for orchestrating agent execution?"
+      "rationale": "The `google.adk.runners.Runner` class is the primary entry point for running an agent. It manages the execution loop, session state, and interaction with services like artifact storage and memory."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class Runner:"
+          "module_path": "google.adk.runners"
+      "file": "src/google/adk/runners.py"
+      "line_of_code_start": 69
+      "line_of_code_end": 69
+    - "category": "Core Class Signatures & Initialization"
+      "question": "What is the easiest way to run an agent for local development and testing?"
+      "rationale": "Use the `InMemoryRunner`. It's a convenient subclass of `Runner` that comes pre-configured with in-memory implementations for all the required services (session, artifact, and memory)."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class InMemoryRunner(Runner):"
+          "module_path": "google.adk.runners"
+      "file": "src/google/adk/runners.py"
+      "line_of_code_start": 1188
+      "line_of_code_end": 1188
+    - "category": "Core Class Signatures & Initialization"
+      "question": "What is the base class for all tools?"
+      "rationale": "All tools must inherit from `google.adk.tools.base_tool.BaseTool`, which defines the core interface for tool execution and schema generation."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BaseTool(ABC):"
+          "module_path": "google.adk.tools.base_tool"
+      "file": "src/google/adk/tools/base_tool.py"
+      "line_of_code_start": 33
+      "line_of_code_end": 33
+    - "category": "Core Class Signatures & Initialization"
+      "question": "How can I group related tools together?"
+      "rationale": "Use a `BaseToolset`. It's an abstract class that allows you to create a collection of tools and dynamically filter them based on the current context."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BaseToolset(ABC):"
+          "module_path": "google.adk.tools.base_toolset"
+      "file": "src/google/adk/tools/base_toolset.py"
+      "line_of_code_start": 55
+      "line_of_code_end": 55
+    - "category": "Data Structure Access & Best Practices"
+      "question": "What is the core interface for session management?"
+      "rationale": "The `BaseSessionService` abstract class defines the contract for all session management implementations, with methods for creating, retrieving, updating, and deleting sessions."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BaseSessionService(abc.ABC):"
+          "module_path": "google.adk.sessions.base_session_service"
+      "file": "src/google/adk/sessions/base_session_service.py"
+      "line_of_code_start": 41
+      "line_of_code_end": 41
+    - "category": "Data Structure Access & Best Practices"
+      "question": "What is the data model for a conversation?"
+      "rationale": "The `Session` class is a Pydantic model that represents the state of a single conversation, including its unique ID, the user ID, a state dictionary for arbitrary data, and a list of all the events that have occurred."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class Session(BaseModel):"
+          "module_path": "google.adk.sessions.session"
+      "file": "src/google/adk/sessions/session.py"
+      "line_of_code_start": 23
+      "line_of_code_end": 23
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "What is the base class for all plugins?"
+      "rationale": "All plugins must inherit from `google.adk.plugins.base_plugin.BasePlugin`, which defines the interface for creating custom logic that can intercept and modify agent, tool, and LLM behaviors at a global level."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class BasePlugin(ABC):"
+          "module_path": "google.adk.plugins.base_plugin"
+      "file": "src/google/adk/plugins/base_plugin.py"
+      "line_of_code_start": 41
+      "line_of_code_end": 41
+    - "category": "Hooks and Lifecycle Methods"
+      "question": "How are plugins managed and executed?"
+      "rationale": "The `PluginManager` is responsible for registering plugins and invoking their callback hooks in the correct order. It's an internal class that is typically managed by the `Runner`."
+      "template": "CLASS_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "class PluginManager:"
+          "module_path": "google.adk.plugins.plugin_manager"
+      "file": "src/google/adk/plugins/plugin_manager.py"
+      "line_of_code_start": 50
+      "line_of_code_end": 50
+    - "category": "Configuration Parameters"
+      "question": "How do I force an LlmAgent to return a structured JSON object?"
+      "rationale": "Set the `output_schema` parameter on the `LlmAgent` to a Pydantic model. The ADK will instruct the LLM to generate a JSON object that conforms to the model's schema."
+      "template": "PARAMETER_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "output_schema: Optional[type[BaseModel]] = None"
+          "module_path": "google.adk.agents.llm_agent"
+      "file": "src/google/adk/agents/llm_agent.py"
+      "line_of_code_start": 315
+      "line_of_code_end": 315
+    - "category": "Data Structure Access & Best Practices"
+      "question": "How can I automatically save an agent's final response to the session state?"
+      "rationale": "Set the `output_key` parameter on the `LlmAgent`. The framework will automatically write the agent's final text or JSON output to `session.state['your_key']` at the end of its turn."
+      "template": "PARAMETER_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "output_key: Optional[str] = None"
+          "module_path": "google.adk.agents.llm_agent"
+      "file": "src/google/adk/agents/llm_agent.py"
+      "line_of_code_start": 318
+      "line_of_code_end": 318
+    - "category": "Configuration Parameters"
+      "question": "What is the difference between `instruction` and `static_instruction`?"
+      "rationale": "Use `static_instruction` for unchanging system-level instructions to enable context caching optimizations. Use the main `instruction` parameter for dynamic instructions that may contain placeholders and change between turns."
+      "template": "PARAMETER_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "static_instruction: Optional[types.ContentUnion] = None"
+          "module_path": "google.adk.agents.llm_agent"
+      "file": "src/google/adk/agents/llm_agent.py"
+      "line_of_code_start": 231
+      "line_of_code_end": 231
+    - "category": "Agent-to-Agent Communication"
+      "question": "How can I find a specific agent within a multi-agent hierarchy?"
+      "rationale": "Call the `find_agent(name)` method on any agent in the tree (usually the root agent). It will recursively search through all of its descendants and return the first agent with a matching name."
+      "template": "METHOD_DEFINITION"
+      "answers":
+        - "answer_template": "StringMatchAnswer"
+          "answer": "def find_agent(self, name: str) -> Optional[BaseAgent]:"
+          "module_path": "google.adk.agents.base_agent"
+      "file": "src/google/adk/agents/base_agent.py"
+      "line_of_code_start": 378
+      "line_of_code_end": 378
