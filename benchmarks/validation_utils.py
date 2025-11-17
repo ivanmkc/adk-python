@@ -16,10 +16,11 @@
 
 import re
 import enum
+from pathlib import Path
 from typing import Any, Callable, Coroutine, Union
 
 import pydantic
-from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import AnswerTemplate, StringMatchAnswer
 
 
 # --- Custom Exceptions ---
@@ -91,9 +92,21 @@ TEMPLATES = {
             "if x > 0:\n    return True",
             "for i in range(10):\n    print(i)",
         ],
-
     ),
 }
+
+
+def validate_module_path(module_path: str, file_path: Path):
+  """Validates that the module_path correctly corresponds to the file_path."""
+  # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
+  expected_module_path = (
+      str(file_path).removeprefix("src/").removesuffix(".py").replace("/", ".")
+  )
+  if module_path != expected_module_path:
+    raise ValidationError(
+        f"Module path '{module_path}' does not match the file path"
+        f" '{file_path}'. Expected '{expected_module_path}'."
+    )
 
 
 def validate_answer_against_template(answer: str, template: AnswerTemplate):

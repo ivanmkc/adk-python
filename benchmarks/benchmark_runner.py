@@ -19,7 +19,7 @@ import asyncio
 import sys
 import tempfile
 from pathlib import Path
-from typing import Union
+from typing import Generic, TypeVar, Union
 
 import pytest
 
@@ -29,31 +29,46 @@ from benchmarks.data_models import (
     BenchmarkResult,
     ExpectedOutcome,
     FixErrorBenchmarkCase,
+    GeneratedAnswer,
 )
-from benchmarks.validation_utils import ValidationError, validate_answer_against_template
+from benchmarks.validation_utils import (
+    ValidationError,
+    validate_answer_against_template,
+    validate_module_path,
+)
+
+# A TypeVar to create a generic link between a runner and the case it handles.
+BenchmarkCaseT = TypeVar("BenchmarkCaseT", bound=BaseBenchmarkCase)
 
 
-class BenchmarkRunner(abc.ABC):
+class BenchmarkRunner(abc.ABC, Generic[BenchmarkCaseT]):
   """Abstract base class for benchmark runners."""
 
   @abc.abstractmethod
   async def run_benchmark(
-      self, benchmark_case: BaseBenchmarkCase, code_to_test: str
+      self, benchmark_case: BenchmarkCaseT, generated_answer: GeneratedAnswer
   ) -> str:
     """Runs a benchmark and returns the result."""
     pass
 
 
-class PytestBenchmarkRunner(BenchmarkRunner):
+class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
   """A benchmark runner that uses pytest to run the tests."""
 
   async def run_benchmark(
-      self, benchmark_case: FixErrorBenchmarkCase, code_to_test: str
+      self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
   ) -> str:
     """Runs a benchmark using pytest on a temporary file."""
-    with open(benchmark_case.test_file, "r", encoding="utf-8") as f:
-      content = f.read()
+    code_to_test = generated_answer.output.code
+    # Resolve the project root from the current file's location.
+    project_root = Path(__file__).parent.parent
+    test_file_path = (project_root / benchmark_case.test_file).resolve()
 
+    if not test_file_path.exists():
+      raise FileNotFoundError(f"Could not find test file: {test_file_path}")
+
+    with open(test_file_path, "r", encoding="utf-8") as f:
+      content = f.read()
     # Replace the code block with the code to test.
     new_content = content.replace(
         "# BEGIN: CODE\n# END: CODE", f"# BEGIN: CODE\n{code_to_test}\n# END: CODE"
@@ -95,15 +110,68 @@ class PytestBenchmarkRunner(BenchmarkRunner):
     return "pass" if proc.returncode == 0 else "fail"
 
 
-class ApiUnderstandingRunner(BenchmarkRunner):
-  """A benchmark runner that validates generated answers against templates."""
+import re
+
+
+class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
+  """
+  A benchmark runner that validates answers for API understanding.
+
+  Validation is a three-step process. The generated answer is compared against
+  each possible ground truth answer. If a match is found, the benchmark passes.
+
+  1. Syntactic Check: The generated code is validated against the regex
+     template defined for the benchmark case.
+  2. Semantic Check: The generated code is normalized (by removing all
+     whitespace) and compared against the normalized ground truth answer.
+  3. Contextual Check: The generated module path is validated against the
+     file path in the benchmark case.
+  """
+
+  def _normalize_code(self, code: str) -> str:
+    """Removes all whitespace from a code string for comparison."""
+    return re.sub(r"\s+", "", code)
 
   async def run_benchmark(
-      self, benchmark_case: ApiUnderstandingBenchmarkCase, code_to_test: str
+      self,
+      benchmark_case: ApiUnderstandingBenchmarkCase,
+      generated_answer: GeneratedAnswer,
   ) -> str:
-    """Validates the generated answer against the template."""
-    try:
-      validate_answer_against_template(code_to_test, benchmark_case.template)
-      return "pass"
-    except ValidationError:
-      return "fail"
+    """Validates the generated answer against all possible ground truths."""
+    all_errors = []
+    output = generated_answer.output
+    code_to_test = output.code
+    module_path_to_test = output.module_path
+
+    for ground_truth in benchmark_case.answers:
+      try:
+        # 1. Syntactic Check
+        validate_answer_against_template(code_to_test, benchmark_case.template)
+
+        # 2. Semantic Check
+        normalized_code = self._normalize_code(code_to_test)
+        normalized_ground_truth = self._normalize_code(ground_truth.answer)
+        if normalized_code != normalized_ground_truth:
+          raise ValidationError(
+              "Normalized code does not match normalized ground truth."
+          )
+
+        # 3. Contextual Check
+        validate_module_path(module_path_to_test, benchmark_case.file)
+
+        # If all checks pass for this answer, the benchmark passes.
+        return "pass"
+
+      except ValidationError as e:
+        all_errors.append(
+            f"  - Ground Truth '{self._normalize_code(ground_truth.answer)}'"
+            f" failed: {e}"
+        )
+
+    # If no answer passed all checks, the benchmark fails.
+    print(
+        f"--- Validation Failed for: {benchmark_case.get_identifier()} ---\n"
+        + "\n".join(all_errors)
+        + "\n------------------------------------------------"
+    )
+    return "fail"

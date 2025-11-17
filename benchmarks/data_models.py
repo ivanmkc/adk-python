@@ -17,13 +17,14 @@
 import enum
 import abc
 from pathlib import Path
-from typing import Annotated, Literal, Union, Optional, Type
+from typing import Annotated, Any, Literal, Union, Optional, Type, Self, TYPE_CHECKING
 
 import pydantic
 from pydantic import Field
 
-# Import BenchmarkRunner locally within methods to avoid circular dependency
-# from benchmarks.benchmark_runner import BenchmarkRunner
+# Import BenchmarkRunner under a TYPE_CHECKING block to avoid circular dependency
+if TYPE_CHECKING:
+  from benchmarks.benchmark_runner import BenchmarkRunner
 
 
 class BenchmarkType(str, enum.Enum):
@@ -51,7 +52,7 @@ class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
     raise NotImplementedError
 
   @abc.abstractmethod
-  def get_runner_class(self) -> Type["BenchmarkRunner"]:
+  def get_runner_class(self) -> Type["BenchmarkRunner[Self]"]:
     """Returns the BenchmarkRunner class responsible for this case type."""
     raise NotImplementedError
 
@@ -109,9 +110,10 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
   line_of_code_start: int
   line_of_code_end: int
 
-  @pydantic.validator("line_of_code_end")
-  def start_must_be_before_end(cls, v, values):
-    if "line_of_code_start" in values and v < values["line_of_code_start"]:
+  @pydantic.field_validator("line_of_code_end")
+  @classmethod
+  def start_must_be_before_end(cls, v: int, info: pydantic.ValidationInfo) -> int:
+    if "line_of_code_start" in info.data and v < info.data["line_of_code_start"]:
       raise ValueError(
           "line_of_code_end must not be before line_of_code_start"
       )
@@ -145,3 +147,53 @@ class BenchmarkResult(pydantic.BaseModel):
   outcome: ExpectedOutcome
   error_type: Optional[str] = None
   error_message: Optional[str] = None
+
+
+# --- Structured Answer Output Models ---
+
+
+class BaseAnswerOutput(pydantic.BaseModel, abc.ABC):
+  """A base model for the structured output of an AnswerGenerator."""
+
+  pass
+
+
+class FixErrorAnswerOutput(BaseAnswerOutput):
+  """The expected output structure for a fix_error benchmark."""
+
+  benchmark_type: Literal[BenchmarkType.FIX_ERROR] = BenchmarkType.FIX_ERROR
+  code: str = Field(
+      ...,
+      description="The complete, corrected Python code snippet to be injected into the test file.",
+  )
+
+
+class ApiUnderstandingAnswerOutput(BaseAnswerOutput):
+  """The expected output structure for an api_understanding benchmark."""
+
+  benchmark_type: Literal[BenchmarkType.API_UNDERSTANDING] = (
+      BenchmarkType.API_UNDERSTANDING
+  )
+  code: str = Field(
+      ...,
+      description="The Python code snippet that answers the question, conforming to the required template.",
+  )
+  module_path: str = Field(
+      ...,
+      description="The expected Python module path where this code would be found, e.g., 'google.adk.agents.llm_agent'.",
+  )
+
+
+AnswerOutput = Annotated[
+    Union[FixErrorAnswerOutput, ApiUnderstandingAnswerOutput],
+    Field(discriminator="benchmark_type"),
+]
+
+
+class GeneratedAnswer(pydantic.BaseModel):
+  """
+  Represents the structured output from an AnswerGenerator, akin to an
+  LLM's function call result.
+  """
+
+  output: AnswerOutput

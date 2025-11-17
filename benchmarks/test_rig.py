@@ -103,8 +103,8 @@ async def run_benchmarks(
         runner_class = case.get_runner_class()
         runner = runner_class()
 
-        code_to_test = generator.generate_answer(case)
-        result = await runner.run_benchmark(case, code_to_test)
+        generated_answer = generator.generate_answer(case)
+        result = await runner.run_benchmark(case, generated_answer)
 
         results.append(
             {

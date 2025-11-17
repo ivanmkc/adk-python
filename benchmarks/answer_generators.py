@@ -19,9 +19,12 @@ import re
 from pathlib import Path
 
 from benchmarks.data_models import (
+    ApiUnderstandingAnswerOutput,
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
+    FixErrorAnswerOutput,
     FixErrorBenchmarkCase,
+    GeneratedAnswer,
 )
 
 
@@ -29,7 +32,7 @@ class AnswerGenerator(abc.ABC):
   """Abstract base class for answer generators."""
 
   @abc.abstractmethod
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> str:
+  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
     """Generates an answer for a given benchmark case."""
     pass
 
@@ -57,7 +60,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
       raise ValueError(f"Could not find code snippet in {file_path}")
     return match.group(1).strip()
 
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> str:
+  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
     """Returns the ground truth answer for the benchmark case."""
     if isinstance(benchmark_case, FixErrorBenchmarkCase):
       file_map = self._get_ground_truth_file_map()
@@ -66,9 +69,15 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
         raise ValueError(
             f"No ground truth file found for {benchmark_case.test_file}"
         )
-      return self._extract_code_snippet(ground_truth_file)
+      code = self._extract_code_snippet(ground_truth_file)
+      output = FixErrorAnswerOutput(code=code)
+      return GeneratedAnswer(output=output)
     elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-      return benchmark_case.answers[0].answer
+      answer = benchmark_case.answers[0]
+      output = ApiUnderstandingAnswerOutput(
+          code=answer.answer, module_path=answer.module_path
+      )
+      return GeneratedAnswer(output=output)
     else:
       raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")
 
@@ -76,6 +85,10 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
 class TrivialAnswerGenerator(AnswerGenerator):
   """An answer generator that returns a trivial (empty) answer."""
 
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> str:
-    """Returns an empty string for any benchmark case."""
-    return ""
+  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    """Returns an empty answer for any benchmark case."""
+    if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
+      output = ApiUnderstandingAnswerOutput(code="", module_path="")
+      return GeneratedAnswer(output=output)
+    output = FixErrorAnswerOutput(code="")
+    return GeneratedAnswer(output=output)
