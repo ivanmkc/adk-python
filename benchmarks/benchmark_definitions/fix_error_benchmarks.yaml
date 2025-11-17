@@ -1,0 +1,115 @@
+benchmarks:
+  - name: "01: A minimal LlmAgent"
+    description: "A minimal LlmAgent."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_01_single_llm_agent.py
+    start_line: 1
+    end_line: 1
+  - name: "02: An LlmAgent with a simple function tool"
+    description: "An LlmAgent with a simple function tool."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_02_agent_with_tool.py
+    start_line: 1
+    end_line: 1
+  - name: "03: An LlmAgent that uses output_schema to enforce JSON output"
+    description: "An LlmAgent that uses output_schema to enforce JSON output."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_03_agent_with_output_schema.py
+    start_line: 1
+    end_line: 1
+  - name: "04: A SequentialAgent orchestrating two simple agents"
+    description: "A SequentialAgent orchestrating two simple agents."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_04_sequential_agent.py
+    start_line: 1
+    end_line: 1
+  - name: "05: A ParallelAgent running two agents concurrently"
+    description: "A ParallelAgent running two agents concurrently."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_05_parallel_agent.py
+    start_line: 1
+    end_line: 1
+  - name: "06: A LoopAgent that runs a sub-agent a fixed number of times"
+    description: "A LoopAgent that runs a sub-agent a fixed number of times."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_06_loop_agent.py
+    start_line: 1
+    end_line: 1
+  - name: "07: A root agent delegating a task to a sub-agent"
+    description: "A root agent delegating a task to a sub-agent."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_07_agent_delegation.py
+    start_line: 1
+    end_line: 1
+  - name: "08: A simple custom agent with conditional logic"
+    description: "A simple custom agent with conditional logic."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_08_custom_agent.py
+    start_line: 1
+    end_line: 1
+  - name: "10: An agent that writes to and reads from session.state"
+    description: "An agent that writes to and reads from session.state."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_10_agent_with_state_management.py
+    start_line: 1
+    end_line: 1
+  - name: "11: A direct implementation test for InMemoryRunner"
+    description: "A direct implementation test for InMemoryRunner."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_11_in_memory_runner_direct.py
+    start_line: 1
+    end_line: 1
+  - name: "12: An App instance that includes a basic plugin"
+    description: "An App instance that includes a basic plugin."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_12_app_with_plugin.py
+    start_line: 1
+    end_line: 1
+  - name: "13: An LlmAgent with a BuiltInCodeExecutor"
+    description: "An LlmAgent with a BuiltInCodeExecutor."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_13_code_executor.py
+    start_line: 1
+    end_line: 1
+  - name: "14: An LlmAgent using an OpenAI model via LiteLlm"
+    description: "An LlmAgent using an OpenAI model via LiteLlm."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_14_agent_with_litellm_openai.py
+    start_line: 1
+    end_line: 1
+  - name: "15: An LlmAgent with an after_model_callback"
+    description: "An LlmAgent with an after_model_callback."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_15_callbacks.py
+    start_line: 1
+    end_line: 1
+  - name: "16: Build integrity test for LlmAgent with generate_content_config"
+    description: "Build integrity test for LlmAgent with generate_content_config."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_16_generate_content_config.py
+    start_line: 1
+    end_line: 1
+  - name: "17: Build integrity test for LlmAgent with input_schema"
+    description: "Build integrity test for LlmAgent with input_schema."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_17_input_schema.py
+    start_line: 1
+    end_line: 1
+  - name: "18: Build integrity test for LlmAgent with include_contents='none'"
+    description: "Build integrity test for LlmAgent with include_contents='none'."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_18_include_contents_none.py
+    start_line: 1
+    end_line: 1
+  - name: "19: Build integrity test for LlmAgent with artifacts"
+    description: "Build integrity test for LlmAgent with artifacts."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_19_artifacts.py
+    start_line: 1
+    end_line: 1
+  - name: "20: Build integrity test for LlmAgent with expanded callbacks"
+    description: "Build integrity test for LlmAgent with expanded callbacks."
+    benchmark_type: fix_error
+    test_file: benchmarks/benchmark_definitions/fix_error/test_20_expanded_callbacks.py
+    start_line: 1
+    end_line: 1
