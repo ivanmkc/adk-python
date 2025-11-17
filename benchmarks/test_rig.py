@@ -72,9 +72,8 @@ async def run_benchmarks(
   It performs the following steps:
     1. Iterates through each provided benchmark suite (YAML file).
     2. For each suite, it iterates through every provided AnswerGenerator.
-    3. For each benchmark case within the suite, it selects the appropriate
-       BenchmarkRunner (`PytestBenchmarkRunner` for 'fix_error' cases,
-       `ApiUnderstandingRunner` for 'api_understanding' cases).
+    3. For each benchmark case within the suite, it asks the case for the
+       appropriate BenchmarkRunner class.
     4. It invokes the AnswerGenerator to get the code to test.
     5. It calls the selected BenchmarkRunner to execute the test.
     6. It compiles the pass/fail results into a raw DataFrame.
@@ -101,12 +100,8 @@ async def run_benchmarks(
       generator_name = generator.__class__.__name__
       print(f"  - Using answer generator: {generator_name}")
       for case in benchmark_file.benchmarks:
-        if isinstance(case, FixErrorBenchmarkCase):
-          runner = PytestBenchmarkRunner()
-        elif isinstance(case, ApiUnderstandingBenchmarkCase):
-          runner = ApiUnderstandingRunner()
-        else:
-          raise ValueError(f"Unknown benchmark type: {case.benchmark_type}")
+        runner_class = case.get_runner_class()
+        runner = runner_class()
 
         code_to_test = generator.generate_answer(case)
         result = await runner.run_benchmark(case, code_to_test)
