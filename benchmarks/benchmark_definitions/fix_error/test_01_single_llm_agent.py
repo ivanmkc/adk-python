@@ -25,18 +25,19 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 print(f"root_agent defined: { 'root_agent' in globals() }")
 
+
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Hello")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "Hello" in response, "Expected a greeting containing 'Hello'."
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "Hello" in response, "Expected a greeting containing 'Hello'."
 
 
 async def test_single_llm_agent():
-  """Tests that a single agent can respond to a simple greeting."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that a single agent can respond to a simple greeting."""
+    response = await run_test()
+    assert_test(response)

@@ -24,22 +24,24 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 @pytest.mark.asyncio
 async def test_include_contents_none_stateless_agent():
-  """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
-  # BEGIN: CODE
-  agent = LlmAgent(
-      name="stateless_agent",
-      model=MODEL_NAME,
-      instruction="Your name is StatelessBot. You are a stateless agent and do not retain information from previous turns.",
-      include_contents="false",
-  )
-  # END: CODE
+    """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
+    # BEGIN: CODE
+    agent = LlmAgent(
+        name="stateless_agent",
+        model=MODEL_NAME,
+        instruction="Your name is StatelessBot. You are a stateless agent and do not retain information from previous turns.",
+        include_contents="none",
+    )
+    # END: CODE
 
-  # First turn: Agent should introduce itself
-  response1 = await run_agent_test(agent, "What is your name?")
-  assert "StatelessBot" in response1
+    # First turn: Agent should introduce itself
+    response1 = await run_agent_test(agent, "What is your name?")
+    assert "StatelessBot" in response1
 
-  # Second turn: Agent should confirm its stateless nature and not recall the specific previous question.
-  response2 = await run_agent_test(agent, "Do you remember what I asked you before?")
-  assert "stateless" in response2.lower()
-  assert "remember" in response2.lower() # It should state that it doesn't remember
-  assert "what is your name" not in response2.lower() # It should not recall the specific question
+    # Second turn: Agent should confirm its stateless nature and not recall the specific previous question.
+    response2 = await run_agent_test(agent, "Do you remember what I asked you before?")
+    assert "stateless" in response2.lower()
+    assert "remember" in response2.lower()  # It should state that it doesn't remember
+    assert (
+        "what is your name" not in response2.lower()
+    )  # It should not recall the specific question

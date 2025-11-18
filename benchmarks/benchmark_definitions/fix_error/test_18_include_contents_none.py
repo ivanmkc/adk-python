@@ -24,16 +24,18 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 @pytest.mark.asyncio
 async def test_include_contents_none_stateless_agent():
-  """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
-  # BEGIN: CODE
-  # END: CODE
+    """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
+    # BEGIN: CODE
+    # END: CODE
 
-  # First turn: Agent should introduce itself
-  response1 = await run_agent_test(agent, "What is your name?")
-  assert "StatelessBot" in response1
+    # First turn: Agent should introduce itself
+    response1 = await run_agent_test(agent, "What is your name?")
+    assert "StatelessBot" in response1
 
-  # Second turn: Agent should confirm its stateless nature and not recall the specific previous question.
-  response2 = await run_agent_test(agent, "Do you remember what I asked you before?")
-  assert "stateless" in response2.lower()
-  assert "remember" in response2.lower() # It should state that it doesn't remember
-  assert "what is your name" not in response2.lower() # It should not recall the specific question
+    # Second turn: Agent should confirm its stateless nature and not recall the specific previous question.
+    response2 = await run_agent_test(agent, "Do you remember what I asked you before?")
+    assert "stateless" in response2.lower()
+    assert "remember" in response2.lower()  # It should state that it doesn't remember
+    assert (
+        "what is your name" not in response2.lower()
+    )  # It should not recall the specific question

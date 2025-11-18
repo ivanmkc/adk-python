@@ -37,17 +37,17 @@ root_agent = LoopAgent(
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Run the loop.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run the loop.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "loop" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "loop" in response.lower()
 
 
 async def test_loop_agent():
-  """Tests that a loop agent runs for the specified number of iterations."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that a loop agent runs for the specified number of iterations."""
+    response = await run_test()
+    assert_test(response)

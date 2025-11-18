@@ -36,7 +36,7 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
 ### Key Components
 
 *   **`test_benchmarks.py`**: The main `pytest` entry point for validating the framework's integrity.
-*   **`benchmark_orchestrator.py`**: The central orchestrator that runs benchmarks and aggregates results.
+*   **`benchmark_orchestrator.py`**: The central orchestrator that iterates through benchmarks, calls the appropriate runner for each case, and aggregates results.
 *   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`).
 *   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`).
 *   **`data_models.py`**: Pydantic models for the benchmark YAML files.
@@ -161,20 +161,18 @@ To add a new type of benchmark (e.g., "code_completion"), follow these steps:
     *   Add a new value to the `BenchmarkType` enum (e.g., `CODE_COMPLETION = "code_completion"`).
     *   Set the `benchmark_type` field in your new class to `Literal[BenchmarkType.CODE_COMPLETION]`.
     *   Add your new class to the `BenchmarkCase` `Union` type.
+    *   Implement the abstract `runner` property to return an instance of your new `BenchmarkRunner` (see next step).
 
-2.  **Create the YAML Data File:**
+2.  **Implement the Benchmark Runner:**
+    *   In `benchmark_runner.py`, create a new class that inherits from `BenchmarkRunner` (e.g., `CodeCompletionRunner`).
+    *   Implement the `async def run_benchmark(...)` method to define the execution and validation logic for this new benchmark type. It must return a tuple of `("pass" or "fail", validation_error_string_or_none)`.
+
+3.  **Create the YAML Data File:**
     *   Create a new YAML file in `benchmark_definitions/` (e.g., `code_completion_benchmarks.yaml`).
     *   Populate this file with benchmark cases matching the Pydantic model you created.
 
-3.  **Implement the Benchmark Runner:**
-    *   In `benchmark_runner.py`, create a new class that inherits from `BenchmarkRunner` (e.g., `CodeCompletionRunner`).
-    *   Implement the `async def run_benchmark(...)` method to define the execution and validation logic for this new benchmark type. It must return `"pass"` or `"fail"`.
-
-4.  **Update the Orchestrator:**
-    *   In `benchmark_orchestrator.py`, add an `elif` to the runner selection logic in `run_benchmarks` to instantiate your new runner for your new benchmark case type.
-
-5.  **Update Answer Generators:**
+4.  **Update Answer Generators:**
     *   In `answer_generators.py`, update the `generate_answer` method in `GroundTruthAnswerGenerator` and any other relevant generators to handle your new `CodeCompletionBenchmarkCase`.
 
-6.  **Add to the Validation Suite:**
+5.  **Add to the Validation Suite:**
     *   In `test_benchmarks.py`, add the path to your new YAML file to the `benchmark_suites` list to include it in the framework's integrity validation run.

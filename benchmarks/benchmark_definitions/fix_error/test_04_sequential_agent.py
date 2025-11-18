@@ -26,18 +26,18 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Run the sequence.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run the sequence.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  # The final response should be from the last agent in the sequence.
-  assert "two" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    # The final response should be from the last agent in the sequence.
+    assert "two" in response.lower()
 
 
 async def test_sequential_agent():
-  """Tests that a sequential agent executes its sub-agents in order."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that a sequential agent executes its sub-agents in order."""
+    response = await run_test()
+    assert_test(response)

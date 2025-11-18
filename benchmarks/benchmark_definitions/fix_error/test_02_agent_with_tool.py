@@ -27,17 +27,17 @@ from benchmarks.test_helpers import MODEL_NAME, basic_tool, run_agent_test
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Can you use your tool?")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Can you use your tool?")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "test" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "test" in response.lower()
 
 
 async def test_agent_with_tool():
-  """Tests that an agent can use a simple tool."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an agent can use a simple tool."""
+    response = await run_test()
+    assert_test(response)

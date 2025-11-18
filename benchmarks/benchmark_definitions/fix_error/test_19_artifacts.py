@@ -24,21 +24,23 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 @pytest.mark.asyncio
 async def test_artifact_usage_in_instruction():
-  """Tests that LlmAgent can use artifacts referenced in its instruction."""
-  artifact_data = {"my_data": "important information"}
+    """Tests that LlmAgent can use artifacts referenced in its instruction."""
+    artifact_data = {"my_data": "important information"}
 
-  # BEGIN: CODE
-  # END: CODE
+    # BEGIN: CODE
+    # END: CODE
 
-  response = await run_agent_test(agent, "What is the data?", artifact_data=artifact_data)
-  assert "important information" in response
+    response = await run_agent_test(
+        agent, "What is the data?", artifact_data=artifact_data
+    )
+    assert "important information" in response
 
 
 @pytest.mark.asyncio
 async def test_artifact_creation_and_reference():
-  """Tests that an agent can create an artifact and it can be referenced."""
-  # This test is more complex as it requires the agent to *create* an artifact
-  # which is typically done via a tool or a specific agent capability.
-  # For now, we'll focus on the agent *using* an artifact provided to it.
-  # A more advanced test would involve a tool that creates an artifact.
-  pass
+    """Tests that an agent can create an artifact and it can be referenced."""
+    # This test is more complex as it requires the agent to *create* an artifact
+    # which is typically done via a tool or a specific agent capability.
+    # For now, we'll focus on the agent *using* an artifact provided to it.
+    # A more advanced test would involve a tool that creates an artifact.
+    pass

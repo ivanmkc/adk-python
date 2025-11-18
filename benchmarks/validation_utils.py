@@ -27,22 +27,22 @@ from benchmarks.data_models import AnswerTemplate, StringMatchAnswer
 
 
 class ValidationError(Exception):
-  """Base class for validation errors."""
+    """Base class for validation errors."""
 
 
 class TemplateMismatchError(ValidationError):
-  """Raised when an answer does not match its template."""
+    """Raised when an answer does not match its template."""
 
 
 # --- Template Definitions ---
 
 
 class TemplateInfo(pydantic.BaseModel):
-  """Model for storing information about an answer template."""
+    """Model for storing information about an answer template."""
 
-  regex: str
-  description: str
-  examples: list[str]
+    regex: str
+    description: str
+    examples: list[str]
 
 
 TEMPLATES = {
@@ -97,27 +97,27 @@ TEMPLATES = {
 
 
 def validate_module_path(module_path: str, file_path: Path):
-  """Validates that the module_path correctly corresponds to the file_path."""
-  # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
-  expected_module_path = (
-      str(file_path).removeprefix("src/").removesuffix(".py").replace("/", ".")
-  )
-  if module_path != expected_module_path:
-    raise ValidationError(
-        f"Module path '{module_path}' does not match the file path"
-        f" '{file_path}'. Expected '{expected_module_path}'."
+    """Validates that the module_path correctly corresponds to the file_path."""
+    # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
+    expected_module_path = (
+        str(file_path).removeprefix("src/").removesuffix(".py").replace("/", ".")
     )
+    if module_path != expected_module_path:
+        raise ValidationError(
+            f"Module path '{module_path}' does not match the file path"
+            f" '{file_path}'. Expected '{expected_module_path}'."
+        )
 
 
 def validate_answer_against_template(answer: str, template: AnswerTemplate):
-  """Validates that the answer matches the regex for the given template."""
-  template_info = TEMPLATES.get(template)
-  if not template_info:
-    raise TemplateMismatchError(f"No template defined for '{template.value}'")
+    """Validates that the answer matches the regex for the given template."""
+    template_info = TEMPLATES.get(template)
+    if not template_info:
+        raise TemplateMismatchError(f"No template defined for '{template.value}'")
 
-  regex = template_info.regex
-  if not re.match(regex, answer):
-    raise TemplateMismatchError(
-        f"Answer '{answer}' does not match the format for template"
-        f" '{template.value}'. Expected format: {template_info.description}"
-    )
+    regex = template_info.regex
+    if not re.match(regex, answer):
+        raise TemplateMismatchError(
+            f"Answer '{answer}' does not match the format for template"
+            f" '{template.value}'. Expected format: {template_info.description}"
+        )

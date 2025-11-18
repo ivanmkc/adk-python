@@ -26,22 +26,22 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 # BEGIN: CODE
 class CustomConditionalAgent(BaseAgent):
-  """A custom agent that runs one of two sub-agents based on session state."""
+    """A custom agent that runs one of two sub-agents based on session state."""
 
-  agent_a: LlmAgent
-  agent_b: LlmAgent
+    agent_a: LlmAgent
+    agent_b: LlmAgent
 
-  async def _run_async_impl(
-      self, ctx: InvocationContext
-  ) -> AsyncGenerator[Event, None]:
-    should_run_a = ctx.session.state.get("run_agent_a", False)
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        should_run_a = ctx.session.state.get("run_agent_a", False)
 
-    if should_run_a:
-      async for event in self.agent_a.run_async(ctx):
-        yield event
-    else:
-      async for event in self.agent_b.run_async(ctx):
-        yield event
+        if should_run_a:
+            async for event in self.agent_a.run_async(ctx):
+                yield event
+        else:
+            async for event in self.agent_b.run_async(ctx):
+                yield event
 
 
 agent_a = create_basic_llm_agent(
@@ -53,7 +53,7 @@ agent_b = create_basic_llm_agent(
 
 root_agent = CustomConditionalAgent(
     name="custom_conditional_agent",
-    agent_c=agent_a,
+    agent_a=agent_a,
     agent_b=agent_b,
     sub_agents=[agent_a, agent_b],
 )
@@ -61,25 +61,23 @@ root_agent = CustomConditionalAgent(
 
 
 async def run_test(run_a: bool) -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(
-      root_agent, "Run", initial_state={"run_agent_a": run_a}
-  )
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run", initial_state={"run_agent_a": run_a})
 
 
 def assert_test(response: str, expected_agent: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert expected_agent in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert expected_agent in response
 
 
 async def test_custom_agent_condition_a():
-  """Tests that the custom agent runs agent_a when the condition is met."""
-  response = await run_test(run_a=True)
-  assert_test(response, "Agent A")
+    """Tests that the custom agent runs agent_a when the condition is met."""
+    response = await run_test(run_a=True)
+    assert_test(response, "Agent A")
 
 
 async def test_custom_agent_condition_b():
-  """Tests that the custom agent runs agent_b when the condition is not met."""
-  response = await run_test(run_a=False)
-  assert_test(response, "Agent B")
+    """Tests that the custom agent runs agent_b when the condition is not met."""
+    response = await run_test(run_a=False)
+    assert_test(response, "Agent B")

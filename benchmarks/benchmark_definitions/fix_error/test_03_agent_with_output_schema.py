@@ -28,22 +28,22 @@ from benchmarks.test_helpers import MODEL_NAME, BasicOutputSchema, run_agent_tes
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Generate a response.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Generate a response.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  try:
-    data = json.loads(response)
-    assert "field_one" in data
-    assert "field_two" in data
-  except json.JSONDecodeError:
-    assert False, "Response was not valid JSON."
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    try:
+        data = json.loads(response)
+        assert "field_one" in data
+        assert "field_two" in data
+    except json.JSONDecodeError:
+        assert False, "Response was not valid JSON."
 
 
 async def test_agent_with_output_schema():
-  """Tests that an agent can produce a structured JSON output."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an agent can produce a structured JSON output."""
+    response = await run_test()
+    assert_test(response)

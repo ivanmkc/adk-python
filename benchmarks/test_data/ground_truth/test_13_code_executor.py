@@ -28,23 +28,23 @@ root_agent = LlmAgent(
     name="code_exec_agent",
     model=MODEL_NAME,
     instruction="You are a helpful assistant. Use the code executor to calculate 2 + 2.",
-    code_executor=BuiltInCodeExecutor,
+    code_executor=BuiltInCodeExecutor(),
 )
 # END: CODE
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Calculate 2 + 2.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Calculate 2 + 2.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "4" in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "4" in response
 
 
 async def test_code_executor():
-  """Tests that an agent can execute a simple Python code block."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an agent can execute a simple Python code block."""
+    response = await run_test()
+    assert_test(response)

@@ -24,38 +24,38 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 async def _mock_tool_func(query: str) -> str:
-  return f"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}"
+    return f"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}"
 
 
 @pytest.mark.asyncio
 async def test_before_and_after_tool_callbacks():
-  """Tests that before_tool_callback and after_tool_callback are invoked."""
-  before_called = []
-  after_called = []
+    """Tests that before_tool_callback and after_tool_callback are invoked."""
+    before_called = []
+    after_called = []
 
-  async def before_callback_func(tool, args, tool_context):
-    before_called.append(True)
-    return None  # Do not modify tool args
+    async def before_callback_func(tool, args, tool_context):
+        before_called.append(True)
+        return None  # Do not modify tool args
 
-  async def after_callback_func(tool, args, tool_context, tool_response):
-    after_called.append(True)
-    return None  # Do not modify tool response
+    async def after_callback_func(tool, args, tool_context, tool_response):
+        after_called.append(True)
+        return None  # Do not modify tool response
 
-  test_tool = FunctionTool(func=_mock_tool_func)
+    test_tool = FunctionTool(func=_mock_tool_func)
 
-  # BEGIN: CODE
-  agent = LlmAgent(
-      name="callback_agent",
-      model=MODEL_NAME,
-      instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
-      tools=[test_tool],
-      before_tool_callbacks=before_callback_func,
-      after_tool_callback=after_callback_func,
-  )
-  # END: CODE
+    # BEGIN: CODE
+    agent = LlmAgent(
+        name="callback_agent",
+        model=MODEL_NAME,
+        instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
+        tools=[test_tool],
+        before_tool_callback=before_callback_func,
+        after_tool_callback=after_callback_func,
+    )
+    # END: CODE
 
-  response = await run_agent_test(agent, "Use the tool with 'hello'")
+    response = await run_agent_test(agent, "Use the tool with 'hello'")
 
-  assert before_called
-  assert after_called
-  assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in response
+    assert before_called
+    assert after_called
+    assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in response

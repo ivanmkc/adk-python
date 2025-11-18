@@ -23,27 +23,17 @@ import sys
 from pathlib import Path
 
 
-
-
-
 import pandas as pd
-
 
 
 import yaml
 
 
-
 from benchmarks.answer_generators import (
-
     AnswerGenerator,
-
     GroundTruthAnswerGenerator,
-
     TrivialAnswerGenerator,
-
 )
-
 
 
 from benchmarks.benchmark_runner import ApiUnderstandingRunner, PytestBenchmarkRunner
@@ -58,104 +48,81 @@ from benchmarks.validation_utils import ValidationError
 async def run_benchmarks(
     benchmark_suites: list[str], answer_generators: list[AnswerGenerator]
 ) -> pd.DataFrame:
-  """
-  Runs all benchmark suites against all answer generators and returns raw results.
+    """
+    Runs all benchmark suites against all answer generators and returns raw results.
 
-  This function serves as the central orchestrator for the benchmark framework.
-  It performs the following steps:
-    1. Iterates through each provided benchmark suite (YAML file).
-    2. For each suite, it iterates through every provided AnswerGenerator.
-    3. For each benchmark case within the suite, it determines the appropriate
-       BenchmarkRunner.
-    4. It invokes the AnswerGenerator to get the code to test.
-    5. It calls the selected BenchmarkRunner to execute the test.
-    6. It compiles the detailed pass/fail results into a raw DataFrame.
+    This function serves as the central orchestrator for the benchmark framework.
+    It performs the following steps:
+      1. Iterates through each provided benchmark suite (YAML file).
+      2. For each suite, it iterates through every provided AnswerGenerator.
+      3. For each benchmark case within the suite, it determines the appropriate
+         BenchmarkRunner.
+      4. It invokes the AnswerGenerator to get the code to test.
+      5. It calls the selected BenchmarkRunner to execute the test.
+      6. It compiles the detailed pass/fail results into a raw DataFrame.
 
-  Args:
-    benchmark_suites: A list of paths to the benchmark suite YAML files.
-    answer_generators: A list of AnswerGenerator instances to evaluate.
+    Args:
+      benchmark_suites: A list of paths to the benchmark suite YAML files.
+      answer_generators: A list of AnswerGenerator instances to evaluate.
 
-  Returns:
-    A pandas DataFrame containing the raw, unsummarized results of the
-    benchmark run. Each row includes the suite, benchmark name, answer
-    generator, and the pass/fail result.
-  """
-  results = []
+    Returns:
+      A pandas DataFrame containing the raw, unsummarized results of the
+      benchmark run. Each row includes the suite, benchmark name, answer
+      generator, and the pass/fail result.
+    """
+    results = []
 
-  for suite_file in benchmark_suites:
-    print(f"--- Running benchmark suite: {suite_file} ---")
-    with open(suite_file, "r", encoding="utf-8") as f:
-      data = yaml.safe_load(f)
-    benchmark_file = BenchmarkFile.model_validate(data)
+    for suite_file in benchmark_suites:
+        print(f"--- Running benchmark suite: {suite_file} ---")
+        with open(suite_file, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        benchmark_file = BenchmarkFile.model_validate(data)
 
-    for generator in answer_generators:
-      generator_name = generator.__class__.__name__
-      print(f"  - Using answer generator: {generator_name}")
-      for case in benchmark_file.benchmarks:
-        if isinstance(case, FixErrorBenchmarkCase):
-          runner = PytestBenchmarkRunner()
-        elif isinstance(case, ApiUnderstandingBenchmarkCase):
-          runner = ApiUnderstandingRunner()
-        else:
-          raise TypeError(f"Unknown benchmark case type: {type(case)}")
+        for generator in answer_generators:
+            generator_name = generator.__class__.__name__
+            print(f"  - Using answer generator: {generator_name}")
+            for case in benchmark_file.benchmarks:
+                runner = case.runner
+                generated_answer = generator.generate_answer(case)
+                result, validation_error = await runner.run_benchmark(
+                    case, generated_answer
+                )
 
-        generated_answer = generator.generate_answer(case)
-        result, logs = await runner.run_benchmark(case, generated_answer)
+                results.append(
+                    {
+                        "suite": Path(suite_file).name,
+                        "benchmark_name": case.get_identifier(),
+                        "answer_generator": generator_name,
+                        "result": 1 if result == "pass" else 0,
+                        "answer": str(generated_answer.output),
+                        "validation_error": validation_error,
+                    }
+                )
 
-        results.append(
-            {
-                "suite": Path(suite_file).name,
-                "benchmark_name": case.get_identifier(),
-                "answer_generator": generator_name,
-                "result": 1 if result == "pass" else 0,
-                "logs": logs,
-            }
-        )
-
-  return pd.DataFrame(results)
-
-
-
+    return pd.DataFrame(results)
 
 
 def main():
+    """Main entry point for the script."""
 
-  """Main entry point for the script."""
+    parser = argparse.ArgumentParser(description="Run the benchmark suites.")
 
-  parser = argparse.ArgumentParser(
+    parser.add_argument(
+        "benchmark_files",
+        type=str,
+        nargs="+",
+        help="Paths to the benchmark YAML files.",
+    )
 
-      description="Run the benchmark suites."
+    args = parser.parse_args()
 
-  )
+    answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
 
-  parser.add_argument(
+    if not asyncio.run(run_benchmarks(args.benchmark_files, answer_generators)):
 
-      "benchmark_files",
-
-      type=str,
-
-      nargs="+",
-
-      help="Paths to the benchmark YAML files.",
-
-  )
-
-  args = parser.parse_args()
-
-
-
-  answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
-
-
-
-  if not asyncio.run(run_benchmarks(args.benchmark_files, answer_generators)):
-
-    sys.exit(1)
-
-
-
+        sys.exit(1)
 
 
 if __name__ == "__main__":
 
-  main()
+    main()

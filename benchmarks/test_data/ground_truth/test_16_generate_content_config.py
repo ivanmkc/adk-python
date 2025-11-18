@@ -25,14 +25,14 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 @pytest.mark.asyncio
 async def test_generate_content_config_temperature():
-  """Tests that LlmAgent respects generate_content_config for temperature."""
-  # BEGIN: CODE
-  agent = LlmAgent(
-      name="config_agent",
-      model=MODEL_NAME,
-      instruction="You are a helpful assistant. Always respond with 'Hello world!'",
-      generation_config=types.GenerationConfig(temperature=0.0),
-  )
-  # END: CODE
-  response = await run_agent_test(agent, "Say hello.")
-  assert "Hello world!" in response
+    """Tests that LlmAgent respects generate_content_config for temperature."""
+    # BEGIN: CODE
+    agent = LlmAgent(
+        name="config_agent",
+        model=MODEL_NAME,
+        instruction="You are a helpful assistant. Always respond with 'Hello world!'",
+        generate_content_config=types.GenerationConfig(temperature=0.0),
+    )
+    # END: CODE
+    response = await run_agent_test(agent, "Say hello.")
+    assert "Hello world!" in response

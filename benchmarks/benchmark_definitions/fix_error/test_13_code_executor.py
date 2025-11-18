@@ -28,17 +28,17 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Calculate 2 + 2.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Calculate 2 + 2.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "4" in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "4" in response
 
 
 async def test_code_executor():
-  """Tests that an agent can execute a simple Python code block."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an agent can execute a simple Python code block."""
+    response = await run_test()
+    assert_test(response)

@@ -24,19 +24,19 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 class UserInfo(BaseModel):
-  name: str = Field(description="The user's name.")
-  age: int = Field(description="The user's age.")
+    name: str = Field(description="The user's name.")
+    age: int = Field(description="The user's age.")
 
 
 @pytest.mark.asyncio
 async def test_input_schema_validation():
-  """Tests that LlmAgent respects input_schema for structured input."""
-  # BEGIN: CODE
-  # END: CODE
-  response = await run_agent_test(agent, '{"name": "Alice", "age": 30}')
-  assert "Alice" in response and "30" in response
+    """Tests that LlmAgent respects input_schema for structured input."""
+    # BEGIN: CODE
+    # END: CODE
+    response = await run_agent_test(agent, '{"name": "Alice", "age": 30}')
+    assert "Alice" in response and "30" in response
 
-  # Test with invalid input (should ideally raise an error or be handled gracefully by the agent)
-  # For now, we'll just check if the agent still responds, as error handling might be internal.
-  response_invalid = await run_agent_test(agent, '{"name": "Bob"}')
-  assert "Bob" in response_invalid
+    # Test with invalid input (should ideally raise an error or be handled gracefully by the agent)
+    # For now, we'll just check if the agent still responds, as error handling might be internal.
+    response_invalid = await run_agent_test(agent, '{"name": "Bob"}')
+    assert "Bob" in response_invalid

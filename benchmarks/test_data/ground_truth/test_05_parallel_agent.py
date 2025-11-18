@@ -38,18 +38,18 @@ root_agent = ParallelAgent(
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Run in parallel.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run in parallel.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  # The response could be from either agent, so we check for a common word.
-  assert "parallel" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    # The response could be from either agent, so we check for a common word.
+    assert "parallel" in response.lower()
 
 
 async def test_parallel_agent():
-  """Tests that a parallel agent executes its sub-agents."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that a parallel agent executes its sub-agents."""
+    response = await run_test()
+    assert_test(response)

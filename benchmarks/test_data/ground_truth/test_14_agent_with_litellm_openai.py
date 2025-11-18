@@ -37,17 +37,20 @@ root_agent = LlmAgent(
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Hello")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "Hello" in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "Hello" in response
 
 
+@pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+)
 async def test_agent_with_litellm_openai():
-  """Tests that an agent can use an OpenAI model via LiteLlm."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an agent can use an OpenAI model via LiteLlm."""
+    response = await run_test()
+    assert_test(response)

@@ -25,8 +25,8 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 @pytest.mark.asyncio
 async def test_generate_content_config_temperature():
-  """Tests that LlmAgent respects generate_content_config for temperature."""
-  # BEGIN: CODE
-  # END: CODE
-  response = await run_agent_test(agent, "Say hello.")
-  assert "Hello world!" in response
+    """Tests that LlmAgent respects generate_content_config for temperature."""
+    # BEGIN: CODE
+    # END: CODE
+    response = await run_agent_test(agent, "Say hello.")
+    assert "Hello world!" in response

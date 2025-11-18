@@ -25,17 +25,17 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Run state management test.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run state management test.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "xyz" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "xyz" in response.lower()
 
 
 async def test_agent_state_management():
-  """Tests that one agent can write to state and another can read from it."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that one agent can write to state and another can read from it."""
+    response = await run_test()
+    assert_test(response)

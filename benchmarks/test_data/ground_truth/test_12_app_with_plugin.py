@@ -23,14 +23,14 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 # BEGIN: CODE
 class SimplePlugin(BasePlugin):
-  """A simple plugin that adds a prefix to the response."""
+    """A simple plugin that adds a prefix to the response."""
 
-  def __init__(self) -> None:
-    super().__init__(name="simple_plugin")
+    def __init__(self) -> None:
+        super().__init__(name="simple_plugin")
 
-  async def after_agent_callback(self, **kwargs) -> None:
-    # This is a simplified example. A real plugin would modify the event.
-    print("SimplePlugin: after_agent_callback")
+    async def after_agent_callback(self, **kwargs) -> None:
+        # This is a simplified example. A real plugin would modify the event.
+        print("SimplePlugin: after_agent_callback")
 
 
 root_agent = create_basic_llm_agent(
@@ -40,23 +40,23 @@ root_agent = create_basic_llm_agent(
 app = App(
     name="my_app",
     root_agent=root_agent,
-    plugins=[SimplePlugin],
+    plugins=[SimplePlugin()],
 )
 # END: CODE
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(app.root_agent, "Hello")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(app.root_agent, "Hello")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "Hello" in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "Hello" in response
 
 
 async def test_app_with_plugin():
-  """Tests that an app with a plugin can run."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that an app with a plugin can run."""
+    response = await run_test()
+    assert_test(response)

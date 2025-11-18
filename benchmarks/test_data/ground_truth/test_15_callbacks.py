@@ -23,10 +23,10 @@ callback_was_called = False
 
 
 def my_callback(**kwargs):
-  """A simple callback that sets a flag."""
-  global callback_was_called
-  callback_was_called = True
-  print("Callback was executed.")
+    """A simple callback that sets a flag."""
+    global callback_was_called
+    callback_was_called = True
+    print("Callback was executed.")
 
 
 # BEGIN: CODE
@@ -34,24 +34,24 @@ root_agent = LlmAgent(
     name="callback_agent",
     model=MODEL_NAME,
     instruction="You are a helpful assistant.",
-    after_model_callbacks=my_callback,
+    after_model_callback=my_callback,
 )
 # END: CODE
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Hello")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid and the callback was called."""
-  print(f"Agent response: {response}")
-  assert "Hello" in response
-  assert callback_was_called, "The after_model_callback was not called."
+    """Asserts the response is valid and the callback was called."""
+    print(f"Agent response: {response}")
+    assert "Hello" in response
+    assert callback_was_called, "The after_model_callback was not called."
 
 
 async def test_after_model_callback():
-  """Tests that the after_model_callback is triggered."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that the after_model_callback is triggered."""
+    response = await run_test()
+    assert_test(response)

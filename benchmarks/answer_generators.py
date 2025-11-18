@@ -30,73 +30,68 @@ from benchmarks.data_models import (
 
 
 class AnswerGenerator(abc.ABC):
-  """Abstract base class for answer generators."""
+    """Abstract base class for answer generators."""
 
-  @abc.abstractmethod
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-    """Generates an answer for a given benchmark case."""
-    pass
+    @abc.abstractmethod
+    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+        """Generates an answer for a given benchmark case."""
+        pass
 
 
 class GroundTruthAnswerGenerator(AnswerGenerator):
-  """An answer generator that returns the ground truth answer."""
+    """An answer generator that returns the ground truth answer."""
 
-  def _get_ground_truth_file_map(self) -> dict[str, Path]:
-    """Maps fix_error test file names to their ground truth counterparts."""
-    ground_truth_base_path = Path("benchmarks/test_data/ground_truth")
-    return {
-        f.name: f
-        for f in ground_truth_base_path.glob("test_*.py")
-    }
+    def _get_ground_truth_file_map(self) -> dict[str, Path]:
+        """Maps fix_error test file names to their ground truth counterparts."""
+        ground_truth_base_path = Path("benchmarks/test_data/ground_truth")
+        return {f.name: f for f in ground_truth_base_path.glob("test_*.py")}
 
-  def _extract_code_snippet(self, file_path: Path) -> str:
-    """Extracts the code snippet from a file."""
-    with open(file_path, "r") as f:
-      content = f.read()
-    match = re.search(
-        r"# BEGIN: CODE\n(.*?)# END: CODE", content, re.DOTALL
-    )
-    if not match:
-      raise ValueError(f"Could not find code snippet in {file_path}")
-    return match.group(1).strip()
+    def _extract_code_snippet(self, file_path: Path) -> str:
+        """Extracts the code snippet from a file."""
+        with open(file_path, "r") as f:
+            content = f.read()
+        match = re.search(r"# BEGIN: CODE\n(.*?)# END: CODE", content, re.DOTALL)
+        if not match:
+            raise ValueError(f"Could not find code snippet in {file_path}")
+        return match.group(1).strip()
 
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-    """Returns the ground truth answer for the benchmark case."""
-    if isinstance(benchmark_case, FixErrorBenchmarkCase):
-      file_map = self._get_ground_truth_file_map()
-      ground_truth_file = file_map.get(benchmark_case.test_file.name)
-      if not ground_truth_file:
-        raise ValueError(
-            f"No ground truth file found for {benchmark_case.test_file.name}"
-        )
-      code = self._extract_code_snippet(ground_truth_file)
-      output = FixErrorAnswerOutput(code=code)
-      return GeneratedAnswer(output=output)
-    elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-      answer = benchmark_case.answers[0]
-      output = ApiUnderstandingAnswerOutput(
-          code=answer.answer, module_path=answer.module_path
-      )
-      return GeneratedAnswer(output=output)
-    else:
-      raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")
+    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+        """Returns the ground truth answer for the benchmark case."""
+        if isinstance(benchmark_case, FixErrorBenchmarkCase):
+            file_map = self._get_ground_truth_file_map()
+            ground_truth_file = file_map.get(benchmark_case.test_file.name)
+            if not ground_truth_file:
+                raise ValueError(
+                    f"No ground truth file found for {benchmark_case.test_file.name}"
+                )
+            code = self._extract_code_snippet(ground_truth_file)
+            output = FixErrorAnswerOutput(code=code)
+            return GeneratedAnswer(output=output)
+        elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
+            answer = benchmark_case.answers[0]
+            output = ApiUnderstandingAnswerOutput(
+                code=answer.answer, module_path=answer.module_path
+            )
+            return GeneratedAnswer(output=output)
+        else:
+            raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")
 
 
 class TrivialAnswerGenerator(AnswerGenerator):
-  """An answer generator that returns a trivial (empty) answer."""
+    """An answer generator that returns a trivial (empty) answer."""
 
-  def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-    """Returns an empty answer for any benchmark case."""
-    if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-      template_map = {
-          AnswerTemplate.CLASS_DEFINITION: "class Trivial:",
-          AnswerTemplate.METHOD_DEFINITION: "def trivial():",
-          AnswerTemplate.PARAMETER_DEFINITION: "trivial: None",
-          AnswerTemplate.TYPE_ALIAS_DEFINITION: "Trivial: TypeAlias = None",
-          AnswerTemplate.CODE_BLOCK: "pass",
-      }
-      code = template_map.get(benchmark_case.template, "")
-      output = ApiUnderstandingAnswerOutput(code=code, module_path="")
-      return GeneratedAnswer(output=output)
-    output = FixErrorAnswerOutput(code="")
-    return GeneratedAnswer(output=output)
+    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+        """Returns an empty answer for any benchmark case."""
+        if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
+            template_map = {
+                AnswerTemplate.CLASS_DEFINITION: "class Trivial:",
+                AnswerTemplate.METHOD_DEFINITION: "def trivial():",
+                AnswerTemplate.PARAMETER_DEFINITION: "trivial: None",
+                AnswerTemplate.TYPE_ALIAS_DEFINITION: "Trivial: TypeAlias = None",
+                AnswerTemplate.CODE_BLOCK: "pass",
+            }
+            code = template_map.get(benchmark_case.template, "")
+            output = ApiUnderstandingAnswerOutput(code=code, module_path="")
+            return GeneratedAnswer(output=output)
+        output = FixErrorAnswerOutput(code="")
+        return GeneratedAnswer(output=output)

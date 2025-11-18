@@ -29,25 +29,23 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 async def run_test(run_a: bool) -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(
-      root_agent, "Run", initial_state={"run_agent_a": run_a}
-  )
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "Run", initial_state={"run_agent_a": run_a})
 
 
 def assert_test(response: str, expected_agent: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert expected_agent in response
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert expected_agent in response
 
 
 async def test_custom_agent_condition_a():
-  """Tests that the custom agent runs agent_a when the condition is met."""
-  response = await run_test(run_a=True)
-  assert_test(response, "Agent A")
+    """Tests that the custom agent runs agent_a when the condition is met."""
+    response = await run_test(run_a=True)
+    assert_test(response, "Agent A")
 
 
 async def test_custom_agent_condition_b():
-  """Tests that the custom agent runs agent_b when the condition is not met."""
-  response = await run_test(run_a=False)
-  assert_test(response, "Agent B")
+    """Tests that the custom agent runs agent_b when the condition is not met."""
+    response = await run_test(run_a=False)
+    assert_test(response, "Agent B")

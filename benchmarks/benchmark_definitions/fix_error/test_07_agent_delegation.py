@@ -25,17 +25,17 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "I need a specialist.")
+    """Runs the agent and returns the response."""
+    return await run_agent_test(root_agent, "I need a specialist.")
 
 
 def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "specialist ok" in response.lower()
+    """Asserts the response is valid."""
+    print(f"Agent response: {response}")
+    assert "specialist ok" in response.lower()
 
 
 async def test_agent_delegation():
-  """Tests that a root agent can delegate a task to a sub-agent."""
-  response = await run_test()
-  assert_test(response)
+    """Tests that a root agent can delegate a task to a sub-agent."""
+    response = await run_test()
+    assert_test(response)

@@ -24,42 +24,38 @@ from benchmarks import benchmark_orchestrator
 
 @pytest.mark.asyncio
 async def test_benchmarks():
-  """
-  Runs a comprehensive benchmark test suite.
+    """
+    Runs a comprehensive benchmark test suite.
 
-  This test evaluates multiple answer generators against all available benchmark
-  suites. Its primary assertion is that the GroundTruthAnswerGenerator achieves
-  a perfect score (100% pass rate), which validates the integrity of the
-  benchmark framework itself.
-  """
-  benchmark_suites = [
-      "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
-      "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
-  ]
-  answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
-  raw_results_df = await benchmark_orchestrator.run_benchmarks(
-      benchmark_suites, answer_generators
-  )
+    This test evaluates multiple answer generators against all available benchmark
+    suites. Its primary assertion is that the GroundTruthAnswerGenerator achieves
+    a perfect score (100% pass rate), which validates the integrity of the
+    benchmark framework itself.
+    """
+    benchmark_suites = [
+        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
+    ]
+    answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
+    raw_results_df = await benchmark_orchestrator.run_benchmarks(
+        benchmark_suites, answer_generators
+    )
 
-  # Calculate summary from raw results
-  summary_df = (
-      raw_results_df.groupby("answer_generator")["result"]
-      .agg(["sum", "count"])
-      .rename(columns={"sum": "passed", "count": "total"})
-  )
-  summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
+    # Calculate summary from raw results
+    summary_df = (
+        raw_results_df.groupby("answer_generator")["result"]
+        .agg(["sum", "count"])
+        .rename(columns={"sum": "passed", "count": "total"})
+    )
+    summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
 
-  print("\n--- Benchmark Summary ---")
-  print(summary_df)
+    print("\n--- Benchmark Summary ---")
+    print(summary_df)
 
-  ground_truth_pass_rate = summary_df.loc["GroundTruthAnswerGenerator"][
-      "pass_rate"
-  ]
-  assert ground_truth_pass_rate == 1.0, (
-      "GroundTruthAnswerGenerator failed to achieve a perfect score."
-  )
+    ground_truth_pass_rate = summary_df.loc["GroundTruthAnswerGenerator"]["pass_rate"]
+    assert (
+        ground_truth_pass_rate == 1.0
+    ), "GroundTruthAnswerGenerator failed to achieve a perfect score."
 
-  trivial_pass_rate = summary_df.loc["TrivialAnswerGenerator"]["pass_rate"]
-  assert trivial_pass_rate == 0.0, (
-      "TrivialAnswerGenerator achieved a non-zero score."
-  )
+    trivial_pass_rate = summary_df.loc["TrivialAnswerGenerator"]["pass_rate"]
+    assert trivial_pass_rate == 0.0, "TrivialAnswerGenerator achieved a non-zero score."
