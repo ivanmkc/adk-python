@@ -4,7 +4,7 @@ This directory contains a data-driven framework for evaluating and comparing dif
 
 ## Overview
 
-The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initiated by `test_benchmarks.py`. It operates by running `AnswerGenerator` classes against benchmark cases defined in YAML files. The results are compiled into a pandas DataFrame that scores the performance of each generator.
+The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initiated by `test_benchmarks.py`. It operates by running `AnswerGenerator` classes against benchmark cases defined in YAML files. The orchestrator runs all tests in parallel and returns a list of strongly-typed `BenchmarkRunResult` Pydantic objects that can be easily converted into a pandas DataFrame for analysis.
 
 ### Architecture Call Graph
 
@@ -36,10 +36,10 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
 ### Key Components
 
 *   **`test_benchmarks.py`**: The main `pytest` entry point for validating the framework's integrity.
-*   **`benchmark_orchestrator.py`**: The central orchestrator that iterates through benchmarks, calls the appropriate runner for each case, and aggregates results.
-*   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`).
+*   **`benchmark_orchestrator.py`**: The central orchestrator that runs benchmarks in parallel, calls the appropriate runner for each case, and aggregates results into a list of `BenchmarkRunResult` objects.
+*   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`). Each runner creates a persistent temporary file for its test case to allow for inspection after the run.
 *   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`).
-*   **`data_models.py`**: Pydantic models for the benchmark YAML files.
+*   **`data_models.py`**: Pydantic models for the benchmark YAML files and for the structured `BenchmarkRunResult`.
 *   **`benchmark_definitions/`**: Contains the YAML data files and test templates.
 *   **`test_data/ground_truth/`**: Contains the correct code snippets for `fix_error` benchmarks.
 
@@ -63,10 +63,10 @@ A successful run is a prerequisite for meaningful evaluation of other answer gen
 
 This is the primary purpose of the framework. The goal is to run one or more experimental `AnswerGenerator`s against the benchmark suites to gather performance metrics. This is not a simple pass/fail test but an experiment to produce a comparative analysis.
 
-The recommended way to do this is to use a separate script or a Jupyter Notebook (see `benchmark_visualization.ipynb` for an example) where you can:
+The recommended way to do this is to use a separate script or a Jupyter Notebook (see `benchmark_debug.py` for an example) where you can:
 1.  Import your candidate `AnswerGenerator`s.
 2.  Call `benchmark_orchestrator.run_benchmarks()` with a list of the generators you want to compare.
-3.  Analyze and visualize the resulting pandas DataFrame.
+3.  Convert the resulting list of `BenchmarkRunResult` objects into a pandas DataFrame for analysis and visualization.
 
 This approach keeps experimental runs separate from the framework's integrity tests.
 
@@ -109,9 +109,10 @@ async def main():
     ]
 
     print("Executing benchmark evaluation...")
-    raw_results_df = await benchmark_orchestrator.run_benchmarks(
+    results = await benchmark_orchestrator.run_benchmarks(
         benchmark_suites, answer_generators_to_test
     )
+    raw_results_df = pd.DataFrame([r.model_dump() for r in results])
 
     # Calculate summary from raw results
     summary_df = (
@@ -165,7 +166,7 @@ To add a new type of benchmark (e.g., "code_completion"), follow these steps:
 
 2.  **Implement the Benchmark Runner:**
     *   In `benchmark_runner.py`, create a new class that inherits from `BenchmarkRunner` (e.g., `CodeCompletionRunner`).
-    *   Implement the `async def run_benchmark(...)` method to define the execution and validation logic for this new benchmark type. It must return a tuple of `("pass" or "fail", validation_error_string_or_none)`.
+    *   Implement the `async def run_benchmark(...)` method to define the execution and validation logic. It must return a tuple of `(result: str, validation_error: Optional[str], temp_file_path: Optional[str])`.
 
 3.  **Create the YAML Data File:**
     *   Create a new YAML file in `benchmark_definitions/` (e.g., `code_completion_benchmarks.yaml`).

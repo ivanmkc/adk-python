@@ -93,5 +93,5 @@ class TrivialAnswerGenerator(AnswerGenerator):
             code = template_map.get(benchmark_case.template, "")
             output = ApiUnderstandingAnswerOutput(code=code, module_path="")
             return GeneratedAnswer(output=output)
-        output = FixErrorAnswerOutput(code="")
+        output = FixErrorAnswerOutput(code="agent = Agent()")
         return GeneratedAnswer(output=output)

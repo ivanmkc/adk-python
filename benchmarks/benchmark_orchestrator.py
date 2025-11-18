@@ -37,69 +37,70 @@ from benchmarks.answer_generators import (
 
 
 from benchmarks.benchmark_runner import ApiUnderstandingRunner, PytestBenchmarkRunner
+from tqdm.asyncio import tqdm
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BenchmarkFile,
+    BenchmarkRunResult,
     FixErrorBenchmarkCase,
 )
 from benchmarks.validation_utils import ValidationError
 
 
+async def _run_single_benchmark(
+    suite_file: str,
+    case: FixErrorBenchmarkCase | ApiUnderstandingBenchmarkCase,
+    generator: AnswerGenerator,
+) -> BenchmarkRunResult:
+    """Helper coroutine to run one benchmark case and return its result."""
+    generator_name = generator.__class__.__name__
+    runner = case.runner
+    generated_answer = generator.generate_answer(case)
+    result, validation_error, temp_file_path = await runner.run_benchmark(
+        case, generated_answer
+    )
+
+    return BenchmarkRunResult(
+        suite=Path(suite_file).name,
+        benchmark_name=case.get_identifier(),
+        answer_generator=generator_name,
+        result=1 if result == "pass" else 0,
+        answer=str(generated_answer.output),
+        validation_error=validation_error,
+        temp_test_file=temp_file_path,
+    )
+
+
 async def run_benchmarks(
     benchmark_suites: list[str], answer_generators: list[AnswerGenerator]
-) -> pd.DataFrame:
+) -> list[BenchmarkRunResult]:
     """
-    Runs all benchmark suites against all answer generators and returns raw results.
-
-    This function serves as the central orchestrator for the benchmark framework.
-    It performs the following steps:
-      1. Iterates through each provided benchmark suite (YAML file).
-      2. For each suite, it iterates through every provided AnswerGenerator.
-      3. For each benchmark case within the suite, it determines the appropriate
-         BenchmarkRunner.
-      4. It invokes the AnswerGenerator to get the code to test.
-      5. It calls the selected BenchmarkRunner to execute the test.
-      6. It compiles the detailed pass/fail results into a raw DataFrame.
-
-    Args:
-      benchmark_suites: A list of paths to the benchmark suite YAML files.
-      answer_generators: A list of AnswerGenerator instances to evaluate.
-
-    Returns:
-      A pandas DataFrame containing the raw, unsummarized results of the
-      benchmark run. Each row includes the suite, benchmark name, answer
-      generator, and the pass/fail result.
+    Runs all benchmark suites against all answer generators in parallel and returns raw results.
+    ...
     """
-    results = []
+    tasks = []
 
     for suite_file in benchmark_suites:
-        print(f"--- Running benchmark suite: {suite_file} ---")
+        print(f"--- Loading benchmark suite: {suite_file} ---")
         with open(suite_file, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
         benchmark_file = BenchmarkFile.model_validate(data)
 
         for generator in answer_generators:
-            generator_name = generator.__class__.__name__
-            print(f"  - Using answer generator: {generator_name}")
+            print(
+                "  - Queuing tests for answer generator:"
+                f" {generator.__class__.__name__}"
+            )
             for case in benchmark_file.benchmarks:
-                runner = case.runner
-                generated_answer = generator.generate_answer(case)
-                result, validation_error = await runner.run_benchmark(
-                    case, generated_answer
-                )
+                tasks.append(_run_single_benchmark(suite_file, case, generator))
 
-                results.append(
-                    {
-                        "suite": Path(suite_file).name,
-                        "benchmark_name": case.get_identifier(),
-                        "answer_generator": generator_name,
-                        "result": 1 if result == "pass" else 0,
-                        "answer": str(generated_answer.output),
-                        "validation_error": validation_error,
-                    }
-                )
+    print(f"\n--- Running {len(tasks)} benchmarks in parallel ---")
+    results = [
+        await f
+        for f in tqdm(asyncio.as_completed(tasks), total=len(tasks))
+    ]
 
-    return pd.DataFrame(results)
+    return results
 
 
 def main():

@@ -19,15 +19,13 @@ import asyncio
 import sys
 import tempfile
 from pathlib import Path
-from typing import Generic, TypeVar, Union
+from typing import Generic, TypeVar, Optional
 
 import pytest
 
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
-    BenchmarkResult,
-    ExpectedOutcome,
     FixErrorBenchmarkCase,
     GeneratedAnswer,
 )
@@ -47,7 +45,7 @@ class BenchmarkRunner(abc.ABC, Generic[BenchmarkCaseT]):
     @abc.abstractmethod
     async def run_benchmark(
         self, benchmark_case: BenchmarkCaseT, generated_answer: GeneratedAnswer
-    ) -> str:
+    ) -> tuple[str, Optional[str], Optional[str]]:
         """Runs a benchmark and returns the result."""
         pass
 
@@ -57,7 +55,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str, str]:
         """Runs a benchmark using pytest and returns the result and logs."""
         code_to_test = generated_answer.output.code
         project_root = Path(__file__).parent.parent
@@ -73,14 +71,10 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             "# BEGIN: CODE\n# END: CODE", f"# BEGIN: CODE\n{code_to_test}\n# END: CODE"
         )
 
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            delete=False,
-            suffix=".py",
-            dir=str(benchmark_case.test_file.parent),
-        ) as tmp:
+        tmpdir = tempfile.mkdtemp(prefix="benchmark_")
+        tmp_path = Path(tmpdir) / "test_temp.py"
+        with open(tmp_path, "w", encoding="utf-8") as tmp:
             tmp.write(new_content)
-            tmp_path = Path(tmp.name)
 
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
@@ -91,14 +85,13 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await proc.communicate()
-        tmp_path.unlink()
 
         logs = (
             f"--- Pytest stdout ---\n{stdout.decode()}\n"
             f"--- Pytest stderr ---\n{stderr.decode()}"
         )
         result = "pass" if proc.returncode == 0 else "fail"
-        return result, logs
+        return result, logs, str(tmp_path)
 
 
 import re
@@ -117,7 +110,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
         self,
         benchmark_case: ApiUnderstandingBenchmarkCase,
         generated_answer: GeneratedAnswer,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str, None]:
         """Validates the generated answer and returns the result and logs."""
         all_errors = []
         output = generated_answer.output
@@ -134,7 +127,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
                         "Normalized code does not match normalized ground truth."
                     )
                 validate_module_path(module_path_to_test, benchmark_case.file)
-                return "pass", "Validation successful."
+                return "pass", "Validation successful.", None
 
             except ValidationError as e:
                 all_errors.append(
@@ -146,4 +139,4 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
             f"--- Validation Failed for: {benchmark_case.get_identifier()} ---\n"
             + "\n".join(all_errors)
         )
-        return "fail", logs
+        return "fail", logs, None

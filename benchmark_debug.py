@@ -1,13 +1,12 @@
-
 import asyncio
-import pandas as pd
-import ast
-
+from typing import List
 from benchmarks import benchmark_orchestrator
 from benchmarks.answer_generators import (
     GroundTruthAnswerGenerator,
     TrivialAnswerGenerator,
 )
+from benchmarks.data_models import BenchmarkRunResult
+import pandas as pd
 
 # ANSI escape codes for colors
 class bcolors:
@@ -21,13 +20,13 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-async def run_comparison() -> pd.DataFrame:
+async def run_comparison() -> List[BenchmarkRunResult]:
     """Sets up and runs the benchmark comparison."""
     print("Configuring benchmark run...")
     
     benchmark_suites = [
-        "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
-        # "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
+        # "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
     ]
     
     answer_generators = [
@@ -36,13 +35,11 @@ async def run_comparison() -> pd.DataFrame:
     ]
     
     print("Executing benchmarks...")
-    raw_results_df = (
-        await benchmark_orchestrator.run_benchmarks(
-            benchmark_suites=benchmark_suites, answer_generators=answer_generators
-        )
+    results = await benchmark_orchestrator.run_benchmarks(
+        benchmark_suites=benchmark_suites, answer_generators=answer_generators
     )
     
-    return raw_results_df
+    return results
 
 def analyze_logs(
     results_df: pd.DataFrame, generator_name: str, result_type: str = 'fail'
@@ -68,11 +65,14 @@ def analyze_logs(
         print(f"{bcolors.OKCYAN}  Answer:{bcolors.ENDC}\n    {row['answer']}")
         if result_type.lower() == 'fail':
             print(f"{bcolors.FAIL}  Validation Error:{bcolors.ENDC}\n    {row['validation_error']}")
+            if "temp_test_file" in row and pd.notna(row["temp_test_file"]):
+                print(f"{bcolors.OKBLUE}  Temp File:{bcolors.ENDC} {row['temp_test_file']}")
         print("-" * 40)
 
 def main() -> None:
     """Runs the benchmark comparison and displays results."""
-    raw_results_df = asyncio.run(run_comparison())
+    results = asyncio.run(run_comparison())
+    raw_results_df = pd.DataFrame([r.model_dump() for r in results])
 
     # Calculate summary from raw results
     summary_df = (

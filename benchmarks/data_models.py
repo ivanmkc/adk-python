@@ -205,3 +205,17 @@ class GeneratedAnswer(pydantic.BaseModel):
     """
 
     output: AnswerOutput
+
+
+class BenchmarkRunResult(pydantic.BaseModel):
+    """Represents the structured result of a single benchmark run."""
+
+    suite: str
+    benchmark_name: str
+    answer_generator: str
+    result: int = Field(
+        ..., description="The result of the benchmark run: 1 for pass, 0 for fail."
+    )
+    answer: str
+    validation_error: Optional[str] = None
+    temp_test_file: Optional[str] = None
