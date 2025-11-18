@@ -20,7 +20,7 @@ import pytest
 
 from google.adk.agents import LlmAgent
 from google.genai import types
-from benchmarks._rigs import MODEL_NAME, run_agent_test
+from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 @pytest.mark.asyncio

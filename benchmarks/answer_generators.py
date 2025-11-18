@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 
 from benchmarks.data_models import (
+    AnswerTemplate,
     ApiUnderstandingAnswerOutput,
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
@@ -42,7 +43,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
 
   def _get_ground_truth_file_map(self) -> dict[Path, Path]:
     """Returns a map from fix_error test files to their ground truth counterparts."""
-    base_path = Path("benchmarks/benchmark_definitions/fix_error")
+    base_path = Path("benchmarks/test_data/ground_truth")
     ground_truth_base_path = Path("benchmarks/test_data/ground_truth")
     return {
         base_path / f.name: ground_truth_base_path / f.name
@@ -88,7 +89,15 @@ class TrivialAnswerGenerator(AnswerGenerator):
   def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
     """Returns an empty answer for any benchmark case."""
     if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-      output = ApiUnderstandingAnswerOutput(code="", module_path="")
+      template_map = {
+          AnswerTemplate.CLASS_DEFINITION: "class Trivial:",
+          AnswerTemplate.METHOD_DEFINITION: "def trivial():",
+          AnswerTemplate.PARAMETER_DEFINITION: "trivial: None",
+          AnswerTemplate.TYPE_ALIAS_DEFINITION: "Trivial: TypeAlias = None",
+          AnswerTemplate.CODE_BLOCK: "pass",
+      }
+      code = template_map.get(benchmark_case.template, "")
+      output = ApiUnderstandingAnswerOutput(code=code, module_path="")
       return GeneratedAnswer(output=output)
     output = FixErrorAnswerOutput(code="")
     return GeneratedAnswer(output=output)

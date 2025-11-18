@@ -20,7 +20,7 @@ import pytest
 
 from google.adk.agents import LlmAgent
 from google.adk.tools.function_tool import FunctionTool
-from benchmarks._rigs import MODEL_NAME, run_agent_test
+from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 async def _mock_tool_func(query: str) -> str:

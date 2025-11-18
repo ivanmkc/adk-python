@@ -20,7 +20,7 @@ import os
 import pytest
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
-from benchmarks._rigs import run_agent_test
+from benchmarks.test_helpers import run_agent_test
 
 # Skip this test if the OPENAI_API_KEY is not set.
 pytestmark = pytest.mark.skipif(

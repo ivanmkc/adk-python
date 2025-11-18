@@ -4,12 +4,39 @@ This directory contains a data-driven framework for evaluating and comparing dif
 
 ## Overview
 
-The benchmark framework is orchestrated by `test_rig.py` and initiated by `test_benchmarks.py`. It operates by running `AnswerGenerator` classes against benchmark cases defined in YAML files. The results are compiled into a pandas DataFrame that scores the performance of each generator.
+The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initiated by `test_benchmarks.py`. It operates by running `AnswerGenerator` classes against benchmark cases defined in YAML files. The results are compiled into a pandas DataFrame that scores the performance of each generator.
+
+### Architecture Call Graph
+
+```
+   +-----------------------+
+   |  test_benchmarks.py   |  (pytest entry point)
+   +-----------------------+
+              |
+              | Calls
+              v
+   +---------------------------+
+   | benchmark_orchestrator.py |  (Main orchestrator)
+   +---------------------------+
+      |           |           |
+      | Uses      | Uses      | Uses
+      v           v           v
++---------------+  +----------------------+  +---------------------+
+| data_models.py|  | answer_generators.py |  | benchmark_runner.py |
++---------------+  +----------------------+  +---------------------+
+                      |
+                      | Reads from
+                      v
+        +---------------------------+
+        | test_data/ground_truth/   |
+        +---------------------------+
+
+```
 
 ### Key Components
 
 *   **`test_benchmarks.py`**: The main `pytest` entry point for validating the framework's integrity.
-*   **`test_rig.py`**: The central orchestrator that runs benchmarks and aggregates results.
+*   **`benchmark_orchestrator.py`**: The central orchestrator that runs benchmarks and aggregates results.
 *   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`).
 *   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`).
 *   **`data_models.py`**: Pydantic models for the benchmark YAML files.
@@ -38,10 +65,65 @@ This is the primary purpose of the framework. The goal is to run one or more exp
 
 The recommended way to do this is to use a separate script or a Jupyter Notebook (see `benchmark_visualization.ipynb` for an example) where you can:
 1.  Import your candidate `AnswerGenerator`s.
-2.  Call `test_rig.run_benchmarks()` with a list of the generators you want to compare.
+2.  Call `benchmark_orchestrator.run_benchmarks()` with a list of the generators you want to compare.
 3.  Analyze and visualize the resulting pandas DataFrame.
 
 This approach keeps experimental runs separate from the framework's integrity tests.
+
+### Example: Evaluating a Custom Generator
+
+Here is a code snippet demonstrating how to run an evaluation. You can use this as a template for your own evaluation scripts.
+
+First, define your custom generator (e.g., in `my_answer_generator.py`):
+
+```python
+# my_answer_generator.py
+from benchmarks.answer_generators import AnswerGenerator
+from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer, FixErrorAnswerOutput
+
+class MySimpleAnswerGenerator(AnswerGenerator):
+    """A simple generator that always returns 'pass' for fix_error cases."""
+    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+        code_snippet = "pass"  # Replace with your actual generation logic
+        output = FixErrorAnswerOutput(code=code_snippet)
+        return GeneratedAnswer(output=output)
+```
+
+Next, create your evaluation script to run the benchmark:
+
+```python
+# run_my_evaluation.py
+import asyncio
+from benchmarks import benchmark_orchestrator
+from benchmarks.answer_generators import GroundTruthAnswerGenerator
+from my_answer_generator import MySimpleAnswerGenerator
+
+async def main():
+    benchmark_suites = [
+        "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
+    ]
+    answer_generators_to_test = [
+        GroundTruthAnswerGenerator(),
+        MySimpleAnswerGenerator(),
+    ]
+
+    print("Executing benchmark evaluation...")
+    raw_results, summary_df = await benchmark_orchestrator.run_benchmarks(
+        benchmark_suites, answer_generators_to_test
+    )
+
+    print("\n--- Evaluation Summary ---")
+    print(summary_df)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Finally, run the script from your terminal:
+
+```bash
+python run_my_evaluation.py
+```
 
 ## Extending the Framework
 
@@ -56,7 +138,7 @@ The framework is designed to be extensible.
 
 2.  **Evaluate the Generator:**
     *   In your evaluation script or notebook, import your new generator.
-    *   Add an instance of it to the `answer_generators` list that you pass to `test_rig.run_benchmarks()`.
+    *   Add an instance of it to the `answer_generators` list that you pass to `benchmark_orchestrator.run_benchmarks()`.
 
 ### How to Add a New Benchmark Type
 
@@ -76,8 +158,8 @@ To add a new type of benchmark (e.g., "code_completion"), follow these steps:
     *   In `benchmark_runner.py`, create a new class that inherits from `BenchmarkRunner` (e.g., `CodeCompletionRunner`).
     *   Implement the `async def run_benchmark(...)` method to define the execution and validation logic for this new benchmark type. It must return `"pass"` or `"fail"`.
 
-4.  **Update the Test Rig:**
-    *   In `test_rig.py`, add an `elif` to the runner selection logic in `run_benchmarks` to instantiate your new runner for your new benchmark case type.
+4.  **Update the Orchestrator:**
+    *   In `benchmark_orchestrator.py`, add an `elif` to the runner selection logic in `run_benchmarks` to instantiate your new runner for your new benchmark case type.
 
 5.  **Update Answer Generators:**
     *   In `answer_generators.py`, update the `generate_answer` method in `GroundTruthAnswerGenerator` and any other relevant generators to handle your new `CodeCompletionBenchmarkCase`.

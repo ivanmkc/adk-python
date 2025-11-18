@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from google.adk.agents import LlmAgent, SequentialAgent
-from benchmarks._rigs import MODEL_NAME, run_agent_test
+from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 # BEGIN: CODE

@@ -21,7 +21,7 @@ from typing import AsyncGenerator
 from google.adk.agents import BaseAgent, LlmAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
-from benchmarks._rigs import create_basic_llm_agent, run_agent_test
+from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 # BEGIN: CODE

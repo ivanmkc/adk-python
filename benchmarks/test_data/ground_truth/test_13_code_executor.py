@@ -20,7 +20,7 @@ from google.adk.agents import LlmAgent
 from google.adk.code_executors.built_in_code_executor import (
     BuiltInCodeExecutor,
 )
-from benchmarks._rigs import MODEL_NAME, run_agent_test
+from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 # BEGIN: CODE

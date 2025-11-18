@@ -20,7 +20,7 @@ from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.runners import InMemoryRunner
 from google.genai import types
-from benchmarks._rigs import MODEL_NAME
+from benchmarks.test_helpers import MODEL_NAME
 
 
 async def run_test() -> str:

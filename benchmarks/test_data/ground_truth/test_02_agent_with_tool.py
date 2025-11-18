@@ -19,7 +19,7 @@ from __future__ import annotations
 import pytest
 from google.adk.agents import LlmAgent
 from google.adk.tools.function_tool import FunctionTool
-from benchmarks._rigs import MODEL_NAME, basic_tool, run_agent_test
+from benchmarks.test_helpers import MODEL_NAME, basic_tool, run_agent_test
 
 
 # BEGIN: CODE

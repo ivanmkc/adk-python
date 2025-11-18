@@ -22,9 +22,7 @@ from typing import Annotated, Any, Literal, Union, Optional, Type, Self, TYPE_CH
 import pydantic
 from pydantic import Field
 
-# Import BenchmarkRunner under a TYPE_CHECKING block to avoid circular dependency
-if TYPE_CHECKING:
-  from benchmarks.benchmark_runner import BenchmarkRunner
+
 
 
 class BenchmarkType(str, enum.Enum):
@@ -51,10 +49,7 @@ class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
     """Returns a unique identifier for the benchmark case."""
     raise NotImplementedError
 
-  @abc.abstractmethod
-  def get_runner_class(self) -> Type["BenchmarkRunner[Self]"]:
-    """Returns the BenchmarkRunner class responsible for this case type."""
-    raise NotImplementedError
+
 
 
 class FixErrorBenchmarkCase(BaseBenchmarkCase):
@@ -70,11 +65,7 @@ class FixErrorBenchmarkCase(BaseBenchmarkCase):
   def get_identifier(self) -> str:
     return self.name
 
-  def get_runner_class(self) -> Type["BenchmarkRunner"]:
-    """Returns the PytestBenchmarkRunner for fix_error cases."""
-    from benchmarks.benchmark_runner import PytestBenchmarkRunner
 
-    return PytestBenchmarkRunner
 
 
 class StringMatchAnswer(pydantic.BaseModel):
@@ -122,11 +113,7 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
   def get_identifier(self) -> str:
     return self.question
 
-  def get_runner_class(self) -> Type["BenchmarkRunner"]:
-    """Returns the ApiUnderstandingRunner for api_understanding cases."""
-    from benchmarks.benchmark_runner import ApiUnderstandingRunner
 
-    return ApiUnderstandingRunner
 
 
 BenchmarkCase = Annotated[

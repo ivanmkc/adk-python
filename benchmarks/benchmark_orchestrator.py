@@ -22,13 +22,13 @@ import sys
 
 from pathlib import Path
 
-from typing import Union
+
 
 
 
 import pandas as pd
 
-import pydantic
+
 
 import yaml
 
@@ -44,16 +44,9 @@ from benchmarks.answer_generators import (
 
 )
 
-from benchmarks.benchmark_runner import (
 
-    ApiUnderstandingRunner,
 
-    BenchmarkRunner,
-
-    PytestBenchmarkRunner,
-
-)
-
+from benchmarks.benchmark_runner import ApiUnderstandingRunner, PytestBenchmarkRunner
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BenchmarkFile,
@@ -100,8 +93,12 @@ async def run_benchmarks(
       generator_name = generator.__class__.__name__
       print(f"  - Using answer generator: {generator_name}")
       for case in benchmark_file.benchmarks:
-        runner_class = case.get_runner_class()
-        runner = runner_class()
+        if isinstance(case, FixErrorBenchmarkCase):
+          runner = PytestBenchmarkRunner()
+        elif isinstance(case, ApiUnderstandingBenchmarkCase):
+          runner = ApiUnderstandingRunner()
+        else:
+          raise TypeError(f"Unknown benchmark case type: {type(case)}")
 
         generated_answer = generator.generate_answer(case)
         result = await runner.run_benchmark(case, generated_answer)
@@ -119,8 +116,6 @@ async def run_benchmarks(
     return pd.DataFrame()
 
   df = pd.DataFrame(results)
-  print("\n--- Raw Benchmark Results ---")
-  print(df)
 
   summary = (
       df.groupby("answer_generator")["result"]

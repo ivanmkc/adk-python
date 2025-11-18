@@ -19,7 +19,7 @@ from benchmarks.answer_generators import (
     GroundTruthAnswerGenerator,
     TrivialAnswerGenerator,
 )
-from benchmarks import test_rig
+from benchmarks import benchmark_orchestrator
 
 
 @pytest.mark.asyncio
@@ -34,9 +34,10 @@ async def test_benchmarks():
   """
   benchmark_suites = [
       "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
+      "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
   ]
-  answer_generators = [GroundTruthAnswerGenerator()]
-  summary_df = await test_rig.run_benchmarks(benchmark_suites, answer_generators)
+  answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
+  summary_df = await benchmark_orchestrator.run_benchmarks(benchmark_suites, answer_generators)
 
   print("\n--- Benchmark Summary ---")
   print(summary_df)
@@ -48,27 +49,7 @@ async def test_benchmarks():
       "GroundTruthAnswerGenerator failed to achieve a perfect score."
   )
 
-
-@pytest.mark.asyncio
-async def test_api_understanding_ground_truth_pass_rate():
-  """
-  Validates the GroundTruthAnswerGenerator against the API understanding suite.
-
-  This is a targeted test to ensure that the ground truth answers defined in the
-  'api_understanding_benchmarks.yaml' file are all correct and pass their
-  template validation. It serves as a specific integrity check for the API
-  understanding benchmark data.
-  """
-  benchmark_suites = [
-      "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
-  ]
-  answer_generators = [GroundTruthAnswerGenerator()]
-
-  summary_df = await test_rig.run_benchmarks(benchmark_suites, answer_generators)
-
-  ground_truth_pass_rate = summary_df.loc["GroundTruthAnswerGenerator"][
-      "pass_rate"
-  ]
-  assert ground_truth_pass_rate == 1.0, (
-      "GroundTruthAnswerGenerator failed to achieve a perfect score for API understanding benchmarks."
+  trivial_pass_rate = summary_df.loc["TrivialAnswerGenerator"]["pass_rate"]
+  assert trivial_pass_rate == 0.0, (
+      "TrivialAnswerGenerator achieved a non-zero score."
   )

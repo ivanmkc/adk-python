@@ -79,14 +79,23 @@ async def run_agent_test(
       new_message=types.Content(role="user", parts=[types.Part(text=input_message)]),
   ):
     # Capture the final text response from any agent.
-    if event.is_final_response() and event.content and event.content.parts:
-      text_parts = [
-          part.text
-          for part in event.content.parts
-          if hasattr(part, "text") and part.text is not None
-      ]
-      if text_parts:
-        final_response = "".join(text_parts)
-
+          if event.is_final_response() and event.content and event.content.parts:
+            # Capture text parts
+            text_parts = [
+                part.text
+                for part in event.content.parts
+                if hasattr(part, "text") and part.text is not None
+            ]
+            if text_parts:
+              final_response = "".join(text_parts)
+              
+            # Capture tool call parts
+            tool_parts = [
+                part.function_call.name
+                for part in event.content.parts
+                if hasattr(part, "function_call") and part.function_call is not None
+            ]
+            if tool_parts:
+              final_response = "".join(tool_parts)
   assert final_response, f"Agent {agent.name} produced an empty final response."
   return final_response
