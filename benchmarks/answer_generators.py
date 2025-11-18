@@ -41,12 +41,11 @@ class AnswerGenerator(abc.ABC):
 class GroundTruthAnswerGenerator(AnswerGenerator):
   """An answer generator that returns the ground truth answer."""
 
-  def _get_ground_truth_file_map(self) -> dict[Path, Path]:
-    """Returns a map from fix_error test files to their ground truth counterparts."""
-    base_path = Path("benchmarks/test_data/ground_truth")
+  def _get_ground_truth_file_map(self) -> dict[str, Path]:
+    """Maps fix_error test file names to their ground truth counterparts."""
     ground_truth_base_path = Path("benchmarks/test_data/ground_truth")
     return {
-        base_path / f.name: ground_truth_base_path / f.name
+        f.name: f
         for f in ground_truth_base_path.glob("test_*.py")
     }
 
@@ -65,10 +64,10 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
     """Returns the ground truth answer for the benchmark case."""
     if isinstance(benchmark_case, FixErrorBenchmarkCase):
       file_map = self._get_ground_truth_file_map()
-      ground_truth_file = file_map.get(benchmark_case.test_file)
+      ground_truth_file = file_map.get(benchmark_case.test_file.name)
       if not ground_truth_file:
         raise ValueError(
-            f"No ground truth file found for {benchmark_case.test_file}"
+            f"No ground truth file found for {benchmark_case.test_file.name}"
         )
       code = self._extract_code_snippet(ground_truth_file)
       output = FixErrorAnswerOutput(code=code)

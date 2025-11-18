@@ -21,21 +21,6 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 # BEGIN: CODE
-specialist_agent = LlmAgent(
-    name="specialist_agent",
-    model=MODEL_NAME,
-    instruction="You are a specialist. You only respond with 'specialist ok'.",
-    description="Use this agent for specialist tasks.",
-)
-
-root_agent = LlmAgent(
-    name="delegator_agent",
-    model=MODEL_NAME,
-    instruction=(
-        "You are a delegator. If the user asks for a specialist, delegate the"
-        " task to the 'specialist_agent'."
-    ),
-)
 # END: CODE
 
 

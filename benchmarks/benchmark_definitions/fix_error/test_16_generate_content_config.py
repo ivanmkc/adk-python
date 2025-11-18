@@ -12,31 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""01: A minimal LlmAgent."""
+"""Build integrity test for LlmAgent with generate_content_config."""
 
 from __future__ import annotations
 
+import pytest
+
 from google.adk.agents import LlmAgent
+from google.genai import types
 from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
-# BEGIN: CODE
-# END: CODE
-
-print(f"root_agent defined: { 'root_agent' in globals() }")
-
-async def run_test() -> str:
-  """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "Hello")
-
-
-def assert_test(response: str):
-  """Asserts the response is valid."""
-  print(f"Agent response: {response}")
-  assert "Hello" in response, "Expected a greeting containing 'Hello'."
-
-
-async def test_single_llm_agent():
-  """Tests that a single agent can respond to a simple greeting."""
-  response = await run_test()
-  assert_test(response)
+@pytest.mark.asyncio
+async def test_generate_content_config_temperature():
+  """Tests that LlmAgent respects generate_content_config for temperature."""
+  # BEGIN: CODE
+  # END: CODE
+  response = await run_agent_test(agent, "Say hello.")
+  assert "Hello world!" in response

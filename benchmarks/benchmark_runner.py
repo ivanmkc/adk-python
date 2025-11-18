@@ -61,13 +61,14 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
     """Runs a benchmark using pytest and returns the result and logs."""
     code_to_test = generated_answer.output.code
     project_root = Path(__file__).parent.parent
-    test_file_path = (project_root / benchmark_case.test_file).resolve()
+    test_file_path = project_root / benchmark_case.test_file
 
     if not test_file_path.exists():
       raise FileNotFoundError(f"Could not find test file: {test_file_path}")
 
     with open(test_file_path, "r", encoding="utf-8") as f:
       content = f.read()
+    # Replace the code block with the code to test.
     new_content = content.replace(
         "# BEGIN: CODE\n# END: CODE", f"# BEGIN: CODE\n{code_to_test}\n# END: CODE"
     )
@@ -76,7 +77,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
         mode="w",
         delete=False,
         suffix=".py",
-        dir=benchmark_case.test_file.parent,
+        dir=str(benchmark_case.test_file.parent),
     ) as tmp:
       tmp.write(new_content)
       tmp_path = Path(tmp.name)

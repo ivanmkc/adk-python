@@ -12,45 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""07: A root agent delegating a task to a sub-agent."""
+"""14: An LlmAgent using an OpenAI model via LiteLlm."""
 
 from __future__ import annotations
 
+import os
+import pytest
 from google.adk.agents import LlmAgent
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+from google.adk.models.lite_llm import LiteLlm
+from benchmarks.test_helpers import run_agent_test
 
+# Skip this test if the OPENAI_API_KEY is not set.
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+)
 
 # BEGIN: CODE
-specialist_agent = LlmAgent(
-    name="specialist_agent",
-    model=MODEL_NAME,
-    instruction="You are a specialist. You only respond with 'specialist ok'.",
-    description="Use this agent for specialist tasks.",
-)
-
-root_agent = LlmAgent(
-    name="delegator_agent",
-    model=MODEL_NAME,
-    instruction=(
-        "You are a delegator. If the user asks for a specialist, delegate the"
-        " task to the 'specialist_agent'."
-    ),
-)
 # END: CODE
 
 
 async def run_test() -> str:
   """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "I need a specialist.")
+  return await run_agent_test(root_agent, "Hello")
 
 
 def assert_test(response: str):
   """Asserts the response is valid."""
   print(f"Agent response: {response}")
-  assert "specialist ok" in response.lower()
+  assert "Hello" in response
 
 
-async def test_agent_delegation():
-  """Tests that a root agent can delegate a task to a sub-agent."""
+async def test_agent_with_litellm_openai():
+  """Tests that an agent can use an OpenAI model via LiteLlm."""
   response = await run_test()
   assert_test(response)

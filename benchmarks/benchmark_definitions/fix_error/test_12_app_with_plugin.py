@@ -12,45 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""07: A root agent delegating a task to a sub-agent."""
+"""12: An App instance that includes a basic plugin."""
 
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+from google.adk.apps import App
+from google.adk.plugins import BasePlugin
+from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 # BEGIN: CODE
-specialist_agent = LlmAgent(
-    name="specialist_agent",
-    model=MODEL_NAME,
-    instruction="You are a specialist. You only respond with 'specialist ok'.",
-    description="Use this agent for specialist tasks.",
-)
-
-root_agent = LlmAgent(
-    name="delegator_agent",
-    model=MODEL_NAME,
-    instruction=(
-        "You are a delegator. If the user asks for a specialist, delegate the"
-        " task to the 'specialist_agent'."
-    ),
-)
 # END: CODE
 
 
 async def run_test() -> str:
   """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "I need a specialist.")
+  return await run_agent_test(app.root_agent, "Hello")
 
 
 def assert_test(response: str):
   """Asserts the response is valid."""
   print(f"Agent response: {response}")
-  assert "specialist ok" in response.lower()
+  assert "Hello" in response
 
 
-async def test_agent_delegation():
-  """Tests that a root agent can delegate a task to a sub-agent."""
+async def test_app_with_plugin():
+  """Tests that an app with a plugin can run."""
   response = await run_test()
   assert_test(response)

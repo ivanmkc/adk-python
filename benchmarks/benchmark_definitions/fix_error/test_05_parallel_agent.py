@@ -12,45 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""07: A root agent delegating a task to a sub-agent."""
+"""05: A ParallelAgent running two agents concurrently."""
 
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+import pytest
+from google.adk.agents import ParallelAgent
+from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 # BEGIN: CODE
-specialist_agent = LlmAgent(
-    name="specialist_agent",
-    model=MODEL_NAME,
-    instruction="You are a specialist. You only respond with 'specialist ok'.",
-    description="Use this agent for specialist tasks.",
-)
-
-root_agent = LlmAgent(
-    name="delegator_agent",
-    model=MODEL_NAME,
-    instruction=(
-        "You are a delegator. If the user asks for a specialist, delegate the"
-        " task to the 'specialist_agent'."
-    ),
-)
 # END: CODE
 
 
 async def run_test() -> str:
   """Runs the agent and returns the response."""
-  return await run_agent_test(root_agent, "I need a specialist.")
+  return await run_agent_test(root_agent, "Run in parallel.")
 
 
 def assert_test(response: str):
   """Asserts the response is valid."""
   print(f"Agent response: {response}")
-  assert "specialist ok" in response.lower()
+  # The response could be from either agent, so we check for a common word.
+  assert "parallel" in response.lower()
 
 
-async def test_agent_delegation():
-  """Tests that a root agent can delegate a task to a sub-agent."""
+async def test_parallel_agent():
+  """Tests that a parallel agent executes its sub-agents."""
   response = await run_test()
   assert_test(response)
