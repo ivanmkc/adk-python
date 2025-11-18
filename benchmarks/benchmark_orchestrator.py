@@ -59,27 +59,26 @@ async def run_benchmarks(
     benchmark_suites: list[str], answer_generators: list[AnswerGenerator]
 ) -> pd.DataFrame:
   """
-  Runs all benchmark suites against all answer generators and returns results.
+  Runs all benchmark suites against all answer generators and returns raw results.
 
   This function serves as the central orchestrator for the benchmark framework.
   It performs the following steps:
     1. Iterates through each provided benchmark suite (YAML file).
     2. For each suite, it iterates through every provided AnswerGenerator.
-    3. For each benchmark case within the suite, it asks the case for the
-       appropriate BenchmarkRunner class.
+    3. For each benchmark case within the suite, it determines the appropriate
+       BenchmarkRunner.
     4. It invokes the AnswerGenerator to get the code to test.
     5. It calls the selected BenchmarkRunner to execute the test.
-    6. It compiles the pass/fail results into a raw DataFrame.
-    7. It aggregates the raw results into a final summary DataFrame, calculating
-       the pass rate for each AnswerGenerator.
+    6. It compiles the detailed pass/fail results into a raw DataFrame.
 
   Args:
     benchmark_suites: A list of paths to the benchmark suite YAML files.
     answer_generators: A list of AnswerGenerator instances to evaluate.
 
   Returns:
-    A pandas DataFrame summarizing the performance of each answer generator,
-    including 'passed', 'total', and 'pass_rate'.
+    A pandas DataFrame containing the raw, unsummarized results of the
+    benchmark run. Each row includes the suite, benchmark name, answer
+    generator, and the pass/fail result.
   """
   results = []
 
@@ -101,29 +100,19 @@ async def run_benchmarks(
           raise TypeError(f"Unknown benchmark case type: {type(case)}")
 
         generated_answer = generator.generate_answer(case)
-        result = await runner.run_benchmark(case, generated_answer)
+        result, logs = await runner.run_benchmark(case, generated_answer)
 
         results.append(
             {
                 "suite": Path(suite_file).name,
-                "benchmark": case.get_identifier(),
+                "benchmark_name": case.get_identifier(),
                 "answer_generator": generator_name,
                 "result": 1 if result == "pass" else 0,
+                "logs": logs,
             }
         )
 
-  if not results:
-    return pd.DataFrame()
-
-  df = pd.DataFrame(results)
-
-  summary = (
-      df.groupby("answer_generator")["result"]
-      .agg(["sum", "count"])
-      .rename(columns={"sum": "passed", "count": "total"})
-  )
-  summary["pass_rate"] = summary["passed"] / summary["total"]
-  return summary
+  return pd.DataFrame(results)
 
 
 

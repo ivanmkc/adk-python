@@ -94,6 +94,7 @@ Next, create your evaluation script to run the benchmark:
 ```python
 # run_my_evaluation.py
 import asyncio
+import pandas as pd
 from benchmarks import benchmark_orchestrator
 from benchmarks.answer_generators import GroundTruthAnswerGenerator
 from my_answer_generator import MySimpleAnswerGenerator
@@ -108,12 +109,23 @@ async def main():
     ]
 
     print("Executing benchmark evaluation...")
-    raw_results, summary_df = await benchmark_orchestrator.run_benchmarks(
+    raw_results_df = await benchmark_orchestrator.run_benchmarks(
         benchmark_suites, answer_generators_to_test
     )
 
+    # Calculate summary from raw results
+    summary_df = (
+        raw_results_df.groupby("answer_generator")["result"]
+        .agg(["sum", "count"])
+        .rename(columns={"sum": "passed", "count": "total"})
+    )
+    summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
+
     print("\n--- Evaluation Summary ---")
     print(summary_df)
+
+    print("\n--- Raw Results ---")
+    print(raw_results_df)
 
 if __name__ == "__main__":
     asyncio.run(main())
