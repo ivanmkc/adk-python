@@ -41,8 +41,6 @@ def mock_api_case() -> ApiUnderstandingBenchmarkCase:
         rationale="To test the generator.",
         category="Data Models",
         file=Path("src/google/adk/sessions/session.py"),
-        line_of_code_start=1,
-        line_of_code_end=100,
         template=AnswerTemplate.CLASS_DEFINITION,
         answers=[
             StringMatchAnswer(

@@ -92,17 +92,22 @@ class StringMatchAnswer(pydantic.BaseModel):
 
     answer_template: Literal["StringMatchAnswer"]
     answer: str
-    module_path: str
+    fully_qualified_class_name: list[str] = pydantic.Field(
+        ...,
+        description="A list of fully qualified names (FQN) for the relevant class. This should include the module path and the class's name only, not method or parameter names. Example: 'google.adk.agents.llm_agent.LlmAgent'",
+    )
 
 
-class AnswerTemplate(enum.Enum):
+
+class AnswerTemplate(str, enum.Enum):
     """The template for the answer."""
 
-    CLASS_DEFINITION = "CLASS_DEFINITION"
-    METHOD_DEFINITION = "METHOD_DEFINITION"
-    PARAMETER_DEFINITION = "PARAMETER_DEFINITION"
-    TYPE_ALIAS_DEFINITION = "TYPE_ALIAS_DEFINITION"
-    CODE_BLOCK = "CODE_BLOCK"
+    CLASS_DEFINITION = "class_definition"
+    PARAMETER_DEFINITION = "parameter_definition"
+    METHOD_DEFINITION = "method_definition"
+    TYPE_ALIAS_DEFINITION = "type_alias_definition"
+    CODE_BLOCK = "code_block"
+    IDENTIFIER = "identifier"
 
 
 class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
@@ -117,14 +122,11 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
     template: AnswerTemplate
     answers: list[StringMatchAnswer]
     file: Path
-    line_of_code_start: int
-    line_of_code_end: int
 
-    @pydantic.field_validator("line_of_code_end")
-    @classmethod
-    def start_must_be_before_end(cls, v: int, info: pydantic.ValidationInfo) -> int:
-        if "line_of_code_start" in info.data and v < info.data["line_of_code_start"]:
-            raise ValueError("line_of_code_end must not be before line_of_code_start")
+    @pydantic.validator("answers", pre=True, each_item=True)
+    def anwers_str_to_list(cls, v):
+        if isinstance(v.get("fully_qualified_class_name"), str):
+            v["fully_qualified_class_name"] = [v["fully_qualified_class_name"]]
         return v
 
     def get_identifier(self) -> str:
@@ -185,8 +187,14 @@ class ApiUnderstandingAnswerOutput(BaseAnswerOutput):
         ...,
         description="The Python code snippet that answers the question, conforming to the required template.",
     )
-    module_path: str = Field(
-        description="The expected Python module path where this code would be found, e.g., 'google.adk.agents.llm_agent'.",
+    fully_qualified_class_name: str = Field(
+        description="""The fully qualified name (FQN) for the relevant class. This should
+        be the path to the module file itself, including the class's name only, not method or parameter names.
+
+        Examples:
+        - Good: 'google.adk.agents.llm_agent.LlmAgent'
+        - Bad: 'google.adk.agents.llm_agent.LlmAgent.model' (includes parameter name)
+        - Bad: 'google.adk.runners.Runner.run' (includes method name)""",
     )
 
 

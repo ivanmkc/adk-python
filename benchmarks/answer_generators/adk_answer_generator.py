@@ -91,7 +91,9 @@ class AdkAnswerGenerator(AnswerGenerator):
             "question about the ADK Python API. The definition must conform to "
             "the specified template structure. Return the result as a JSON "
             "object with two keys: 'code' for the resulting definition and "
-            "'module_path' for the module path."
+            "'fully_qualified_class_name' for the fully qualified name of the "
+            "*class* where the API element is defined (do not include method or "
+            "parameter names in the fully qualified class name). Make sure you include the actual class name in the path."
             "\n\n"
             "Here are a few examples:\n\n"
             "Question: What is the main class for creating a sequential agent in the "
@@ -103,7 +105,7 @@ class AdkAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "class SequentialAgent(google.adk.agents.agent.Agent):",\n'
-            '    "module_path": "google.adk.agents.agent.Agent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.sequential_agent.SequentialAgent"\n'
             "}\n"
             "```\n\n"
             "Question: Which method is used to execute an agent in the ADK?\n"
@@ -113,7 +115,7 @@ class AdkAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "def run(self, request: "RunnerRequest") -> "RunnerResponse":",\n'
-            '    "module_path": "google.adk.runners.Runner"\n'
+            '    "fully_qualified_class_name": "google.adk.runners.Runner"\n'
             "}\n"
             "```\n\n"
             "Question: What parameter defines the LLM to be used in an LlmAgent?\n"
@@ -124,7 +126,7 @@ class AdkAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "model: str | Llm | None = None,",\n'
-            '    "module_path": "google.adk.agents.llm_agent.LlmAgent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.llm_agent.LlmAgent"\n'
             "}\n"
             "```\n\n"
             "Now, answer the following question:\n\n"

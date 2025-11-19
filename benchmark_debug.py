@@ -28,12 +28,12 @@ async def run_comparison() -> List[BenchmarkRunResult]:
     
     benchmark_suites = [
         # "benchmarks/benchmark_definitions/fix_error_benchmarks_mini.yaml",
-        "benchmarks/benchmark_definitions/api_understanding_benchmarks_mini.yaml",
+        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
     ]
     
     answer_generators = [
-        GroundTruthAnswerGenerator(),
-        TrivialAnswerGenerator(),
+        # GroundTruthAnswerGenerator(),
+        # TrivialAnswerGenerator(),
         GeminiAnswerGenerator(),
         # AdkAnswerGenerator(),
     ]
@@ -90,7 +90,7 @@ def main() -> None:
     print(summary_df)
             
     # --- Configuration ---
-    generator_to_analyze = 'AdkAnswerGenerator' 
+    generator_to_analyze = 'GeminiAnswerGenerator' 
     result_type_to_see = 'fail' 
 
     analyze_logs(

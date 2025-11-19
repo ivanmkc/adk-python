@@ -29,11 +29,7 @@ from benchmarks.data_models import (
     FixErrorBenchmarkCase,
     GeneratedAnswer,
 )
-from benchmarks.validation_utils import (
-    ValidationError,
-    validate_answer_against_template,
-    validate_module_path,
-)
+import benchmarks.validation_utils as validation_utils
 
 # A TypeVar to create a generic link between a runner and the case it handles.
 BenchmarkCaseT = TypeVar("BenchmarkCaseT", bound=BaseBenchmarkCase)
@@ -104,7 +100,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
     """
 
     def _normalize_code(self, code: str) -> str:
-        """Normalizes code for comparison by collapsing whitespace and stripping."""
+        """Normalizes code for comparison by collapsing whitespace to one space and stripping."""
         # Replace all whitespace sequences with a single space
         code = re.sub(r"\s+", " ", code)
         # Remove leading/trailing whitespace
@@ -119,21 +115,24 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
         all_errors = []
         output = generated_answer.output
         code_to_test = output.code
-        module_path_to_test = output.module_path
+
 
         for ground_truth in benchmark_case.answers:
             try:
-                validate_answer_against_template(code_to_test, benchmark_case.template)
+                validation_utils.validate_answer_against_template(code_to_test, benchmark_case.template)
                 normalized_code = self._normalize_code(code_to_test)
                 normalized_ground_truth = self._normalize_code(ground_truth.answer)
-                if normalized_code != normalized_ground_truth:
-                    raise ValidationError(
+                if normalized_ground_truth not in normalized_code:
+                    raise validation_utils.ValidationError(
                         "Normalized code does not match normalized ground truth."
                     )
-                validate_module_path(module_path_to_test, benchmark_case.file)
+                validation_utils.validate_module_path(
+                    fully_qualified_class_name=generated_answer.output.fully_qualified_class_name,
+                    expected_paths=ground_truth.fully_qualified_class_name,
+                )
                 return "pass", "Validation successful.", None
 
-            except ValidationError as e:
+            except validation_utils.ValidationError as e:
                 all_errors.append(
                     f"  - Ground Truth '{self._normalize_code(ground_truth.answer)}'"
                     f" failed: {e}"

@@ -29,6 +29,12 @@ from benchmarks.data_models import AnswerTemplate, StringMatchAnswer
 class ValidationError(Exception):
     """Base class for validation errors."""
 
+    def __init__(
+        self, message: str, expected_path: str | None = None
+    ):  # pylint: disable=redefined-builtin
+        super().__init__(message)
+        self.expected_path = expected_path
+
 
 class TemplateMismatchError(ValidationError):
     """Raised when an answer does not match its template."""
@@ -47,34 +53,30 @@ class TemplateInfo(pydantic.BaseModel):
 
 TEMPLATES = {
     AnswerTemplate.CLASS_DEFINITION: TemplateInfo(
-        regex=r"^\s*class\s+\w+(\(.*\))?:\s*$",
-        description="A Python class definition.",
+        regex=r"^\s*(class\s+)?\w+(\(.*\))?:?\s*$",
+        description="A Python class definition or class name.",
         examples=[
             "class MyClass:",
             "class MyClass(object):",
-            "class MyClass(BaseClass, Mixin):",
+            "MyClass",
         ],
     ),
     AnswerTemplate.PARAMETER_DEFINITION: TemplateInfo(
-        regex=r"^\s*\w+:\s*\S+.*$",
-        description="A Python parameter definition (e.g., 'my_param: str').",
+        regex=r"^\s*\w+(:.*)?$",
+        description="A Python parameter definition (e.g., 'my_param: str' or 'my_param').",
         examples=[
             "my_param: str",
-            "my_param: Optional[int] = None",
-            "my_param: list[str]",
+            "my_param",
         ],
     ),
     AnswerTemplate.METHOD_DEFINITION: TemplateInfo(
         regex=(
-            r"^(?:\s*@.*\n)*\s*(async\s+)?def\s+\w+\(.*\n?(?:.*\n)*\s*\)(?:\s*->\s*.*)?:\s*$"
+            r"^(?:\s*@.*\n)*\s*(async\s+)?(def\s+)?\w+(\(.*\n?(?:.*\n)*\s*\))?(?:\s*->\s*.*)?:?\s*$"
         ),
-        description="A Python method definition.",
+        description="A Python method definition or method name.",
         examples=[
             "def my_method(self):",
-            "async def my_method(self, arg1: str):",
-            "def my_method(self, *args, **kwargs):",
-            "async def my_method(\
-    self,\n    arg1: str,\n) -> str:",
+            "my_method",
         ],
     ),
     AnswerTemplate.TYPE_ALIAS_DEFINITION: TemplateInfo(
@@ -93,20 +95,27 @@ TEMPLATES = {
             "for i in range(10):\n    print(i)",
         ],
     ),
+    AnswerTemplate.IDENTIFIER: TemplateInfo(
+        regex=r"^\s*\w+\s*$",
+        description="A Python identifier (e.g., a class, variable or function name).",
+        examples=["my_class", "my_variable", "my_function", "my_method"],
+    ),
 }
 
 
-def validate_module_path(module_path: str, file_path: Path):
+def validate_module_path(
+    fully_qualified_class_name: str, expected_paths: list[str]
+):
     """Validates that the module_path correctly corresponds to the file_path."""
-    # Strip 'src/' prefix and '.py' suffix, then replace '/' with '.'
-    expected_module_path = (
-        str(file_path).removeprefix("src/").removesuffix(".py").replace("/", ".")
+    for expected_path in expected_paths:
+        if fully_qualified_class_name == expected_path:
+            return
+
+    raise ValidationError(
+        f"Module path '{fully_qualified_class_name}' does not exactly match any of the expected"
+        f" paths: {expected_paths}",
+        expected_path=str(expected_paths),
     )
-    if module_path != expected_module_path:
-        raise ValidationError(
-            f"Module path '{module_path}' does not match the file path"
-            f" '{file_path}'. Expected '{expected_module_path}'."
-        )
 
 
 def validate_answer_against_template(answer: str, template: AnswerTemplate):

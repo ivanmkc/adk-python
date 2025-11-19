@@ -36,10 +36,6 @@ class GeminiAnswerGenerator(AnswerGenerator):
     def __init__(self, model_name: str = "gemini-2.5-pro"):
         super().__init__()
         self.model_name = model_name
-        # api_key = os.environ.get("GEMINI_API_KEY")
-        # if not api_key:
-        #     raise ValueError("GEMINI_API_KEY environment variable not set.")
-        # genai.configure(api_key=api_key)
         self.client = genai.Client().aio
 
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
@@ -91,7 +87,14 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "definition from the ADK API that correctly answers the following "
             "question. The definition must conform to the specified template "
             "structure. Return the result as a JSON object with two keys: 'code' for "
-            "the resulting definition and 'module_path' for the module path."
+            "the resulting definition. If the template specifies an identifier (e.g., "
+            "a parameter, class, or method name), ensure 'code' contains *only* "
+            "that identifier (e.g., 'parameter_name', not 'parameter_name: str'). "
+            "If the question asks for a specific named tool (like GoogleSearchTool), "
+            "'code' should be the exact class name of that tool. The second key is "
+            "'fully_qualified_class_name' for the fully qualified name of the "
+            "*class* where the API element is defined (do not include method or "
+            "parameter names in the fully qualified class name)."
             "\n\n"
             "Here are a few examples:\n\n"
             "Question: What is the main class for creating a sequential agent "
@@ -103,7 +106,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "class SequentialAgent(google.adk.agents.agent.Agent):",\n'
-            '    "module_path": "google.adk.agents.agent.Agent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.sequential_agent.SequentialAgent"\n'
             "}\n"
             "```\n\n"
             "Question: Which method is used to execute an agent in the ADK?\n"
@@ -113,7 +116,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "def run(self, request: "RunnerRequest") -> "RunnerResponse":",\n'
-            '    "module_path": "google.adk.runners.Runner"\n'
+            '    "fully_qualified_class_name": "google.adk.runners.Runner"\n'
             "}\n"
             "```\n\n"
             "Question: What parameter defines the LLM to be used in an LlmAgent?\n"
@@ -123,8 +126,28 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "Answer: \n"
             "```json\n"
             "{\n"
-            '    "code": "model: str | Llm | None = None,",\n'
-            '    "module_path": "google.adk.agents.llm_agent.LlmAgent"\n'
+            '    "code": "model",\n'
+            '    "fully_qualified_class_name": "google.adk.agents.llm_agent.LlmAgent"\n'
+            "}\n"
+            "```\n\n"
+            "Question: Which specific tool class in ADK leverages Google's native search capability?"
+            "Rationale: The user is asking for the specific class that integrates Google Search natively."
+            f'Template: "{TEMPLATES[AnswerTemplate.CLASS_DEFINITION].description}"\n'
+            "Answer: \n"
+            "```json\n"
+            "{\n"
+            '    "code": "GoogleSearchTool",\n'
+            '    "fully_qualified_class_name": "google.adk.tools.google_search_tool.GoogleSearchTool"\n'
+            "}\n"
+            "```\n\n"
+            "Question: Which class is used to run multiple agents concurrently in ADK?"
+            "Rationale: The user is asking for the class that enables parallel execution of agents."
+            f'Template: "{TEMPLATES[AnswerTemplate.CLASS_DEFINITION].description}"\n'
+            "Answer: \n"
+            "```json\n"
+            "{\n"
+            '    "code": "ParallelAgent",\n'
+            '    "fully_qualified_class_name": "google.adk.agents.parallel_agent.ParallelAgent"\n'
             "}\n"
             "```\n\n"
             "Now, answer the following question:\n\n"
