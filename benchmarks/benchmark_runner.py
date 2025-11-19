@@ -104,8 +104,11 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
     """
 
     def _normalize_code(self, code: str) -> str:
-        """Removes all whitespace from a code string for comparison."""
-        return re.sub(r"\s+", "", code)
+        """Normalizes code for comparison by collapsing whitespace and stripping."""
+        # Replace all whitespace sequences with a single space
+        code = re.sub(r"\s+", " ", code)
+        # Remove leading/trailing whitespace
+        return code.strip()
 
     async def run_benchmark(
         self,

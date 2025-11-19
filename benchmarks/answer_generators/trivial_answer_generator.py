@@ -28,7 +28,7 @@ from benchmarks.data_models import (
 class TrivialAnswerGenerator(AnswerGenerator):
     """An answer generator that returns a trivial (empty) answer."""
 
-    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             template_map = {
@@ -39,7 +39,7 @@ class TrivialAnswerGenerator(AnswerGenerator):
                 AnswerTemplate.CODE_BLOCK: "pass",
             }
             code = template_map.get(benchmark_case.template, "")
-            output = ApiUnderstandingAnswerOutput(code=code, module_path="")
+            output = ApiUnderstandingAnswerOutput(code=code, module_path="trivial.module")
             return GeneratedAnswer(output=output)
         output = FixErrorAnswerOutput(code="agent = Agent()")
         return GeneratedAnswer(output=output)

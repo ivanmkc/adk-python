@@ -14,12 +14,14 @@
 
 """A package containing various answer generator implementations."""
 
+from .adk_answer_generator import AdkAnswerGenerator
 from .base import AnswerGenerator
 from .gemini_answer_generator import GeminiAnswerGenerator
 from .ground_truth_answer_generator import GroundTruthAnswerGenerator
 from .trivial_answer_generator import TrivialAnswerGenerator
 
 __all__ = [
+    "AdkAnswerGenerator",
     "AnswerGenerator",
     "GeminiAnswerGenerator",
     "GroundTruthAnswerGenerator",

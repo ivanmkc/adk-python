@@ -2,6 +2,7 @@ import asyncio
 from typing import List
 from benchmarks import benchmark_orchestrator
 from benchmarks.answer_generators import (
+    AdkAnswerGenerator,
     GeminiAnswerGenerator,
     GroundTruthAnswerGenerator,
     TrivialAnswerGenerator,
@@ -26,14 +27,15 @@ async def run_comparison() -> List[BenchmarkRunResult]:
     print("Configuring benchmark run...")
     
     benchmark_suites = [
-        # "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
+        # "benchmarks/benchmark_definitions/fix_error_benchmarks_mini.yaml",
+        "benchmarks/benchmark_definitions/api_understanding_benchmarks_mini.yaml",
     ]
     
     answer_generators = [
-        GroundTruthAnswerGenerator(), 
+        GroundTruthAnswerGenerator(),
         TrivialAnswerGenerator(),
         GeminiAnswerGenerator(),
+        # AdkAnswerGenerator(),
     ]
     
     print("Executing benchmarks...")
@@ -88,7 +90,7 @@ def main() -> None:
     print(summary_df)
             
     # --- Configuration ---
-    generator_to_analyze = 'GeminiAnswerGenerator' 
+    generator_to_analyze = 'AdkAnswerGenerator' 
     result_type_to_see = 'fail' 
 
     analyze_logs(

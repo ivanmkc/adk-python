@@ -45,7 +45,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
             raise ValueError(f"Could not find code snippet in {file_path}")
         return match.group(1).strip()
 
-    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Returns the ground truth answer for the benchmark case."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             code = self._extract_code_snippet(benchmark_case.test_file)

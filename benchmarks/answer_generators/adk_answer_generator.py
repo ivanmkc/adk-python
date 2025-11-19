@@ -12,77 +12,78 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""An AnswerGenerator that uses the Gemini API to generate answers."""
+"""An AnswerGenerator that uses an ADK Agent to generate answers."""
 
-from google import genai
+import asyncio
+
+from google.adk.agents import LlmAgent
+from google.adk.runners import InMemoryRunner
+from google.adk.sessions import Session
 
 from benchmarks.answer_generators.base import AnswerGenerator
-from benchmarks.validation_utils import TEMPLATES
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
     FixErrorBenchmarkCase,
     GeneratedAnswer,
-    FixErrorAnswerOutput,
     ApiUnderstandingAnswerOutput,
     AnswerTemplate,
 )
+from benchmarks.validation_utils import TEMPLATES
 
 
-
-class GeminiAnswerGenerator(AnswerGenerator):
-    """An AnswerGenerator that uses the Gemini API."""
+class AdkAnswerGenerator(AnswerGenerator):
+    """An AnswerGenerator that uses an ADK Agent."""
 
     def __init__(self, model_name: str = "gemini-2.5-pro"):
         super().__init__()
         self.model_name = model_name
-        # api_key = os.environ.get("GEMINI_API_KEY")
-        # if not api_key:
-        #     raise ValueError("GEMINI_API_KEY environment variable not set.")
-        # genai.configure(api_key=api_key)
-        self.client = genai.Client().aio
+        self.agent = LlmAgent(
+            name="adk_test_agent",
+            model=self.model_name,
+            instruction=(
+                "You are a senior engineer specializing in the ADK Python framework. "
+                "Your task is to answer questions about the ADK API with expert "
+                "precision."
+            ),
+            output_schema=ApiUnderstandingAnswerOutput,
+        )
+        self.runner = InMemoryRunner(root_agent=self.agent)
 
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-        """Generates an answer using the Gemini API's structured output feature."""
+        """Generates an answer using the ADK Agent."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
-            prompt = self._create_prompt_for_fix_error(benchmark_case)
-            response_schema = FixErrorAnswerOutput
-        elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-            prompt = self._create_prompt_for_api_understanding(benchmark_case)
-            response_schema = ApiUnderstandingAnswerOutput
-        else:
-            raise TypeError(f"Unsupported benchmark case type: {type(benchmark_case)}")
+            # The ADK agent is not designed to handle fix_error cases.
+            # This could be extended in the future.
+            return GeneratedAnswer(output=None)
 
-        json_schema = response_schema.model_json_schema()
-        response = await self.client.models.generate_content(
-            model=self.model_name,
-            contents=prompt, 
-            config={
-                "response_mime_type": "application/json",
-                "response_json_schema": json_schema,
-            },
-        )
-        output = response_schema.model_validate_json(response.text)
+        if not isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
+            raise TypeError(
+                "ADKAnswerGenerator only supports ApiUnderstandingBenchmarkCase."
+            )
 
+        prompt = self._create_prompt(benchmark_case)
+
+        # Run the agent asynchronously.
+        response = await self._run_agent_async(prompt)
+
+        # The agent's response should be a JSON string that can be parsed
+        # into the ApiUnderstandingAnswerOutput schema.
+        output = ApiUnderstandingAnswerOutput.model_validate_json(response)
         return GeneratedAnswer(output=output)
 
-    def _create_prompt_for_fix_error(self, case: FixErrorBenchmarkCase) -> str:
-        """Creates a prompt for a fix_error benchmark case."""
-        return (
-            "Please fix the following Python code snippet. "
-            "Return the result as a JSON object with a single key 'code' "
-            "containing the corrected code.\n\n"
-            f"Description of the error: {case.description}\n\n"
-            "Code with error:\n"
-            "```python\n"
-            f"{self._read_code_from_file(case.test_file, case.start_line, case.end_line)}\n"
-            "```"
-        )
+    async def _run_agent_async(self, prompt: str) -> str:
+        """Helper to run the agent and get the response."""
+        session = await self.runner.create_session()
+        final_response = ""
+        async for event in self.runner.run(session.id, prompt):
+            if event.is_final_response():
+                final_response = event.content.parts[0].text
+                break
+        return final_response
 
-    def _create_prompt_for_api_understanding(
-        self, case: ApiUnderstandingBenchmarkCase
-    ) -> str:
-        """Creates a prompt for an api_understanding benchmark case."""
+    def _create_prompt(self, case: ApiUnderstandingBenchmarkCase) -> str:
+        """Creates a prompt for the ADK agent."""
         template_info = TEMPLATES[case.template]
         examples = "\n".join(f"- {example}" for example in template_info.examples)
         return (
@@ -93,10 +94,10 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "'module_path' for the module path."
             "\n\n"
             "Here are a few examples:\n\n"
-            "Question: What is the main class for creating a sequential agent "
-            "in the ADK?\n"
-            "Rationale: The user is asking for the primary class to instantiate "
-            "a sequential agent.\n"
+            "Question: What is the main class for creating a sequential agent in the "
+            "ADK?\n"
+            "Rationale: The user is asking for the primary class to instantiate a "
+            "sequential agent.\n"
             f'Template: "{TEMPLATES[AnswerTemplate.CLASS_DEFINITION].description}"\n'
             "Answer: \n"
             "```json\n"
@@ -132,9 +133,3 @@ class GeminiAnswerGenerator(AnswerGenerator):
             f"Template: {template_info.description}\n"
             f"Examples:\n{examples}\n"
         )
-
-    def _read_code_from_file(self, file_path, start_line, end_line) -> str:
-        """Reads a specific range of lines from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        return "".join(lines[start_line - 1 : end_line])

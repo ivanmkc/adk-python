@@ -40,6 +40,7 @@ from benchmarks.benchmark_runner import ApiUnderstandingRunner, PytestBenchmarkR
 from tqdm.asyncio import tqdm
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
+    BaseBenchmarkCase,
     BenchmarkFile,
     BenchmarkRunResult,
     FixErrorBenchmarkCase,
@@ -49,13 +50,13 @@ from benchmarks.validation_utils import ValidationError
 
 async def _run_single_benchmark(
     suite_file: str,
-    case: FixErrorBenchmarkCase | ApiUnderstandingBenchmarkCase,
+    case: BaseBenchmarkCase,
     generator: AnswerGenerator,
 ) -> BenchmarkRunResult:
     """Helper coroutine to run one benchmark case and return its result."""
     generator_name = generator.__class__.__name__
     runner = case.runner
-    generated_answer = generator.generate_answer(case)
+    generated_answer = await generator.generate_answer(case)
     result, validation_error, temp_file_path = await runner.run_benchmark(
         case, generated_answer
     )
