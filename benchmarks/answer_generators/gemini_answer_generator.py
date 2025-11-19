@@ -86,11 +86,12 @@ class GeminiAnswerGenerator(AnswerGenerator):
         template_info = TEMPLATES[case.template]
         examples = "\n".join(f"- {example}" for example in template_info.examples)
         return (
-            "Please provide a Python type definition that answers the following "
-            "question about the ADK Python API. The definition must conform to "
-            "the specified template structure. Return the result as a JSON "
-            "object with two keys: 'code' for the resulting definition and "
-            "'module_path' for the module path."
+            "You are an expert software engineer specializing in the Google ADK Python "
+            "framework. Your task is to identify the precise and exact Python "
+            "definition from the ADK API that correctly answers the following "
+            "question. The definition must conform to the specified template "
+            "structure. Return the result as a JSON object with two keys: 'code' for "
+            "the resulting definition and 'module_path' for the module path."
             "\n\n"
             "Here are a few examples:\n\n"
             "Question: What is the main class for creating a sequential agent "
