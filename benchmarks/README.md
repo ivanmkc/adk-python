@@ -22,7 +22,7 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
       | Uses      | Uses      | Uses
       v           v           v
 +---------------+  +----------------------+  +---------------------+
-| data_models.py|  | answer_generators.py |  | benchmark_runner.py |
+| data_models.py|  |  answer_generators/  |  | benchmark_runner.py |
 +---------------+  +----------------------+  +---------------------+
                       |
                       | Reads from
@@ -38,8 +38,8 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
 *   **`test_benchmarks.py`**: The main `pytest` entry point for validating the framework's integrity.
 *   **`benchmark_orchestrator.py`**: The central orchestrator that runs benchmarks in parallel, calls the appropriate runner for each case, and aggregates results into a list of `BenchmarkRunResult` objects.
 *   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`). Each runner creates a persistent temporary file for its test case to allow for inspection after the run.
-*   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`, `GeminiAnswerGenerator`).
-*   **`data_models.py`**: Pydantic models for the benchmark YAML files and for the structured `BenchmarkRunResult`.
+*   **`answer_generators/`**: A package containing different code generation strategies (e.g., `GroundTruthAnswerGenerator`, `GeminiAnswerGenerator`).
+*   **`data_models.py`**: Pydantic models for the benchmark YAML files, structured `AnswerOutput` schemas, and the `BenchmarkRunResult`.
 *   **`benchmark_definitions/`**: Contains the YAML data files and test templates.
 *   **`test_data/ground_truth/`**: Contains the correct code snippets for `fix_error` benchmarks.
 
@@ -74,7 +74,7 @@ This approach keeps experimental runs separate from the framework's integrity te
 
 Here is a code snippet demonstrating how to run an evaluation. You can use this as a template for your own evaluation scripts.
 
-First, define your custom generator. For a sophisticated example, see `gemini_answer_generator.py`, which calls the Gemini API to generate code. You will need to set the `GEMINI_API_KEY` environment variable for it to work.
+First, define your custom generator. For a sophisticated example, see `benchmarks/answer_generators/gemini_answer_generator.py`, which calls the Gemini API to generate code. You will need to set the `GEMINI_API_KEY` environment variable for it to work.
 
 Next, create your evaluation script to run the benchmark:
 
@@ -108,9 +108,14 @@ async def main():
 
     # Calculate summary from raw results
     summary_df = (
-        raw_results_df.groupby("answer_generator")["result"]
-        .agg(["sum", "count"])
-        .rename(columns={"sum": "passed", "count": "total"})
+        raw_results_df.groupby("answer_generator")
+        .agg(
+            passed=("result", "sum"),
+            total=("result", "count"),
+            mean_latency=("latency", "mean"),
+            p50_latency=("latency", lambda x: x.quantile(0.5)),
+            p90_latency=("latency", lambda x: x.quantile(0.9)),
+        )
     )
     summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
 
@@ -137,9 +142,9 @@ The framework is designed to be extensible.
 ### How to Add a New Candidate Answer Generator
 
 1.  **Create the Generator Class:**
-    *   In `answer_generators.py`, create a new class that inherits from `AnswerGenerator`.
-    *   Implement the `generate_answer(self, benchmark_case: BaseBenchmarkCase) -> str` method.
-    *   Inside this method, add logic to handle the different `benchmark_case` types (`FixErrorBenchmarkCase`, `ApiUnderstandingBenchmarkCase`, etc.) and return the generated code as a string.
+    *   In `benchmarks/answer_generators/`, create a new module and class that inherits from `AnswerGenerator`.
+    *   Implement the `generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer` method.
+    *   Inside this method, add logic to handle the different `benchmark_case` types (e.g. `FixErrorBenchmarkCase`) and return a `GeneratedAnswer` containing the appropriate `AnswerOutput` (e.g. `FixErrorAnswerOutput`).
 
 2.  **Evaluate the Generator:**
     *   In your evaluation script or notebook, import your new generator.
@@ -149,12 +154,13 @@ The framework is designed to be extensible.
 
 To add a new type of benchmark (e.g., "code_completion"), follow these steps:
 
-1.  **Define the Data Model:**
+1.  **Define the Data Models:**
     *   In `data_models.py`, create a new Pydantic model that inherits from `BaseBenchmarkCase` (e.g., `CodeCompletionBenchmarkCase`).
+    *   Create a new output model inheriting from `BaseAnswerOutput` (e.g. `CodeCompletionAnswerOutput`).
     *   Add a new value to the `BenchmarkType` enum (e.g., `CODE_COMPLETION = "code_completion"`).
-    *   Set the `benchmark_type` field in your new class to `Literal[BenchmarkType.CODE_COMPLETION]`.
-    *   Add your new class to the `BenchmarkCase` `Union` type.
-    *   Implement the abstract `runner` property to return an instance of your new `BenchmarkRunner` (see next step).
+    *   Set the `benchmark_type` field in your new classes to `Literal[BenchmarkType.CODE_COMPLETION]`.
+    *   Add your new classes to the `BenchmarkCase` and `AnswerOutput` `Union` types.
+    *   Implement the abstract `runner` property in your case class to return an instance of your new `BenchmarkRunner`.
 
 2.  **Implement the Benchmark Runner:**
     *   In `benchmark_runner.py`, create a new class that inherits from `BenchmarkRunner` (e.g., `CodeCompletionRunner`).
@@ -165,7 +171,7 @@ To add a new type of benchmark (e.g., "code_completion"), follow these steps:
     *   Populate this file with benchmark cases matching the Pydantic model you created.
 
 4.  **Update Answer Generators:**
-    *   In `answer_generators.py`, update the `generate_answer` method in `GroundTruthAnswerGenerator` and any other relevant generators to handle your new `CodeCompletionBenchmarkCase`.
+    *   Update the `generate_answer` method in `GroundTruthAnswerGenerator` and any other relevant generators to handle your new `CodeCompletionBenchmarkCase` and return a `GeneratedAnswer` wrapping `CodeCompletionAnswerOutput`.
 
 5.  **Add to the Validation Suite:**
     *   In `test_benchmarks.py`, add the path to your new YAML file to the `benchmark_suites` list to include it in the framework's integrity validation run.

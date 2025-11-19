@@ -12,6 +12,6 @@ This directory contains the YAML files that define the benchmark suites for the 
 
 ## Usage
 
-To run a benchmark suite, you provide the path to its YAML file to the `benchmark_orchestrator.py` script. The orchestrator will then parse the file and execute each benchmark case against the specified answer generators.
+To run a benchmark suite, you provide the path to its YAML file to the `benchmark_orchestrator.run_benchmarks()` function (typically called from a script like `benchmark_debug.py` or `test_benchmarks.py`). The orchestrator will then parse the file and execute each benchmark case against the specified answer generators.
 
 To add a new benchmark suite, create a new YAML file in this directory following the structure of the existing files.
