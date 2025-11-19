@@ -31,6 +31,11 @@ from benchmarks.data_models import (
 class GroundTruthAnswerGenerator(AnswerGenerator):
     """An answer generator that returns the ground truth answer."""
 
+    @property
+    def name(self) -> str:
+        """Returns the name of the generator."""
+        return "GroundTruthAnswerGenerator"
+
     def _get_ground_truth_file_map(self) -> dict[str, Path]:
         """Maps fix_error test file names to their ground truth counterparts."""
         ground_truth_base_path = Path("benchmarks/test_data/ground_truth")

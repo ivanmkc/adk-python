@@ -22,6 +22,12 @@ from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer
 class AnswerGenerator(abc.ABC):
     """Abstract base class for answer generators."""
 
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        """Returns a unique name for this generator instance, reflecting its configuration."""
+        pass
+
     @abc.abstractmethod
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Generates an answer for a given benchmark case."""

@@ -225,3 +225,4 @@ class BenchmarkRunResult(pydantic.BaseModel):
     answer: str
     validation_error: Optional[str] = None
     temp_test_file: Optional[str] = None
+    latency: float = 0.0

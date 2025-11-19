@@ -50,6 +50,11 @@ class AdkAnswerGenerator(AnswerGenerator):
         )
         self.runner = InMemoryRunner(root_agent=self.agent)
 
+    @property
+    def name(self) -> str:
+        """Returns a unique name for this generator instance."""
+        return f"AdkAnswerGenerator({self.model_name})"
+
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Generates an answer using the ADK Agent."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):

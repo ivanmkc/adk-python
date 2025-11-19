@@ -28,6 +28,11 @@ from benchmarks.data_models import (
 class TrivialAnswerGenerator(AnswerGenerator):
     """An answer generator that returns a trivial (empty) answer."""
 
+    @property
+    def name(self) -> str:
+        """Returns the name of the generator."""
+        return "TrivialAnswerGenerator"
+
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):

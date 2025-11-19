@@ -48,15 +48,21 @@ from benchmarks.data_models import (
 from benchmarks.validation_utils import ValidationError
 
 
+import time
+from typing import Union
+
 async def _run_single_benchmark(
     suite_file: str,
     case: BaseBenchmarkCase,
     generator: AnswerGenerator,
 ) -> BenchmarkRunResult:
     """Helper coroutine to run one benchmark case and return its result."""
-    generator_name = generator.__class__.__name__
     runner = case.runner
+    
+    start_time = time.time()
     generated_answer = await generator.generate_answer(case)
+    latency = time.time() - start_time
+    
     result, validation_error, temp_file_path = await runner.run_benchmark(
         case, generated_answer
     )
@@ -64,23 +70,24 @@ async def _run_single_benchmark(
     return BenchmarkRunResult(
         suite=Path(suite_file).name,
         benchmark_name=case.get_identifier(),
-        answer_generator=generator_name,
+        answer_generator=generator.name,
         result=1 if result == "pass" else 0,
         answer=str(generated_answer.output),
         validation_error=validation_error,
         temp_test_file=temp_file_path,
+        latency=latency,
     )
 
 
 async def run_benchmarks(
-    benchmark_suites: list[str], answer_generators: list[AnswerGenerator]
+    benchmark_suites: list[str], 
+    answer_generators: list[AnswerGenerator]
 ) -> list[BenchmarkRunResult]:
     """
     Runs all benchmark suites against all answer generators in parallel and returns raw results.
-    ...
     """
     tasks = []
-
+    
     for suite_file in benchmark_suites:
         print(f"--- Loading benchmark suite: {suite_file} ---")
         with open(suite_file, "r", encoding="utf-8") as f:
@@ -90,7 +97,7 @@ async def run_benchmarks(
         for generator in answer_generators:
             print(
                 "  - Queuing tests for answer generator:"
-                f" {generator.__class__.__name__}"
+                f" {generator.name}"
             )
             for case in benchmark_file.benchmarks:
                 tasks.append(_run_single_benchmark(suite_file, case, generator))
