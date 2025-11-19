@@ -31,6 +31,7 @@ specialist_agent = LlmAgent(
 root_agent = LlmAgent(
     name="delegator_agent",
     model=MODEL_NAME,
+    sub_agents=[specialist_agent],
     instruction=(
         "You are a delegator. If the user asks for a specialist, delegate the"
         " task to the 'specialist_agent'."

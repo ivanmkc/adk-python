@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Answer generators for benchmarks."""
+"""An answer generator that returns the ground truth answer."""
 
-import abc
 import re
 from pathlib import Path
 
+from benchmarks.answer_generators.base import AnswerGenerator
 from benchmarks.data_models import (
-    AnswerTemplate,
     ApiUnderstandingAnswerOutput,
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
@@ -27,15 +26,6 @@ from benchmarks.data_models import (
     FixErrorBenchmarkCase,
     GeneratedAnswer,
 )
-
-
-class AnswerGenerator(abc.ABC):
-    """Abstract base class for answer generators."""
-
-    @abc.abstractmethod
-    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-        """Generates an answer for a given benchmark case."""
-        pass
 
 
 class GroundTruthAnswerGenerator(AnswerGenerator):
@@ -58,13 +48,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
     def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Returns the ground truth answer for the benchmark case."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
-            file_map = self._get_ground_truth_file_map()
-            ground_truth_file = file_map.get(benchmark_case.test_file.name)
-            if not ground_truth_file:
-                raise ValueError(
-                    f"No ground truth file found for {benchmark_case.test_file.name}"
-                )
-            code = self._extract_code_snippet(ground_truth_file)
+            code = self._extract_code_snippet(benchmark_case.test_file)
             output = FixErrorAnswerOutput(code=code)
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
@@ -75,23 +59,3 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
             return GeneratedAnswer(output=output)
         else:
             raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")
-
-
-class TrivialAnswerGenerator(AnswerGenerator):
-    """An answer generator that returns a trivial (empty) answer."""
-
-    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-        """Returns an empty answer for any benchmark case."""
-        if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-            template_map = {
-                AnswerTemplate.CLASS_DEFINITION: "class Trivial:",
-                AnswerTemplate.METHOD_DEFINITION: "def trivial():",
-                AnswerTemplate.PARAMETER_DEFINITION: "trivial: None",
-                AnswerTemplate.TYPE_ALIAS_DEFINITION: "Trivial: TypeAlias = None",
-                AnswerTemplate.CODE_BLOCK: "pass",
-            }
-            code = template_map.get(benchmark_case.template, "")
-            output = ApiUnderstandingAnswerOutput(code=code, module_path="")
-            return GeneratedAnswer(output=output)
-        output = FixErrorAnswerOutput(code="agent = Agent()")
-        return GeneratedAnswer(output=output)

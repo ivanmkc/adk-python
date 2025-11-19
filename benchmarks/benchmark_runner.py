@@ -80,6 +80,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             sys.executable,
             "-m",
             "pytest",
+            "--asyncio-mode=auto",
             str(tmp_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,

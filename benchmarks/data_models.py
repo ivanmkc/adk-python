@@ -162,7 +162,6 @@ class BenchmarkResult(pydantic.BaseModel):
 
 class BaseAnswerOutput(pydantic.BaseModel, abc.ABC):
     """A base model for the structured output of an AnswerGenerator."""
-
     pass
 
 
@@ -187,7 +186,6 @@ class ApiUnderstandingAnswerOutput(BaseAnswerOutput):
         description="The Python code snippet that answers the question, conforming to the required template.",
     )
     module_path: str = Field(
-        ...,
         description="The expected Python module path where this code would be found, e.g., 'google.adk.agents.llm_agent'.",
     )
 

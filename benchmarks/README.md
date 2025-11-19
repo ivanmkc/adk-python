@@ -38,7 +38,7 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
 *   **`test_benchmarks.py`**: The main `pytest` entry point for validating the framework's integrity.
 *   **`benchmark_orchestrator.py`**: The central orchestrator that runs benchmarks in parallel, calls the appropriate runner for each case, and aggregates results into a list of `BenchmarkRunResult` objects.
 *   **`benchmark_runner.py`**: Defines strategies for executing benchmarks (e.g., `PytestBenchmarkRunner`). Each runner creates a persistent temporary file for its test case to allow for inspection after the run.
-*   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`).
+*   **`answer_generators.py`**: Defines different code generation strategies (e.g., `GroundTruthAnswerGenerator`, `GeminiAnswerGenerator`).
 *   **`data_models.py`**: Pydantic models for the benchmark YAML files and for the structured `BenchmarkRunResult`.
 *   **`benchmark_definitions/`**: Contains the YAML data files and test templates.
 *   **`test_data/ground_truth/`**: Contains the correct code snippets for `fix_error` benchmarks.
@@ -74,20 +74,7 @@ This approach keeps experimental runs separate from the framework's integrity te
 
 Here is a code snippet demonstrating how to run an evaluation. You can use this as a template for your own evaluation scripts.
 
-First, define your custom generator (e.g., in `my_answer_generator.py`):
-
-```python
-# my_answer_generator.py
-from benchmarks.answer_generators import AnswerGenerator
-from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer, FixErrorAnswerOutput
-
-class MySimpleAnswerGenerator(AnswerGenerator):
-    """A simple generator that always returns 'pass' for fix_error cases."""
-    def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
-        code_snippet = "pass"  # Replace with your actual generation logic
-        output = FixErrorAnswerOutput(code=code_snippet)
-        return GeneratedAnswer(output=output)
-```
+First, define your custom generator. For a sophisticated example, see `gemini_answer_generator.py`, which calls the Gemini API to generate code. You will need to set the `GEMINI_API_KEY` environment variable for it to work.
 
 Next, create your evaluation script to run the benchmark:
 
@@ -96,16 +83,21 @@ Next, create your evaluation script to run the benchmark:
 import asyncio
 import pandas as pd
 from benchmarks import benchmark_orchestrator
-from benchmarks.answer_generators import GroundTruthAnswerGenerator
-from my_answer_generator import MySimpleAnswerGenerator
+from benchmarks.answer_generators import (
+    GroundTruthAnswerGenerator,
+    TrivialAnswerGenerator,
+    GeminiAnswerGenerator,
+)
 
 async def main():
     benchmark_suites = [
         "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
     ]
     answer_generators_to_test = [
         GroundTruthAnswerGenerator(),
-        MySimpleAnswerGenerator(),
+        TrivialAnswerGenerator(),
+        GeminiAnswerGenerator(),
     ]
 
     print("Executing benchmark evaluation...")
