@@ -19,6 +19,7 @@
 # 2. **NOTA Constraint**: Every question MUST include "E: None of the above" as the last option.
 # 3. **NOTA Validity**: Ensure that "None of the above" is the correct answer for a significant portion (approx. 20-30%) of questions to prevent "process of elimination" guessing.
 # 4. **Verification**: All questions must be verifiable against the codebase. Run verification scripts before committing.
+#    Relevant verification script: `benchmarks/verification/verify_advanced_benchmarks.py`
 #
 # These questions cover:
 # - Correct imports and module locations
