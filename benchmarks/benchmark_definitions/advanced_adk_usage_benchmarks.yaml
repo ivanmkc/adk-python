@@ -1,0 +1,132 @@
+benchmarks:
+  - question: |
+      Which is the correct import statement for the `Runner` class?
+    options:
+      A: "from google.adk import Runner"
+      B: "from google.adk.runners import Runner"
+      C: "from google.adk.core import Runner"
+      D: "from google.adk.agent_runner import Runner"
+    correct_answer: "B"
+    explanation: "`Runner` is located in `google.adk.runners`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You need to inspect an `Event` object. Which import allows you to reference the `Event` class for type hinting?
+    options:
+      A: "from google.adk.events.event import Event"
+      B: "from google.adk.types import Event"
+      C: "from google.adk.core.events import Event"
+      D: "from google.adk.models import Event"
+    correct_answer: "A"
+    explanation: "The `Event` class is defined in `google.adk.events.event`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      When calling `runner.run_async()`, which parameter is used to pass the user's input message?
+    options:
+      A: "message"
+      B: "input"
+      C: "new_message"
+      D: "content"
+    correct_answer: "C"
+    explanation: "The parameter `new_message` is used to pass the user's input content."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You are initializing an `App`. Which parameter is mutually exclusive with providing `app_name` and `root_agent` directly to the `Runner`?
+    options:
+      A: "plugins"
+      B: "app"
+      C: "context_cache_config"
+      D: "resumability_config"
+    correct_answer: "B"
+    explanation: "You provide either an `App` object (which contains the name and agent) OR `app_name` and `agent` separately."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which Google GenAI type represents the fundamental unit of content (text, image, function call) within a message?
+    options:
+      A: "types.Item"
+      B: "types.Chunk"
+      C: "types.Part"
+      D: "types.Element"
+    correct_answer: "C"
+    explanation: "`types.Part` is the atomic unit of content in the Gemini API and ADK."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      How do you correctly construct a user message content object with text?
+    options:
+      A: "types.Content(role='user', text='Hello')"
+      B: "types.Content(role='user', parts=[types.Part(text='Hello')])"
+      C: "types.Message(role='user', content='Hello')"
+      D: "types.UserMessage(text='Hello')"
+    correct_answer: "B"
+    explanation: "`types.Content` takes a list of `types.Part` objects in the `parts` parameter."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      When defining a custom agent class, which abstract base class must you inherit from?
+    options:
+      A: "Agent"
+      B: "BaseAgent"
+      C: "AbstractAgent"
+      D: "CustomAgent"
+    correct_answer: "B"
+    explanation: "`BaseAgent` (from `google.adk.agents.base_agent`) is the root ABC for all agents."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You are implementing a custom tool. Which method must you implement from `BaseTool`?
+    options:
+      A: "run()"
+      B: "execute()"
+      C: "__call__()"
+      D: "The method defined in the tool's definition (schema)."
+    correct_answer: "D"
+    explanation: "`BaseTool` implementation details depend on the specific tool type (e.g., `FunctionTool` wraps a callable), but generally, the runner invokes the underlying function."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the correct signature for a `before_tool_callback` function?
+    options:
+      A: "async def callback(tool, args, context):"
+      B: "def callback(tool, args):"
+      C: "async def callback(tool_name, arguments):"
+      D: "async def callback(tool, args, context, response):"
+    correct_answer: "A"
+    explanation: "The signature is `async def callback(tool: BaseTool, args: dict, tool_context: ToolContext)`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      In a `BasePlugin`, what is the correct signature for `run_on_event_callback`?
+    options:
+      A: "async def run_on_event_callback(self, event: Event) -> Event:"
+      B: "async def run_on_event_callback(self, invocation_context: InvocationContext, event: Event) -> Optional[Event]:"
+      C: "def run_on_event_callback(self, event: Event):"
+      D: "async def run_on_event_callback(self, context: dict, event: Event) -> Event:"
+    correct_answer: "B"
+    explanation: "The callback receives the `InvocationContext` and the `Event`, and returns an optional modified `Event`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the primary purpose of `InvocationContext`?
+    options:
+      A: "To store the chat history of the session."
+      B: "To manage the state and dependencies (services, config) for a single agent execution turn."
+      C: "To configure the LLM's generation parameters."
+      D: "To define the tools available to the agent."
+    correct_answer: "B"
+    explanation: "`InvocationContext` holds the scoped state, services, and configuration for the current run/invocation."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to create a custom artifact service. Which class should you inherit from?
+    options:
+      A: "ArtifactManager"
+      B: "BaseArtifactService"
+      C: "ArtifactProvider"
+      D: "StorageService"
+    correct_answer: "B"
+    explanation: "`BaseArtifactService` is the ABC for implementing artifact storage backends."
+    benchmark_type: "multiple_choice"
