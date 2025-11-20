@@ -18,6 +18,14 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import sys
+from pathlib import Path
+
+# Ensure src is in path
+project_root = Path(__file__).resolve().parents[2]
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
 from benchmarks.answer_generators import (
     AdkAnswerGenerator,
     GeminiAnswerGenerator,

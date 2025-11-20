@@ -40,7 +40,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
 
     def _get_ground_truth_file_map(self) -> dict[str, Path]:
         """Maps fix_error test file names to their ground truth counterparts."""
-        ground_truth_base_path = Path("benchmarks/test_data/ground_truth")
+        ground_truth_base_path = Path("benchmarks/ground_truth/fix_error_suite")
         return {f.name: f for f in ground_truth_base_path.glob("test_*.py")}
 
     def _extract_code_snippet(self, file_path: Path) -> str:
@@ -63,7 +63,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
             
             if test_filename not in ground_truth_map:
                  # Fallback: try to find it directly if map fails or is incomplete
-                 ground_truth_path = Path("benchmarks/test_data/ground_truth") / test_filename
+                 ground_truth_path = Path("benchmarks/ground_truth/fix_error_suite") / test_filename
             else:
                  ground_truth_path = ground_truth_map[test_filename]
 

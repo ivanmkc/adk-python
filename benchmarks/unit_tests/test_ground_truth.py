@@ -18,13 +18,21 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import sys
+from pathlib import Path
+
+# Ensure src is in path
+project_root = Path(__file__).resolve().parents[2]
+if str(project_root) not in sys.path:
+    sys.path.append(str(project_root))
+
 from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
 from google.genai import types
 
-GROUND_TRUTH_DIR = Path("benchmarks/test_data/ground_truth")
+GROUND_TRUTH_DIR = Path("benchmarks/ground_truth/fix_error_suite")
 GROUND_TRUTH_FILES = list(GROUND_TRUTH_DIR.glob("test_*.py"))
 
 
