@@ -16,12 +16,14 @@
 
 from benchmarks.answer_generators.base import AnswerGenerator
 from benchmarks.data_models import (
-    AnswerTemplate,
     ApiUnderstandingAnswerOutput,
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
     FixErrorAnswerOutput,
+    FixErrorBenchmarkCase,
     GeneratedAnswer,
+    MultipleChoiceAnswerOutput,
+    MultipleChoiceBenchmarkCase,
 )
 
 
@@ -36,15 +38,15 @@ class TrivialAnswerGenerator(AnswerGenerator):
     async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
-            template_map = {
-                AnswerTemplate.CLASS_DEFINITION: "class Trivial:",
-                AnswerTemplate.METHOD_DEFINITION: "def trivial():",
-                AnswerTemplate.PARAMETER_DEFINITION: "trivial: None",
-                AnswerTemplate.TYPE_ALIAS_DEFINITION: "Trivial: TypeAlias = None",
-                AnswerTemplate.CODE_BLOCK: "pass",
-            }
-            code = template_map.get(benchmark_case.template, "")
-            output = ApiUnderstandingAnswerOutput(code=code, module_path="trivial.module")
+            output = ApiUnderstandingAnswerOutput(
+                code="", fully_qualified_class_name=""
+            )
             return GeneratedAnswer(output=output)
-        output = FixErrorAnswerOutput(code="agent = Agent()")
-        return GeneratedAnswer(output=output)
+        elif isinstance(benchmark_case, FixErrorBenchmarkCase):
+            output = FixErrorAnswerOutput(code="")
+            return GeneratedAnswer(output=output)
+        elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
+            output = MultipleChoiceAnswerOutput(answer="A")
+            return GeneratedAnswer(output=output)
+        else:
+            raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")

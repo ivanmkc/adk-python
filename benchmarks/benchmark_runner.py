@@ -27,6 +27,7 @@ from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
     FixErrorBenchmarkCase,
+    MultipleChoiceBenchmarkCase,
     GeneratedAnswer,
 )
 import benchmarks.validation_utils as validation_utils
@@ -46,8 +47,58 @@ class BenchmarkRunner(abc.ABC, Generic[BenchmarkCaseT]):
         pass
 
 
+class MultipleChoiceRunner(BenchmarkRunner[MultipleChoiceBenchmarkCase]):
+    """Runs a multiple choice benchmark."""
+
+    async def run_benchmark(
+        self,
+        benchmark_case: MultipleChoiceBenchmarkCase,
+        generated_answer: GeneratedAnswer,
+    ) -> tuple[str, Optional[str], Optional[str]]:
+        """Checks if the answer matches the correct option."""
+        answer = generated_answer.output.answer.strip().upper()
+        correct = benchmark_case.correct_answer.strip().upper()
+
+        if answer == correct:
+            return "pass", None, None
+        else:
+            return (
+                "fail",
+                f"Expected '{correct}', but got '{answer}'.\nQuestion: {benchmark_case.question}",
+                None,
+            )
+
+
 class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
     """A benchmark runner that uses pytest to run the tests."""
+
+    def _inject_code(self, content: str, code: str) -> str:
+        """Injects code between markers, respecting indentation."""
+        import textwrap
+        lines = content.splitlines()
+        new_lines = []
+        in_block = False
+        
+        for line in lines:
+            if "# BEGIN: CODE" in line:
+                new_lines.append(line)
+                in_block = True
+                
+                # Determine indentation from the marker line
+                indent = line[:line.find("# BEGIN: CODE")]
+                
+                # Indent the code to match
+                if code:
+                    indented_code = textwrap.indent(code, indent)
+                    new_lines.append(indented_code)
+                
+            elif "# END: CODE" in line:
+                in_block = False
+                new_lines.append(line)
+            elif not in_block:
+                new_lines.append(line)
+        
+        return "\n".join(new_lines)
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
@@ -62,10 +113,9 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
         with open(test_file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        # Replace the code block with the code to test.
-        new_content = content.replace(
-            "# BEGIN: CODE\n# END: CODE", f"# BEGIN: CODE\n{code_to_test}\n# END: CODE"
-        )
+        
+        # Replace the code block with the code to test using robust injection
+        new_content = self._inject_code(content, code_to_test)
 
         tmpdir = tempfile.mkdtemp(prefix="benchmark_")
         tmp_path = Path(tmpdir) / "test_temp.py"

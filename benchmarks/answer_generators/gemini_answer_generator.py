@@ -22,12 +22,13 @@ from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
     FixErrorBenchmarkCase,
+    MultipleChoiceBenchmarkCase,
     GeneratedAnswer,
     FixErrorAnswerOutput,
     ApiUnderstandingAnswerOutput,
+    MultipleChoiceAnswerOutput,
     AnswerTemplate,
 )
-
 
 
 class GeminiAnswerGenerator(AnswerGenerator):
@@ -53,6 +54,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
         elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             prompt = self._create_prompt_for_api_understanding(benchmark_case)
             response_schema = ApiUnderstandingAnswerOutput
+        elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
+            prompt = self._create_prompt_for_multiple_choice(benchmark_case)
+            response_schema = MultipleChoiceAnswerOutput
         else:
             raise TypeError(f"Unsupported benchmark case type: {type(benchmark_case)}")
 
@@ -88,6 +92,25 @@ class GeminiAnswerGenerator(AnswerGenerator):
             f"{self._read_code_from_file(case.test_file, case.start_line, case.end_line)}\n"
             "```"
         )
+    
+    def _create_prompt_for_multiple_choice(self, case: MultipleChoiceBenchmarkCase) -> str:
+        """Creates a prompt for a multiple choice benchmark case."""
+        options_str = "\n".join(f"{key}: {value}" for key, value in case.options.items())
+        prompt = (
+            "You are an expert on the Google ADK Python framework. "
+            "Answer the following multiple choice question. "
+            "Return the result as a JSON object with a single key 'answer' "
+            "containing the single letter of the correct option (e.g., 'A', 'B', 'C', or 'D').\n\n"
+        )
+
+        if self.context:
+            prompt += f"Context:\n{self.context}\n\n"
+
+        prompt += (
+            f"Question: {case.question}\n\n"
+            f"Options:\n{options_str}\n"
+        )
+        return prompt
 
     def _create_prompt_for_api_understanding(
         self, case: ApiUnderstandingBenchmarkCase

@@ -37,6 +37,7 @@ async def test_benchmarks():
     benchmark_suites = [
         "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
         "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/multiple_choice_benchmarks.yaml",
     ]
     answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
     results = await benchmark_orchestrator.run_benchmarks(
@@ -55,10 +56,32 @@ async def test_benchmarks():
     print("\n--- Benchmark Summary ---")
     print(summary_df)
 
-    ground_truth_pass_rate = summary_df.loc["GroundTruthAnswerGenerator"]["pass_rate"]
+    # Filter for GroundTruthAnswerGenerator results to check its pass rate.
+    ground_truth_results_df = raw_results_df[raw_results_df["answer_generator"] == "GroundTruthAnswerGenerator"]
+    ground_truth_summary_df = (
+        ground_truth_results_df.groupby("answer_generator")["result"]
+        .agg(["sum", "count"])
+        .rename(columns={"sum": "passed", "count": "total"})
+    )
+    ground_truth_summary_df["pass_rate"] = ground_truth_summary_df["passed"] / ground_truth_summary_df["total"]
+
+    # Debug: Print failures for GroundTruthAnswerGenerator
+    failed_ground_truth = ground_truth_results_df[ground_truth_results_df["result"] == 0]
+    if not failed_ground_truth.empty:
+        print("\n--- GroundTruthAnswerGenerator Failures ---")
+        for _, row in failed_ground_truth.iterrows():
+            print(f"Suite: {row['suite']}")
+            print(f"Benchmark: {row['benchmark_name']}")
+            print(f"Answer: {row['answer']}")
+            print(f"Error: {row['validation_error']}")
+            print("-" * 20)
+
+    ground_truth_pass_rate = ground_truth_summary_df.loc["GroundTruthAnswerGenerator"]["pass_rate"]
     assert (
         ground_truth_pass_rate == 1.0
     ), "GroundTruthAnswerGenerator failed to achieve a perfect score."
 
-    trivial_pass_rate = summary_df.loc["TrivialAnswerGenerator"]["pass_rate"]
+    # Also verify that TrivialAnswerGenerator has a low pass rate (sanity check).
+    trivial_summary = summary_df.loc["TrivialAnswerGenerator"]
+    trivial_pass_rate = trivial_summary["pass_rate"]
     assert trivial_pass_rate < 0.1, "TrivialAnswerGenerator achieved a non-zero score."

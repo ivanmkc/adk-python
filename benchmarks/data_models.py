@@ -37,170 +37,588 @@ if TYPE_CHECKING:
 
 
 class BenchmarkType(str, enum.Enum):
+
+
     """The type of benchmark."""
 
+
+
+
+
     FIX_ERROR = "fix_error"
+
+
     API_UNDERSTANDING = "api_understanding"
 
 
+    MULTIPLE_CHOICE = "multiple_choice"
+
+
+
+
+
+
+
+
 class ExpectedOutcome(str, enum.Enum):
+
+
     """The expected outcome of a benchmark."""
 
+
+
+
+
     PASS = "pass"
+
+
     FAIL_WITH_ERROR = "fail_with_error"
 
 
+
+
+
+
+
+
 class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
+
+
     """Abstract base class for a single benchmark case."""
+
+
+
+
 
     benchmark_type: BenchmarkType
 
+
+
+
+
     @abc.abstractmethod
+
+
     def get_identifier(self) -> str:
+
+
         """Returns a unique identifier for the benchmark case."""
+
+
         raise NotImplementedError
 
+
+
+
+
     @property
+
+
     @abc.abstractmethod
+
+
     def runner(self) -> "BaseBenchmarkRunner":
+
+
         """Returns the benchmark runner for this case."""
+
+
         raise NotImplementedError
+
+
+
+
+
+
 
 
 class FixErrorBenchmarkCase(BaseBenchmarkCase):
+
+
     """Represents a single fix_error benchmark case."""
 
+
+
+
+
     name: str
+
+
     description: str
+
+
     benchmark_type: Literal[BenchmarkType.FIX_ERROR] = BenchmarkType.FIX_ERROR
+
+
     test_file: Path
+
+
     start_line: int
+
+
     end_line: int
 
+
+
+
+
     def get_identifier(self) -> str:
+
+
         return self.name
 
+
+
+
+
     @property
+
+
     def runner(self) -> "PytestBenchmarkRunner":
+
+
         from benchmarks.benchmark_runner import PytestBenchmarkRunner
+
+
+
+
 
         return PytestBenchmarkRunner()
 
 
+
+
+
+
+
+
 class StringMatchAnswer(pydantic.BaseModel):
+
+
     """Represents an answer that is a string match."""
 
+
+
+
+
     answer_template: Literal["StringMatchAnswer"]
+
+
     answer: str
+
+
     fully_qualified_class_name: list[str] = pydantic.Field(
+
+
         ...,
+
+
         description="A list of fully qualified names (FQN) for the relevant class. This should include the module path and the class's name only, not method or parameter names. Example: 'google.adk.agents.llm_agent.LlmAgent'",
+
+
     )
+
+
+
+
+
 
 
 
 class AnswerTemplate(str, enum.Enum):
+
+
     """The template for the answer."""
 
+
+
+
+
     CLASS_DEFINITION = "class_definition"
+
+
     PARAMETER_DEFINITION = "parameter_definition"
+
+
     METHOD_DEFINITION = "method_definition"
+
+
     TYPE_ALIAS_DEFINITION = "type_alias_definition"
+
+
     CODE_BLOCK = "code_block"
+
+
     IDENTIFIER = "identifier"
 
 
+
+
+
+
+
+
 class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
+
+
     """Represents a single API understanding benchmark case (from adk_faq.yaml)."""
 
+
+
+
+
     category: str
+
+
     question: str
+
+
     rationale: str
+
+
     benchmark_type: Literal[BenchmarkType.API_UNDERSTANDING] = (
+
+
         BenchmarkType.API_UNDERSTANDING
+
+
     )
+
+
     template: AnswerTemplate
+
+
     answers: list[StringMatchAnswer]
+
+
     file: Path
 
+
+
+
+
     @pydantic.validator("answers", pre=True, each_item=True)
+
+
     def anwers_str_to_list(cls, v):
+
+
         if isinstance(v.get("fully_qualified_class_name"), str):
+
+
             v["fully_qualified_class_name"] = [v["fully_qualified_class_name"]]
+
+
         return v
 
+
+
+
+
     def get_identifier(self) -> str:
+
+
         return self.question
 
+
+
+
+
     @property
+
+
     def runner(self) -> "ApiUnderstandingRunner":
+
+
         from benchmarks.benchmark_runner import ApiUnderstandingRunner
+
+
+
+
 
         return ApiUnderstandingRunner()
 
 
+
+
+
+
+
+
+class MultipleChoiceBenchmarkCase(BaseBenchmarkCase):
+    """Represents a single multiple choice benchmark case."""
+
+    question: str
+    options: dict[str, str]  # e.g., {"A": "Option A", "B": "Option B"}
+    correct_answer: str  # e.g., "B"
+    explanation: Optional[str] = None
+
+    benchmark_type: Literal[BenchmarkType.MULTIPLE_CHOICE] = (
+        BenchmarkType.MULTIPLE_CHOICE
+    )
+
+    def get_identifier(self) -> str:
+        return self.question[:50] + "..."
+
+    @property
+    def runner(self) -> "MultipleChoiceRunner":
+        from benchmarks.benchmark_runner import MultipleChoiceRunner
+
+        return MultipleChoiceRunner()
+
+
+
+
+
+
+
+
 BenchmarkCase = Annotated[
-    Union[FixErrorBenchmarkCase, ApiUnderstandingBenchmarkCase],
+
+
+    Union[
+
+
+        FixErrorBenchmarkCase,
+
+
+        ApiUnderstandingBenchmarkCase,
+
+
+        MultipleChoiceBenchmarkCase,
+
+
+    ],
+
+
     Field(discriminator="benchmark_type"),
+
+
 ]
 
 
+
+
+
+
+
+
 class BenchmarkFile(pydantic.BaseModel):
+
+
     """Represents an entire benchmark YAML file."""
+
+
+
+
 
     benchmarks: list[BenchmarkCase]
 
 
+
+
+
+
+
+
 class BenchmarkResult(pydantic.BaseModel):
+
+
     """Represents the result of a benchmark run."""
 
+
+
+
+
     outcome: ExpectedOutcome
+
+
     error_type: Optional[str] = None
+
+
     error_message: Optional[str] = None
+
+
+
+
+
+
 
 
 # --- Structured Answer Output Models ---
 
 
+
+
+
+
+
+
 class BaseAnswerOutput(pydantic.BaseModel, abc.ABC):
+
+
     """A base model for the structured output of an AnswerGenerator."""
+
+
     pass
 
 
+
+
+
+
+
+
 class FixErrorAnswerOutput(BaseAnswerOutput):
+
+
     """The expected output structure for a fix_error benchmark."""
 
+
+
+
+
     benchmark_type: Literal[BenchmarkType.FIX_ERROR] = BenchmarkType.FIX_ERROR
+
+
     code: str = Field(
+
+
         ...,
+
+
         description="The complete, corrected Python code snippet to be injected into the test file.",
+
+
     )
+
+
+
+
+
+
 
 
 class ApiUnderstandingAnswerOutput(BaseAnswerOutput):
+
+
     """The expected output structure for an api_understanding benchmark."""
 
+
+
+
+
     benchmark_type: Literal[BenchmarkType.API_UNDERSTANDING] = (
+
+
         BenchmarkType.API_UNDERSTANDING
+
+
     )
+
+
     code: str = Field(
+
+
         ...,
+
+
         description="The Python code snippet that answers the question, conforming to the required template.",
+
+
     )
+
+
     fully_qualified_class_name: str = Field(
+
+
         description="""The fully qualified name (FQN) for the relevant class. This should
+
+
         be the path to the module file itself, including the class's name only, not method or parameter names.
 
+
+
+
+
         Examples:
+
+
         - Good: 'google.adk.agents.llm_agent.LlmAgent'
+
+
         - Bad: 'google.adk.agents.llm_agent.LlmAgent.model' (includes parameter name)
+
+
         - Bad: 'google.adk.runners.Runner.run' (includes method name)""",
+
+
     )
+
+
+
+
+
+
+
+
+class MultipleChoiceAnswerOutput(BaseAnswerOutput):
+
+
+    """The expected output structure for a multiple_choice benchmark."""
+
+
+
+
+
+    benchmark_type: Literal[BenchmarkType.MULTIPLE_CHOICE] = (
+
+
+        BenchmarkType.MULTIPLE_CHOICE
+
+
+    )
+
+
+    answer: str = Field(
+
+
+        ...,
+
+
+        description="The single letter corresponding to the chosen answer (e.g., 'A', 'B', 'C', or 'D').",
+
+
+    )
+
+
+
+
+
+
 
 
 AnswerOutput = Annotated[
-    Union[FixErrorAnswerOutput, ApiUnderstandingAnswerOutput],
+
+
+    Union[
+
+
+        FixErrorAnswerOutput,
+
+
+        ApiUnderstandingAnswerOutput,
+
+
+        MultipleChoiceAnswerOutput,
+
+
+    ],
+
+
     Field(discriminator="benchmark_type"),
+
+
 ]
 
 

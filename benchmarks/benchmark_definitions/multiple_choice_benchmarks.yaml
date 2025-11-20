@@ -1,0 +1,179 @@
+benchmarks:
+  - question: |
+      You are defining a simple `LlmAgent` but receiving a `TypeError` about missing arguments.
+      The code looks like this:
+      ```python
+      root_agent = LlmAgent(
+          name="my_agent",
+          instruction="You are a helpful assistant."
+      )
+      ```
+      What is the error?
+    options:
+      A: "The `instruction` argument must be a list of strings."
+      B: "The `LlmAgent` class is missing the required `model` argument."
+      C: "You must always provide a `tools` list, even if empty."
+      D: "The `name` argument must be unique across the entire project."
+    correct_answer: "B"
+    explanation: "LlmAgent requires a `model` argument to function."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to give your agent access to a Python function named `calculate_tax`.
+      You try:
+      ```python
+      root_agent = LlmAgent(
+          name="tax_agent",
+          model="gemini-2.5-flash",
+          tools=[calculate_tax]
+      )
+      ```
+      Why does this fail or behave incorrectly?
+    options:
+      A: "Tools must be defined in a separate file."
+      B: "The function must be a static method of a class."
+      C: "Raw Python functions must be wrapped in `FunctionTool`."
+      D: "The argument name should be `functions`, not `tools`."
+    correct_answer: "C"
+    explanation: "Raw functions must be wrapped using `FunctionTool`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want `agent_one` to run first, followed by `agent_two`. You write:
+      ```python
+      root_agent = SequentialAgent(
+          name="sequence",
+          tools=[agent_one, agent_two]
+      )
+      ```
+      What is the error in this definition?
+    options:
+      A: "SequentialAgent does not support `LlmAgent` instances."
+      B: "Agents should be passed to the `sub_agents` parameter, not `tools`."
+      C: "You must use `ParallelAgent` for multiple agents."
+      D: "The `instruction` parameter is missing and is required for `SequentialAgent`."
+    correct_answer: "B"
+    explanation: "SequentialAgent takes a list of agents in the `sub_agents` parameter."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want your agent to be able to run Python code. You attempt:
+      ```python
+      root_agent = LlmAgent(
+          name="coder",
+          model="gemini-2.5-flash",
+          tools=[BuiltInCodeExecutor()]
+      )
+      ```
+      How should this be fixed to correctly enable the code executor?
+    options:
+      A: "Use the `CodeAgent` class instead of `LlmAgent`."
+      B: "Pass the executor instance to the `code_executor` parameter, not `tools`."
+      C: "Add `enable_code_execution=True` to the constructor."
+      D: "Wrap `BuiltInCodeExecutor` inside `FunctionTool`."
+    correct_answer: "B"
+    explanation: "BuiltInCodeExecutor is passed to the dedicated `code_executor` argument."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You have a `root_agent` and a `specialist_agent`. You want the root to delegate tasks to the specialist.
+      ```python
+      root_agent = LlmAgent(
+          name="manager",
+          model="gemini-2.5-flash",
+          tools=[specialist_agent]
+      )
+      ```
+      What is the correct way to register the specialist for delegation?
+    options:
+      A: "Use `sub_agents=[specialist_agent]`."
+      B: "Use `delegates=[specialist_agent]`."
+      C: "Use `child_agents=[specialist_agent]`."
+      D: "Keep it in `tools`, but ensure the specialist has a `description`."
+    correct_answer: "A"
+    explanation: "Other agents are registered via the `sub_agents` parameter to enable delegation."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want two agents to run at the same time and combine their results.
+      ```python
+      root_agent = MultiAgent(
+          name="parallel_run",
+          agents=[agent_a, agent_b]
+      )
+      ```
+      `MultiAgent` is not a valid class. Which class should you use?
+    options:
+      A: "ConcurrentAgent"
+      B: "AsyncAgent"
+      C: "ParallelAgent"
+      D: "BatchAgent"
+    correct_answer: "C"
+    explanation: "ParallelAgent is used for running agents concurrently."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want your agent to process input that matches a specific Pydantic model `UserInfo`.
+      ```python
+      class UserInfo(BaseModel):
+          name: str
+          age: int
+
+      root_agent = LlmAgent(
+          name="form_filler",
+          model="gemini-2.5-flash",
+          input_schema=UserInfo()
+      )
+      ```
+      What is the error in the `input_schema` assignment?
+    options:
+      A: "`input_schema` only accepts JSON schemas (dicts), not Pydantic models."
+      B: "You should pass the class `UserInfo`, not an instance `UserInfo()`."
+      C: "The field should be named `response_model`."
+      D: "Pydantic models must be wrapped in `SchemaTool`."
+    correct_answer: "B"
+    explanation: "The class itself (`UserInfo`) is passed to `input_schema`, not an instance."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You encounter a `NameError: name 'FunctionTool' is not defined`. Which import statement is likely missing?
+    options:
+      A: "from google.adk.tools import FunctionTool"
+      B: "from google.adk.agents import FunctionTool"
+      C: "from google.adk.utils import FunctionTool"
+      D: "from google.adk.tools.function_tool import FunctionTool"
+    correct_answer: "D"
+    explanation: "FunctionTool is imported from `google.adk.tools.function_tool`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Your root agent has a `specialist_agent` in its `sub_agents` list, but it never delegates to it, even when asked.
+      What is the most likely missing component in the **specialist's** definition?
+    options:
+      A: "The specialist is missing a `description`."
+      B: "The specialist is missing an `instruction`."
+      C: "The specialist must use a different model than the root."
+      D: "The specialist must be defined in a separate file."
+    correct_answer: "A"
+    explanation: "The specialist needs a `description` for the root agent's planner to know when to use it."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to force the LLM to output JSON matching a specific schema.
+      ```python
+      root_agent = LlmAgent(
+          name="json_agent",
+          model="gemini-2.5-flash",
+          output_format="json",
+          schema=MyPydanticModel
+      )
+      ```
+      What are the correct parameters to achieve this?
+    options:
+      A: "response_format='json', response_schema=MyPydanticModel"
+      B: "output_schema=MyPydanticModel"
+      C: "format=MyPydanticModel"
+      D: "structured_output=MyPydanticModel"
+    correct_answer: "B"
+    explanation: "`output_schema` is the standard parameter for enforcing structured output."
+    benchmark_type: "multiple_choice"
