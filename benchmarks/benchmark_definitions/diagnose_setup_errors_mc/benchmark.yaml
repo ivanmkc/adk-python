@@ -1,179 +1,1874 @@
 benchmarks:
-  - question: |
-      You are defining a simple `LlmAgent` but receiving a `TypeError` about missing arguments.
-      The code looks like this:
-      ```python
-      root_agent = LlmAgent(
-          name="my_agent",
-          instruction="You are a helpful assistant."
-      )
-      ```
-      What is the error?
-    options:
-      A: "The `instruction` argument must be a list of strings."
-      B: "The `LlmAgent` class is missing the required `model` argument."
-      C: "You must always provide a `tools` list, even if empty."
-      D: "The `name` argument must be unique across the entire project."
-    correct_answer: "B"
-    explanation: "LlmAgent requires a `model` argument to function."
-    benchmark_type: "multiple_choice"
+- question: "You are defining a simple `LlmAgent` but receiving a `TypeError` about\
+    \ missing arguments.\nThe code looks like this:\n```python\nroot_agent = LlmAgent(\n\
+    \    name=\"my_agent\",\n    instruction=\"You are a helpful assistant.\"\n)\n\
+    ```\nWhat is the error?\n"
+  options:
+    A: The `instruction` argument must be a list of strings.
+    B: The `LlmAgent` class is missing the required `model` argument.
+    C: You must always provide a `tools` list, even if empty.
+    D: The `name` argument must be unique across the entire project.
+  correct_answer: B
+  explanation: LlmAgent requires a `model` argument to function.
+  benchmark_type: multiple_choice
+- question: "You want to give your agent access to a Python function named `calculate_tax`.\n\
+    You try:\n```python\nroot_agent = LlmAgent(\n    name=\"tax_agent\",\n    model=\"\
+    gemini-2.5-flash\",\n    tools=[calculate_tax]\n)\n```\nWhy does this fail or\
+    \ behave incorrectly?\n"
+  options:
+    A: Tools must be defined in a separate file.
+    B: The function must be a static method of a class.
+    C: Raw Python functions must be wrapped in `FunctionTool`.
+    D: The argument name should be `functions`, not `tools`.
+  correct_answer: C
+  explanation: Raw functions must be wrapped using `FunctionTool`.
+  benchmark_type: multiple_choice
+- question: "You want `agent_one` to run first, followed by `agent_two`. You write:\n\
+    ```python\nroot_agent = SequentialAgent(\n    name=\"sequence\",\n    tools=[agent_one,\
+    \ agent_two]\n)\n```\nWhat is the error in this definition?\n"
+  options:
+    A: SequentialAgent does not support `LlmAgent` instances.
+    B: Agents should be passed to the `sub_agents` parameter, not `tools`.
+    C: You must use `ParallelAgent` for multiple agents.
+    D: The `instruction` parameter is missing and is required for `SequentialAgent`.
+  correct_answer: B
+  explanation: SequentialAgent takes a list of agents in the `sub_agents` parameter.
+  benchmark_type: multiple_choice
+- question: "You want your agent to be able to run Python code. You attempt:\n```python\n\
+    root_agent = LlmAgent(\n    name=\"coder\",\n    model=\"gemini-2.5-flash\",\n\
+    \    tools=[BuiltInCodeExecutor()]\n)\n```\nHow should this be fixed to correctly\
+    \ enable the code executor?\n"
+  options:
+    A: Use the `CodeAgent` class instead of `LlmAgent`.
+    B: Pass the executor instance to the `code_executor` parameter, not `tools`.
+    C: Add `enable_code_execution=True` to the constructor.
+    D: Wrap `BuiltInCodeExecutor` inside `FunctionTool`.
+  correct_answer: B
+  explanation: BuiltInCodeExecutor is passed to the dedicated `code_executor` argument.
+  benchmark_type: multiple_choice
+- question: "You have a `root_agent` and a `specialist_agent`. You want the root to\
+    \ delegate tasks to the specialist.\n```python\nroot_agent = LlmAgent(\n    name=\"\
+    manager\",\n    model=\"gemini-2.5-flash\",\n    tools=[specialist_agent]\n)\n\
+    ```\nWhat is the correct way to register the specialist for delegation?\n"
+  options:
+    A: Use `sub_agents=[specialist_agent]`.
+    B: Use `delegates=[specialist_agent]`.
+    C: Use `child_agents=[specialist_agent]`.
+    D: Keep it in `tools`, but ensure the specialist has a `description`.
+  correct_answer: A
+  explanation: Other agents are registered via the `sub_agents` parameter to enable
+    delegation.
+  benchmark_type: multiple_choice
+- question: "You want two agents to run at the same time and combine their results.\n\
+    ```python\nroot_agent = MultiAgent(\n    name=\"parallel_run\",\n    agents=[agent_a,\
+    \ agent_b]\n)\n```\n`MultiAgent` is not a valid class. Which class should you\
+    \ use?\n"
+  options:
+    A: ConcurrentAgent
+    B: AsyncAgent
+    C: ParallelAgent
+    D: BatchAgent
+  correct_answer: C
+  explanation: ParallelAgent is used for running agents concurrently.
+  benchmark_type: multiple_choice
+- question: "You want your agent to process input that matches a specific Pydantic\
+    \ model `UserInfo`.\n```python\nclass UserInfo(BaseModel):\n    name: str\n  \
+    \  age: int\n\nroot_agent = LlmAgent(\n    name=\"form_filler\",\n    model=\"\
+    gemini-2.5-flash\",\n    input_schema=UserInfo()\n)\n```\nWhat is the error in\
+    \ the `input_schema` assignment?\n"
+  options:
+    A: '`input_schema` only accepts JSON schemas (dicts), not Pydantic models.'
+    B: You should pass the class `UserInfo`, not an instance `UserInfo()`.
+    C: The field should be named `response_model`.
+    D: Pydantic models must be wrapped in `SchemaTool`.
+  correct_answer: B
+  explanation: The class itself (`UserInfo`) is passed to `input_schema`, not an instance.
+  benchmark_type: multiple_choice
+- question: 'You encounter a `NameError: name ''FunctionTool'' is not defined`. Which
+    import statement is likely missing?
 
-  - question: |
-      You want to give your agent access to a Python function named `calculate_tax`.
-      You try:
-      ```python
-      root_agent = LlmAgent(
-          name="tax_agent",
-          model="gemini-2.5-flash",
-          tools=[calculate_tax]
-      )
-      ```
-      Why does this fail or behave incorrectly?
-    options:
-      A: "Tools must be defined in a separate file."
-      B: "The function must be a static method of a class."
-      C: "Raw Python functions must be wrapped in `FunctionTool`."
-      D: "The argument name should be `functions`, not `tools`."
-    correct_answer: "C"
-    explanation: "Raw functions must be wrapped using `FunctionTool`."
-    benchmark_type: "multiple_choice"
+    '
+  options:
+    A: from google.adk.tools import FunctionTool
+    B: from google.adk.agents import FunctionTool
+    C: from google.adk.utils import FunctionTool
+    D: from google.adk.tools.function_tool import FunctionTool
+  correct_answer: D
+  explanation: FunctionTool is imported from `google.adk.tools.function_tool`.
+  benchmark_type: multiple_choice
+- question: 'Your root agent has a `specialist_agent` in its `sub_agents` list, but
+    it never delegates to it, even when asked.
 
-  - question: |
-      You want `agent_one` to run first, followed by `agent_two`. You write:
-      ```python
-      root_agent = SequentialAgent(
-          name="sequence",
-          tools=[agent_one, agent_two]
-      )
-      ```
-      What is the error in this definition?
-    options:
-      A: "SequentialAgent does not support `LlmAgent` instances."
-      B: "Agents should be passed to the `sub_agents` parameter, not `tools`."
-      C: "You must use `ParallelAgent` for multiple agents."
-      D: "The `instruction` parameter is missing and is required for `SequentialAgent`."
-    correct_answer: "B"
-    explanation: "SequentialAgent takes a list of agents in the `sub_agents` parameter."
-    benchmark_type: "multiple_choice"
+    What is the most likely missing component in the **specialist''s** definition?
 
-  - question: |
-      You want your agent to be able to run Python code. You attempt:
-      ```python
-      root_agent = LlmAgent(
-          name="coder",
-          model="gemini-2.5-flash",
-          tools=[BuiltInCodeExecutor()]
-      )
-      ```
-      How should this be fixed to correctly enable the code executor?
-    options:
-      A: "Use the `CodeAgent` class instead of `LlmAgent`."
-      B: "Pass the executor instance to the `code_executor` parameter, not `tools`."
-      C: "Add `enable_code_execution=True` to the constructor."
-      D: "Wrap `BuiltInCodeExecutor` inside `FunctionTool`."
-    correct_answer: "B"
-    explanation: "BuiltInCodeExecutor is passed to the dedicated `code_executor` argument."
-    benchmark_type: "multiple_choice"
+    '
+  options:
+    A: The specialist is missing a `description`.
+    B: The specialist is missing an `instruction`.
+    C: The specialist must use a different model than the root.
+    D: The specialist must be defined in a separate file.
+  correct_answer: A
+  explanation: The specialist needs a `description` for the root agent's planner to
+    know when to use it.
+  benchmark_type: multiple_choice
+- question: "You want to force the LLM to output JSON matching a specific schema.\n\
+    ```python\nroot_agent = LlmAgent(\n    name=\"json_agent\",\n    model=\"gemini-2.5-flash\"\
+    ,\n    output_format=\"json\",\n    schema=MyPydanticModel\n)\n```\nWhat are the\
+    \ correct parameters to achieve this?\n"
+  options:
+    A: response_format='json', response_schema=MyPydanticModel
+    B: output_schema=MyPydanticModel
+    C: format=MyPydanticModel
+    D: structured_output=MyPydanticModel
+  correct_answer: B
+  explanation: '`output_schema` is the standard parameter for enforcing structured
+    output.'
+  benchmark_type: multiple_choice
+- question: 'You try to define an agent with the name ''user''.
 
-  - question: |
-      You have a `root_agent` and a `specialist_agent`. You want the root to delegate tasks to the specialist.
-      ```python
-      root_agent = LlmAgent(
-          name="manager",
-          model="gemini-2.5-flash",
-          tools=[specialist_agent]
-      )
-      ```
-      What is the correct way to register the specialist for delegation?
-    options:
-      A: "Use `sub_agents=[specialist_agent]`."
-      B: "Use `delegates=[specialist_agent]`."
-      C: "Use `child_agents=[specialist_agent]`."
-      D: "Keep it in `tools`, but ensure the specialist has a `description`."
-    correct_answer: "A"
-    explanation: "Other agents are registered via the `sub_agents` parameter to enable delegation."
-    benchmark_type: "multiple_choice"
+    ```python
 
-  - question: |
-      You want two agents to run at the same time and combine their results.
-      ```python
-      root_agent = MultiAgent(
-          name="parallel_run",
-          agents=[agent_a, agent_b]
-      )
-      ```
-      `MultiAgent` is not a valid class. Which class should you use?
-    options:
-      A: "ConcurrentAgent"
-      B: "AsyncAgent"
-      C: "ParallelAgent"
-      D: "BatchAgent"
-    correct_answer: "C"
-    explanation: "ParallelAgent is used for running agents concurrently."
-    benchmark_type: "multiple_choice"
+    agent = LlmAgent(name=''user'', model=''gemini-1.5-pro'')
 
-  - question: |
-      You want your agent to process input that matches a specific Pydantic model `UserInfo`.
-      ```python
-      class UserInfo(BaseModel):
-          name: str
-          age: int
+    ```
 
-      root_agent = LlmAgent(
-          name="form_filler",
-          model="gemini-2.5-flash",
-          input_schema=UserInfo()
-      )
-      ```
-      What is the error in the `input_schema` assignment?
-    options:
-      A: "`input_schema` only accepts JSON schemas (dicts), not Pydantic models."
-      B: "You should pass the class `UserInfo`, not an instance `UserInfo()`."
-      C: "The field should be named `response_model`."
-      D: "Pydantic models must be wrapped in `SchemaTool`."
-    correct_answer: "B"
-    explanation: "The class itself (`UserInfo`) is passed to `input_schema`, not an instance."
-    benchmark_type: "multiple_choice"
+    What error occurs?'
+  options:
+    A: No error, 'user' is a valid name.
+    B: 'ValueError: Agent name cannot be `user`.'
+    C: 'TypeError: Name must be an integer.'
+    D: 'RuntimeError: User agent already exists.'
+  correct_answer: B
+  explanation: '`user` is a reserved name for end-user input.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with an invalid name ''my-agent''.
 
-  - question: |
-      You encounter a `NameError: name 'FunctionTool' is not defined`. Which import statement is likely missing?
-    options:
-      A: "from google.adk.tools import FunctionTool"
-      B: "from google.adk.agents import FunctionTool"
-      C: "from google.adk.utils import FunctionTool"
-      D: "from google.adk.tools.function_tool import FunctionTool"
-    correct_answer: "D"
-    explanation: "FunctionTool is imported from `google.adk.tools.function_tool`."
-    benchmark_type: "multiple_choice"
+    ```python
 
-  - question: |
-      Your root agent has a `specialist_agent` in its `sub_agents` list, but it never delegates to it, even when asked.
-      What is the most likely missing component in the **specialist's** definition?
-    options:
-      A: "The specialist is missing a `description`."
-      B: "The specialist is missing an `instruction`."
-      C: "The specialist must use a different model than the root."
-      D: "The specialist must be defined in a separate file."
-    correct_answer: "A"
-    explanation: "The specialist needs a `description` for the root agent's planner to know when to use it."
-    benchmark_type: "multiple_choice"
+    agent = LlmAgent(name=''my-agent'', model=''gemini-1.5-pro'')
 
-  - question: |
-      You want to force the LLM to output JSON matching a specific schema.
-      ```python
-      root_agent = LlmAgent(
-          name="json_agent",
-          model="gemini-2.5-flash",
-          output_format="json",
-          schema=MyPydanticModel
-      )
-      ```
-      What are the correct parameters to achieve this?
-    options:
-      A: "response_format='json', response_schema=MyPydanticModel"
-      B: "output_schema=MyPydanticModel"
-      C: "format=MyPydanticModel"
-      D: "structured_output=MyPydanticModel"
-    correct_answer: "B"
-    explanation: "`output_schema` is the standard parameter for enforcing structured output."
-    benchmark_type: "multiple_choice"
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: 'ValueError: Agent name cannot contain hyphens.'
+    C: No error.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores).
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `system_instruction` inside `generate_content_config`.\n\
+    ```python\nagent = LlmAgent(\n    name='agent',\n    model='gemini-1.5-pro',\n\
+    \    generate_content_config=types.GenerateContentConfig(system_instruction='Hi')\n\
+    )\n```\nWhat error does this cause?"
+  options:
+    A: No error, it works as expected.
+    B: 'ValueError: System instruction must be set via LlmAgent.instruction.'
+    C: 'TypeError: system_instruction must be a Content object.'
+    D: 'ValueError: generate_content_config is read-only.'
+  correct_answer: B
+  explanation: LlmAgent enforces that instructions are set via the `instruction` or
+    `static_instruction` fields, not `generate_content_config`.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `tools` inside `generate_content_config`.\n```python\n\
+    agent = LlmAgent(\n    name='agent',\n    model='gemini-1.5-pro',\n    generate_content_config=types.GenerateContentConfig(tools=[tool])\n\
+    )\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: All tools must be set via LlmAgent.tools.'
+    B: No error.
+    C: 'TypeError: Tools must be a list of functions.'
+    D: 'ValueError: Tools are not supported in this model.'
+  correct_answer: A
+  explanation: Tools must be configured via the `tools` parameter of `LlmAgent`.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `response_schema` inside `generate_content_config`.\n\
+    ```python\nagent = LlmAgent(\n    name='agent',\n    model='gemini-1.5-pro',\n\
+    \    generate_content_config=types.GenerateContentConfig(response_schema=schema)\n\
+    )\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: Response schema must be set via LlmAgent.output_schema.'
+    B: No error.
+    C: 'TypeError: Schema must be a dict.'
+    D: 'ValueError: response_schema is deprecated.'
+  correct_answer: A
+  explanation: Structured output should be configured via `output_schema` on the `LlmAgent`.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to initialize a `Runner` with both `app` and `agent`.
+
+    ```python
+
+    runner = Runner(app=my_app, agent=my_agent)
+
+    ```
+
+    What error is raised?'
+  options:
+    A: 'ValueError: When app is provided, agent should not be provided.'
+    B: No error, agent overrides app.root_agent.
+    C: 'TypeError: Multiple values for argument ''agent''.'
+    D: 'ValueError: App name mismatch.'
+  correct_answer: A
+  explanation: '`app` and `agent` arguments are mutually exclusive in `Runner` initialization.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to initialize a `Runner` without `app` and without `app_name`.
+
+    ```python
+
+    runner = Runner(agent=my_agent)
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Either app or both app_name and agent must be provided.'
+    B: No error, app_name defaults to 'default'.
+    C: 'ValueError: Agent must have a name.'
+    D: 'AttributeError: ''NoneType'' object has no attribute ''name''.'
+  correct_answer: A
+  explanation: If `app` is not provided, `app_name` is required.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an `App` with an invalid name ''my app''.
+
+    ```python
+
+    app = App(name=''my app'', root_agent=agent)
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Invalid app name ''my app''...'
+    B: No error.
+    C: 'TypeError: Name must be alphanumeric.'
+    D: 'ValueError: App name cannot contain spaces.'
+  correct_answer: A
+  explanation: App names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to clone an agent and update `parent_agent`.
+
+    ```python
+
+    new_agent = agent.clone(update={''parent_agent'': other_agent})
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Cannot update `parent_agent` field in clone.'
+    B: No error.
+    C: 'TypeError: parent_agent is immutable.'
+    D: 'AttributeError: parent_agent is read-only.'
+  correct_answer: A
+  explanation: '`parent_agent` cannot be updated during cloning; it is set when added
+    to a parent''s sub_agents.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to clone an agent and update a non-existent field.
+
+    ```python
+
+    new_agent = agent.clone(update={''random_field'': 123})
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Cannot update nonexistent fields...'
+    B: No error, field is added.
+    C: AttributeError.
+    D: TypeError.
+  correct_answer: A
+  explanation: '`clone` validates that updated fields exist on the agent class.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize a `SequentialAgent` without `sub_agents`.
+
+    ```python
+
+    agent = SequentialAgent(name=''seq'')
+
+    ```
+
+    What happens?'
+  options:
+    A: No error, but it won't do anything useful.
+    B: 'ValueError: SequentialAgent requires at least one sub-agent.'
+    C: 'TypeError: Missing required argument ''sub_agents''.'
+    D: RuntimeError on initialization.
+  correct_answer: A
+  explanation: '`sub_agents` defaults to an empty list. It is valid setup, though
+    functionally empty.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to add an agent as a sub-agent to two different parents.
+
+    ```python
+
+    parent1 = SequentialAgent(name=''p1'', sub_agents=[child])
+
+    parent2 = SequentialAgent(name=''p2'', sub_agents=[child])
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Agent `child` already has a parent agent...'
+    B: No error, shared ownership is allowed.
+    C: 'RuntimeError: Circular dependency.'
+    D: 'TypeError: Agent cannot be reused.'
+  correct_answer: A
+  explanation: An agent instance can only have one parent. It checks `parent_agent`
+    is None before assignment.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize an `LlmAgent` with a `thinking_config` in `generate_content_config`.
+
+    ```python
+
+    agent = LlmAgent(name=''a'', model=''m'', generate_content_config=types.GenerateContentConfig(thinking_config=...))
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Thinking config should be set via LlmAgent.planner.'
+    B: No error.
+    C: 'TypeError: thinking_config not supported.'
+    D: 'ValueError: Model does not support thinking.'
+  correct_answer: A
+  explanation: Thinking config must be configured via the `planner` field.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You provide an invalid tool config in YAML.\n```yaml\ntools:\n  - name:\
+    \ 'invalid.tool.format'\n```\nIf the tool cannot be resolved, what happens?"
+  options:
+    A: ImportError or ValueError depending on the resolution failure.
+    B: It is ignored.
+    C: A warning is logged.
+    D: It defaults to a mock tool.
+  correct_answer: A
+  explanation: The tool resolution logic attempts to import and load the tool. Failure
+    raises an exception.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize a `RunConfig` with `max_llm_calls` equal to `sys.maxsize`.
+
+    ```python
+
+    config = RunConfig(max_llm_calls=sys.maxsize)
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValueError: max_llm_calls should be less than sys.maxsize.'
+    B: No error.
+    C: OverflowError.
+    D: TypeError.
+  correct_answer: A
+  explanation: RunConfig validates that max_llm_calls is less than sys.maxsize.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define a `LoopAgent` without specifying `max_iterations`.
+
+    ```python
+
+    agent = LoopAgent(name=''loop'', sub_agents=[child])
+
+    ```
+
+    If `max_iterations` is required (hypothetically), what error would you expect?'
+  options:
+    A: 'ValidationError: Field required.'
+    B: No error, it defaults to None/Infinite.
+    C: ValueError.
+    D: TypeError.
+  correct_answer: B
+  explanation: '`max_iterations` is optional (default None), so no error occurs.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You try to set `parent_agent` manually during initialization.
+
+    ```python
+
+    agent = LlmAgent(name=''child'', parent_agent=parent)
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: parent_agent is init=False.'
+    B: No error.
+    C: 'ValueError: parent_agent cannot be set.'
+    D: 'TypeError: Unexpected argument.'
+  correct_answer: D
+  explanation: The `parent_agent` field is marked `init=False`, so Pydantic prevents
+    setting it in __init__.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ContextCacheConfig` with `ttl` as a string.
+
+    ```python
+
+    config = ContextCacheConfig(ttl=''3600s'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: value is not a valid integer.'
+    B: No error.
+    C: 'ValueError: Invalid format.'
+    D: TypeError.
+  correct_answer: A
+  explanation: '`ttl` must be an integer (seconds).'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''my-agent''.
+
+    ```python
+
+    agent = LlmAgent(name=''my-agent'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent name'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''1agent''.
+
+    ```python
+
+    agent = LlmAgent(name=''1agent'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent!''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent!'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent.name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent.name'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent@123''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent@123'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `thinking_config` inside `generate_content_config`.\n\
+    ```python\nagent = LlmAgent(\n    name='agent',\n    model='m',\n    generate_content_config=types.GenerateContentConfig(thinking_config=ThinkingConfig())\n\
+    )\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: Thinking config should be set via LlmAgent.planner.'
+    B: No error.
+    C: TypeError.
+    D: RuntimeWarning.
+  correct_answer: A
+  explanation: LlmAgent enforces that `thinking_config` is configured via a specific
+    agent parameter, not the generic config.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `tools` inside `generate_content_config`.\n```python\n\
+    agent = LlmAgent(\n    name='agent',\n    model='m',\n    generate_content_config=types.GenerateContentConfig(tools=[my_tool])\n\
+    )\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: All tools must be set via LlmAgent.tools.'
+    B: No error.
+    C: TypeError.
+    D: RuntimeWarning.
+  correct_answer: A
+  explanation: LlmAgent enforces that `tools` is configured via a specific agent parameter,
+    not the generic config.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `system_instruction` inside `generate_content_config`.\n\
+    ```python\nagent = LlmAgent(\n    name='agent',\n    model='m',\n    generate_content_config=types.GenerateContentConfig(system_instruction='sys')\n\
+    )\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: System instruction must be set via LlmAgent.instruction.'
+    B: No error.
+    C: TypeError.
+    D: RuntimeWarning.
+  correct_answer: A
+  explanation: LlmAgent enforces that `system_instruction` is configured via a specific
+    agent parameter, not the generic config.
+  benchmark_type: diagnose_setup_errors_mc
+- question: "You try to set `response_schema` inside `generate_content_config`.\n\
+    ```python\nagent = LlmAgent(\n    name='agent',\n    model='m',\n    generate_content_config=types.GenerateContentConfig(response_schema={'type':\
+    \ 'object'})\n)\n```\nWhat error occurs?"
+  options:
+    A: 'ValueError: Response schema must be set via LlmAgent.output_schema.'
+    B: No error.
+    C: TypeError.
+    D: RuntimeWarning.
+  correct_answer: A
+  explanation: LlmAgent enforces that `response_schema` is configured via a specific
+    agent parameter, not the generic config.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `App` with both `root_agent` and `agents` (hypothetical
+    old API).
+
+    ```python
+
+    app = App(name=''app'', root_agent=root, agents=[root])
+
+    ```
+
+    If `agents` is not a valid parameter, what happens?'
+  options:
+    A: 'ValidationError: Extra inputs are not permitted.'
+    B: No error, agents is ignored.
+    C: 'TypeError: __init__() got an unexpected keyword argument ''agents''.'
+    D: ValueError.
+  correct_answer: A
+  explanation: Pydantic models with `extra='forbid'` raise ValidationError for unknown
+    arguments.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You call `agent.clone(update={''parent_agent'': ''val''})`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Cannot update...'
+    B: No error.
+    C: TypeError.
+    D: AttributeError.
+  correct_answer: A
+  explanation: Clone prevents updating parent_agent or non-existent fields.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You call `agent.clone(update={''unknown_field_xyz'': ''val''})`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Cannot update nonexistent fields...'
+    B: No error.
+    C: TypeError.
+    D: AttributeError.
+  correct_answer: A
+  explanation: Clone prevents updating parent_agent or non-existent fields.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You call `agent.clone(update={''another_bad_field'': ''val''})`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Cannot update nonexistent fields...'
+    B: No error.
+    C: TypeError.
+    D: AttributeError.
+  correct_answer: A
+  explanation: Clone prevents updating parent_agent or non-existent fields.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent#''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent#'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent$''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent$'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent%''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent%'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent^''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent^'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent&''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent&'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent*''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent*'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent(''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent('', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent)''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent)'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent+''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent+'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent=''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent='', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent{''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent{'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent}''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent}'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent[''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent['', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent]''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent]'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent|''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent|'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent\''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent\'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent:''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent:'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent;''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent;'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent''''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent'''', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent"''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent"'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent<''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent<'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent>''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent>'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent,''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent,'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent?''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent?'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent/''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent/'', model=''gemini-1.5-pro'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers (letters, numbers, underscores,
+    cannot start with number).
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `EventsCompactionConfig` with `overlap_size=-1`.
+
+    What error occurs?'
+  options:
+    A: ValidationError
+    B: No error.
+    C: ValueError.
+    D: TypeError.
+  correct_answer: A
+  explanation: Pydantic validation ensures `overlap_size` has the correct type/constraints.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `EventsCompactionConfig` with `compaction_interval=0`.
+
+    What error occurs?'
+  options:
+    A: ValidationError
+    B: No error.
+    C: ValueError.
+    D: TypeError.
+  correct_answer: A
+  explanation: Pydantic validation ensures `compaction_interval` has the correct type/constraints.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `EventsCompactionConfig` with `summarizer=''string''`.
+
+    What error occurs?'
+  options:
+    A: ValidationError
+    B: No error.
+    C: ValueError.
+    D: TypeError.
+  correct_answer: A
+  explanation: Pydantic validation ensures `summarizer` has the correct type/constraints.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent_1''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent_1'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''agent_1'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''AgentName''.
+
+    ```python
+
+    agent = LlmAgent(name=''AgentName'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''AgentName'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''agent'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''_agent''.
+
+    ```python
+
+    agent = LlmAgent(name=''_agent'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''_agent'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent123''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent123'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''agent123'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''my_agent_name''.
+
+    ```python
+
+    agent = LlmAgent(name=''my_agent_name'', model=''gemini-1.5-pro'')
+
+    ```
+
+    Does this raise a name validation error?'
+  options:
+    A: No error.
+    B: 'ValueError: Agent name must be a valid identifier.'
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: '''my_agent_name'' is a valid Python identifier.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: You initialize `LlmAgent(name='user', model='m')`. What happens?
+  options:
+    A: 'ValueError: Agent name cannot be `user`.'
+    B: No error.
+    C: TypeError.
+    D: RuntimeError.
+  correct_answer: A
+  explanation: '''user'' is reserved.'
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ParallelAgent` with `max_workers=''0''` (string).
+
+    ```python
+
+    agent = ParallelAgent(name=''p'', max_workers=''0'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: Input should be a valid integer.'
+    B: No error.
+    C: TypeError.
+    D: ValueError.
+  correct_answer: A
+  explanation: max_workers must be an integer.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ParallelAgent` with `max_workers=''1''` (string).
+
+    ```python
+
+    agent = ParallelAgent(name=''p'', max_workers=''1'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: Input should be a valid integer.'
+    B: No error.
+    C: TypeError.
+    D: ValueError.
+  correct_answer: A
+  explanation: max_workers must be an integer.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ParallelAgent` with `max_workers=''2''` (string).
+
+    ```python
+
+    agent = ParallelAgent(name=''p'', max_workers=''2'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: Input should be a valid integer.'
+    B: No error.
+    C: TypeError.
+    D: ValueError.
+  correct_answer: A
+  explanation: max_workers must be an integer.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ParallelAgent` with `max_workers=''3''` (string).
+
+    ```python
+
+    agent = ParallelAgent(name=''p'', max_workers=''3'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: Input should be a valid integer.'
+    B: No error.
+    C: TypeError.
+    D: ValueError.
+  correct_answer: A
+  explanation: max_workers must be an integer.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `ParallelAgent` with `max_workers=''4''` (string).
+
+    ```python
+
+    agent = ParallelAgent(name=''p'', max_workers=''4'')
+
+    ```
+
+    What error occurs?'
+  options:
+    A: 'ValidationError: Input should be a valid integer.'
+    B: No error.
+    C: TypeError.
+    D: ValueError.
+  correct_answer: A
+  explanation: max_workers must be an integer.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `Runner(app=None, app_name=None, agent=None)`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: Either app or both app_name and agent...'
+    B: No error.
+    C: TypeError.
+    D: RuntimeError.
+  correct_answer: A
+  explanation: Runner constructor validation logic.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `Runner(app=my_app, app_name=''name'')`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: When app is provided, app_name should not...'
+    B: No error.
+    C: TypeError.
+    D: RuntimeError.
+  correct_answer: A
+  explanation: Runner constructor validation logic.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `Runner(app=my_app, agent=my_agent)`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: When app is provided, agent should not...'
+    B: No error.
+    C: TypeError.
+    D: RuntimeError.
+  correct_answer: A
+  explanation: Runner constructor validation logic.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You initialize `Runner(app=my_app, plugins=[p])`.
+
+    What error occurs?'
+  options:
+    A: 'ValueError: When app is provided, plugins should not...'
+    B: No error.
+    C: TypeError.
+    D: RuntimeError.
+  correct_answer: A
+  explanation: Runner constructor validation logic.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You provide a YAML tool config missing `name` (assuming it''s required).
+
+    What happens during parsing?'
+  options:
+    A: ValidationError/KeyError.
+    B: It defaults.
+    C: Warning.
+    D: Nothing.
+  correct_answer: A
+  explanation: ToolConfig validation.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You provide a YAML tool config missing `type` (assuming it''s required).
+
+    What happens during parsing?'
+  options:
+    A: ValidationError/KeyError.
+    B: It defaults.
+    C: Warning.
+    D: Nothing.
+  correct_answer: A
+  explanation: ToolConfig validation.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You provide a YAML tool config missing `class` (assuming it''s required).
+
+    What happens during parsing?'
+  options:
+    A: ValidationError/KeyError.
+    B: It defaults.
+    C: Warning.
+    D: Nothing.
+  correct_answer: A
+  explanation: ToolConfig validation.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent!name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent!name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent@name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent@name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent#name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent#name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent$name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent$name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent%name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent%name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent^name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent^name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent&name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent&name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent*name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent*name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent(name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent(name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent)name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent)name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent-name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent-name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent+name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent+name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent=name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent=name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent{name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent{name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent}name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent}name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent[name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent[name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent]name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent]name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent|name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent|name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent\name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent\name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent:name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent:name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent;name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent;name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent"name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent"name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent''name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent''name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent<name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent<name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent>name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent>name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent,name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent,name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent.name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent.name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent?name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent?name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
+- question: 'You define an agent with the name ''agent/name''.
+
+    ```python
+
+    agent = LlmAgent(name=''agent/name'', model=''m'')
+
+    ```
+
+    What validation error is raised?'
+  options:
+    A: 'ValueError: Agent name must be a valid identifier.'
+    B: No error.
+    C: TypeError.
+    D: SyntaxError.
+  correct_answer: A
+  explanation: Agent names must be valid Python identifiers.
+  benchmark_type: diagnose_setup_errors_mc
