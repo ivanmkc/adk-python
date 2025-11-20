@@ -1,3 +1,27 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This file contains advanced multiple-choice benchmarks for the Google ADK Python framework.
+# These questions cover:
+# - Correct imports and module locations
+# - API usage patterns (Runner, App, Agent)
+# - Type definitions and abstract base classes
+# - Callback signatures and plugin architecture
+# - State management and session handling
+# - Event compaction and memory management
+# - Tool definitions and integration
+
 benchmarks:
   - question: |
       Which is the correct import statement for the `Runner` class?
@@ -129,4 +153,136 @@ benchmarks:
       D: "StorageService"
     correct_answer: "B"
     explanation: "`BaseArtifactService` is the ABC for implementing artifact storage backends."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      How do you configure an `App` to automatically compact events in the session history?
+    options:
+      A: "Set `auto_compact=True` in the `Runner` constructor."
+      B: "Pass an `EventsCompactionConfig` object to the `events_compaction_config` parameter of the `App` constructor."
+      C: "Call `app.compact_events()` manually before every run."
+      D: "Use the `CompactionPlugin` in the plugins list."
+    correct_answer: "B"
+    explanation: "Event compaction is configured at the App level using `EventsCompactionConfig`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      When using `InMemorySessionService`, how is session data persisted?
+    options:
+      A: "It is saved to a local JSON file."
+      B: "It is stored in a SQLite database."
+      C: "It is kept in a Python dictionary in RAM and lost when the process exits."
+      D: "It is uploaded to Google Cloud Storage."
+    correct_answer: "C"
+    explanation: "`InMemorySessionService` is ephemeral and stores data only in memory."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the purpose of the `state_delta` parameter in `runner.run_async`?
+    options:
+      A: "To update the agent's configuration for the current run."
+      B: "To modify the session state (variables shared across agents) for the current invocation."
+      C: "To change the LLM's system instruction dynamically."
+      D: "To inject temporary tools for the current turn."
+    correct_answer: "B"
+    explanation: "`state_delta` allows you to inject or update session state variables at the start of a run."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to implement a 'human-in-the-loop' workflow where the agent asks for confirmation before executing a sensitive tool. Which mechanism is best suited for this?
+    options:
+      A: "Use a `SequentialAgent` with a `HumanAgent`."
+      B: "Raise a `ToolConfirmationRequest` exception in the tool's execution logic."
+      C: "This is not supported in ADK."
+      D: "Return a special string from the tool asking for confirmation."
+    correct_answer: "A"
+    explanation: "While custom logic is possible, `HumanAgent` or `UserProxy` patterns are the standard architectural way to handle human interaction in agent flows."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which class allows you to define a tool from an OpenAPI specification?
+    options:
+      A: "OpenApiTool"
+      B: "SwaggerTool"
+      C: "ApiTool"
+      D: "SpecTool"
+    correct_answer: "A"
+    explanation: "`OpenApiTool` is designed to wrap OpenAPI specs into ADK-compatible tools."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      If you want to use a Google Search tool that returns structured results, which tool should you use?
+    options:
+      A: "GoogleSearchTool"
+      B: "SerpApiTool"
+      C: "SearchTool"
+      D: "WebSearch"
+    correct_answer: "A"
+    explanation: "`GoogleSearchTool` (often imported as `google_search`) provides access to Google Search."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the correct way to access the `session_id` from within a tool's execution logic?
+    options:
+      A: "It is passed as an argument named `session_id`."
+      B: "Access `self.session_id` (if the tool is a class)."
+      C: "It is available in the `tool_context` object passed to the tool function (if configured)."
+      D: "Use `google.adk.get_current_session_id()`."
+    correct_answer: "C"
+    explanation: "Contextual information like `session_id` is injected via `tool_context` if the tool signature requests it."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which event type indicates that the model has finished generating a text response?
+    options:
+      A: "Event(type='response_complete')"
+      B: "Event(content=...)"
+      C: "Event(status='finished')"
+      D: "The event stream simply ends."
+    correct_answer: "B"
+    explanation: "A standard `Event` with `content` populated (and `partial=False` by default) represents a completed turn/response chunk."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to use a `ParallelAgent` to run three sub-agents. How does the `ParallelAgent` determine when it is finished?
+    options:
+      A: "It waits for the first agent to finish."
+      B: "It waits for all sub-agents to finish their execution."
+      C: "It runs for a fixed timeout."
+      D: "It requires a manual stop signal."
+    correct_answer: "B"
+    explanation: "`ParallelAgent` aggregates results from all its sub-agents."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the `model_client` property on an `LlmAgent` used for?
+    options:
+      A: "To directly access the underlying GenAI client for raw API calls."
+      B: "To change the model name at runtime."
+      C: "To configure HTTP proxies."
+      D: "It is an internal property and should not be used."
+    correct_answer: "A"
+    explanation: "It provides access to the configured model client wrapper."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      How do you specify that a tool function should *not* return its output to the model, but instead save it directly to the session state?
+    options:
+      A: "Return `None` from the function."
+      B: "Use the `side_effect=True` decorator."
+      C: "This is not possible; all tool outputs go to the model."
+      D: "Modify the `session.state` directly within the tool and return a confirmation string."
+    correct_answer: "D"
+    explanation: "Tools can modify state via context. While they must return *something* to the model (the tool response), the *meaningful* data acts as a side effect on the state."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which component is responsible for truncating conversation history to fit within the model's context window?
+    options:
+      A: "The `Runner` automatically does this."
+      B: "The `LlmAgent` handles it internally."
+      C: "The `ContextFilterPlugin` (or similar compaction logic)."
+      D: "The `SessionService`."
+    correct_answer: "C"
+    explanation: "Plugins like `ContextFilterPlugin` or `CompactionPlugin` (configured via `EventsCompactionConfig`) handle history truncation/compaction."
     benchmark_type: "multiple_choice"
