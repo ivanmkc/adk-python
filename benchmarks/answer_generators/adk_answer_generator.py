@@ -16,6 +16,7 @@
 
 import asyncio
 
+from google.genai import types
 from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.adk.sessions import Session
@@ -48,7 +49,7 @@ class AdkAnswerGenerator(AnswerGenerator):
             ),
             output_schema=ApiUnderstandingAnswerOutput,
         )
-        self.runner = InMemoryRunner(root_agent=self.agent)
+        self.runner = InMemoryRunner(agent=self.agent)
 
     @property
     def name(self) -> str:
@@ -79,11 +80,23 @@ class AdkAnswerGenerator(AnswerGenerator):
 
     async def _run_agent_async(self, prompt: str) -> str:
         """Helper to run the agent and get the response."""
-        session = await self.runner.create_session()
+        session = await self.runner.session_service.create_session(
+            app_name=self.runner.app_name,
+            user_id="benchmark_user",
+            session_id="benchmark_session"
+        )
         final_response = ""
-        async for event in self.runner.run(session.id, prompt):
+        
+        new_message = types.UserContent(parts=[types.Part(text=prompt)])
+
+        async for event in self.runner.run_async(
+            user_id=session.user_id,
+            session_id=session.id,
+            new_message=new_message
+        ):
             if event.is_final_response():
-                final_response = event.content.parts[0].text
+                if event.content and event.content.parts:
+                    final_response = event.content.parts[0].text
                 break
         return final_response
 
