@@ -35,11 +35,11 @@ async def test_benchmarks():
     benchmark framework itself.
     """
     benchmark_suites = [
-        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/multiple_choice_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/advanced_adk_usage_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/skill_based_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/api_understanding/benchmark.yaml",
+        "benchmarks/benchmark_definitions/fix_error_suite/benchmark.yaml",
+        "benchmarks/benchmark_definitions/multiple_choice/benchmark.yaml",
+        "benchmarks/benchmark_definitions/advanced_adk_usage/benchmark.yaml",
+        "benchmarks/benchmark_definitions/skill_based/benchmark.yaml",
     ]
     answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
     results = await benchmark_orchestrator.run_benchmarks(
