@@ -286,3 +286,123 @@ benchmarks:
     correct_answer: "C"
     explanation: "Plugins like `ContextFilterPlugin` or `CompactionPlugin` (configured via `EventsCompactionConfig`) handle history truncation/compaction."
     benchmark_type: "multiple_choice"
+
+  - question: |
+      You are using a `LoopAgent` and want to prevent it from running infinitely if the sub-agents never escalate. Which parameter should you set?
+    options:
+      A: "timeout"
+      B: "max_steps"
+      C: "max_iterations"
+      D: "loop_limit"
+    correct_answer: "C"
+    explanation: "`LoopAgent` uses `max_iterations` to limit the number of times it loops through its sub-agents."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which `RunConfig` parameter allows you to limit the total number of LLM calls in a single run to prevent runaway costs?
+    options:
+      A: "max_tokens"
+      B: "call_limit"
+      C: "max_llm_calls"
+      D: "budget"
+    correct_answer: "C"
+    explanation: "`max_llm_calls` (default 500) sets a hard limit on the number of LLM interactions per run."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You want to automatically save any file blobs (images, audio) sent by the user as artifacts in the artifact service. Which plugin should you use?
+    options:
+      A: "ArtifactSaverPlugin"
+      B: "SaveFilesAsArtifactsPlugin"
+      C: "BlobStoragePlugin"
+      D: "FilePersistencePlugin"
+    correct_answer: "B"
+    explanation: "`SaveFilesAsArtifactsPlugin` is the standard plugin for intercepting and saving user file uploads as artifacts."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      When using `LlmAgent` with a model that supports native audio output, how do you configure the response modality?
+    options:
+      A: "Set `response_modalities=['AUDIO']` in `RunConfig`."
+      B: "Pass `audio=True` to the `LlmAgent` constructor."
+      C: "Use `types.GenerationConfig(response_mime_type='audio/mp3')`."
+      D: "This is automatically detected based on the input."
+    correct_answer: "A"
+    explanation: "`RunConfig.response_modalities` controls the expected output format (e.g., TEXT, AUDIO)."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      What is the purpose of `GlobalInstructionPlugin`?
+    options:
+      A: "To set the system instruction for the root agent only."
+      B: "To inject a specific instruction into the context of *every* agent in the application."
+      C: "To override the model's safety settings globally."
+      D: "To provide a fallback instruction if the user prompt is empty."
+    correct_answer: "B"
+    explanation: "`GlobalInstructionPlugin` appends (or prepends) instructions to all agents' contexts, useful for enforcing global policies."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      You need to retry a tool execution automatically if the tool raises a specific exception or returns an error. Which plugin can help?
+    options:
+      A: "RetryPlugin"
+      B: "ToolErrorPlugin"
+      C: "ReflectRetryToolPlugin"
+      D: "RobustnessPlugin"
+    correct_answer: "C"
+    explanation: "`ReflectRetryToolPlugin` allows the agent to see the tool error and retry the call, potentially with corrected arguments."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      How does `ContextFilterPlugin` generally operate?
+    options:
+      A: "It summarizes the entire conversation history into a single string."
+      B: "It keeps only the last `N` invocations or messages to fit context limits."
+      C: "It removes PII (Personally Identifiable Information) from the context."
+      D: "It filters out tool outputs to save tokens."
+    correct_answer: "B"
+    explanation: "`ContextFilterPlugin` is primarily used for sliding window context management, retaining recent history."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which class allows you to run an agent loop specifically for debugging in a REPL or notebook environment without setting up a full runner loop manually?
+    options:
+      A: "adk.debug_run()"
+      B: "runner.run_debug()"
+      C: "agent.execute_debug()"
+      D: "Runner.debug()"
+    correct_answer: "B"
+    explanation: "`runner.run_debug()` is a convenience method for quick experimentation and debugging."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      When implementing a `BaseToolset`, what is the `close()` method responsible for?
+    options:
+      A: "Deleting the tool definitions from the agent."
+      B: "Releasing external resources (e.g., closing HTTP sessions, database connections)."
+      C: "Saving the tool state to the session."
+      D: "Validating the tool arguments."
+    correct_answer: "B"
+    explanation: "`BaseToolset.close()` is an async lifecycle method for cleaning up I/O resources."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Which configuration object is used to enable 'affective dialog' (emotion detection and adaptation) in a live run?
+    options:
+      A: "AffectiveConfig"
+      B: "EmotionConfig"
+      C: "RunConfig(enable_affective_dialog=True)"
+      D: "LiveConfig(affective=True)"
+    correct_answer: "C"
+    explanation: "`RunConfig` has an `enable_affective_dialog` boolean field."
+    benchmark_type: "multiple_choice"
+
+# --- Gap Assessment ---
+# While this benchmark suite covers a broad range of ADK functionality, the following areas could be expanded:
+# 1. **Auth & Credentials**: Detailed usage of `CredentialService` for different auth flows (OAuth, Service Account).
+# 2. **Telemetry**: Specifics on how to configure and consume OpenTelemetry traces generated by ADK.
+# 3. **Advanced Session Persistence**: Questions about using `SpannerSessionService` or `FirestoreSessionService`.
+# 4. **Deployment**: Questions related to `adk run` CLI arguments and `ContainerImage` build processes.
+# 5. **Error Handling strategies**: More scenarios on how agents recover from specific LLM or Tool errors beyond `ReflectRetryToolPlugin`.
+# 6. **Multi-modal inputs**: Specifics on handling video/image inputs in `LlmAgent` beyond just "Part".
+
