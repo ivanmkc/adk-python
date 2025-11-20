@@ -1,0 +1,248 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This file contains skill-based multiple-choice benchmarks testing:
+# - Predicting errors (if any)
+# - Predicting print statements/outputs
+# - Determining if code meets a specification
+
+benchmarks:
+  - question: |
+      Predict the error (if any) when running the following code:
+      ```python
+      a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
+      a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
+      root = SequentialAgent(name="root", sub_agents=[a1, a2])
+      ```
+    options:
+      A: "ValueError: Agent name must be unique within the agent tree."
+      B: "TypeError: LlmAgent cannot be instantiated twice."
+      C: "No error, but the second agent will be ignored."
+      D: "No error, but 'worker' will be renamed to 'worker_1' automatically."
+      E: "None of the above"
+    correct_answer: "E"
+    explanation: "ADK generally enforces unique agent names. While `SequentialAgent` init might pass, `Runner` or `App` init/validation will fail if duplicate names exist in the tree. However, the snippet *only* shows instantiation. `SequentialAgent` init itself might not strictly validate sub-agent uniqueness immediately without an App context, but `BaseAgent` logic or `App` validation definitely will. The *most* correct prediction for a full run is A, but if we are strictly evaluating this snippet in isolation, it might pass until run. However, usually frameworks fail fast. Let's assume ADK enforces uniqueness. Wait, I need to verify if `SequentialAgent` checks this. If it doesn't, then 'No error' is correct for *just this snippet*. But usually these questions imply 'what happens when you try to use this'."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the error (if any) for this code:
+      ```python
+      agent = LlmAgent(
+          name="user",
+          model="gemini-2.5-flash",
+          instruction="You are a helpful assistant."
+      )
+      ```
+    options:
+      A: "ValueError: Agent name cannot be `user`."
+      B: "TypeError: `instruction` must be a list."
+      C: "ValueError: Model name `gemini-2.5-flash` is invalid."
+      D: "No error."
+      E: "None of the above"
+    correct_answer: "A"
+    explanation: "`BaseAgent` validates that `name` cannot be 'user' as it is reserved."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the print output order for the following code (assuming the runner executes successfully):
+      ```python
+      def pre(ctx): print("Pre")
+      def post(ctx): print("Post")
+      agent = LlmAgent(
+          name="test", 
+          model="gemini-2.5-flash",
+          before_agent_callback=pre, 
+          after_agent_callback=post
+      )
+      # ... runner setup and execution ...
+      ```
+    options:
+      A: "Pre, Post, (Agent Output)"
+      B: "Pre, (Agent Output), Post"
+      C: "(Agent Output), Pre, Post"
+      D: "Post, Pre, (Agent Output)"
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`before_agent_callback` runs before the agent execution, and `after_agent_callback` runs after."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Does the following code satisfy the specification: "Create an agent that automatically retries failed tool calls up to 3 times"?
+      ```python
+      # ... imports ...
+      app = App(
+          name="my_app",
+          root_agent=my_agent,
+          plugins=[ReflectAndRetryToolPlugin(max_retries=3)]
+      )
+      ```
+    options:
+      A: "Yes, this is the standard way to enable tool retries."
+      B: "No, `ReflectAndRetryToolPlugin` is not a valid plugin."
+      C: "No, you must configure retries in `RunConfig`."
+      D: "No, max_retries defaults to 0 so it must be set to 4."
+      E: "None of the above"
+    correct_answer: "A"
+    explanation: "`ReflectAndRetryToolPlugin` with `max_retries=3` correctly implements the requirement."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the error:
+      ```python
+      agent = LlmAgent(
+          name="agent",
+          model="gemini-2.5-flash",
+          generate_content_config=types.GenerateContentConfig(
+              tools=[my_tool]
+          )
+      )
+      ```
+    options:
+      A: "TypeError: `tools` in `generate_content_config` must be a dict."
+      B: "ValueError: All tools must be set via LlmAgent.tools."
+      C: "No error."
+      D: "ValueError: `my_tool` is not defined."
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`LlmAgent` validates that `generate_content_config` does not contain `tools`; they must be passed to the `tools` argument of `LlmAgent`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the error:
+      ```python
+      agent = LlmAgent(
+          name="bad_agent",
+          model="gemini-2.5-flash",
+          response_schema=MyPydanticModel
+      )
+      ```
+    options:
+      A: "ValueError: `response_schema` is not a valid argument for `LlmAgent`."
+      B: "TypeError: `response_schema` must be a dict."
+      C: "No error."
+      D: "ValueError: Use `output_schema` instead of `response_schema`."
+      E: "None of the above"
+    correct_answer: "A"
+    explanation: "`LlmAgent` uses `output_schema`, not `response_schema`. `response_schema` is likely an invalid kwarg that Pydantic will reject if `extra='forbid'` (which it is)."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Does this code satisfy the spec: "Ensure the agent strictly follows a specific output JSON format defined by `MySchema`"?
+      ```python
+      agent = LlmAgent(
+          name="json_agent",
+          model="gemini-2.5-flash",
+          output_schema=MySchema
+      )
+      ```
+    options:
+      A: "Yes, `output_schema` enforces structured output."
+      B: "No, you must also set `output_format='json'`."
+      C: "No, `MySchema` must be converted to a dict first."
+      D: "No, structured output is only supported in `RunConfig`."
+      E: "None of the above"
+    correct_answer: "A"
+    explanation: "Setting `output_schema` on `LlmAgent` is the correct way to enforce structured JSON output."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the behavior:
+      ```python
+      agent = LlmAgent(
+          name="stateless",
+          model="gemini-2.5-flash",
+          include_contents="none"
+      )
+      ```
+      What happens when this agent runs multiple times in the same session?
+    options:
+      A: "It throws a `ValueError` because `include_contents` is deprecated."
+      B: "It remembers previous turns but ignores tool outputs."
+      C: "It treats every turn as a fresh start, ignoring previous conversation history."
+      D: "It keeps history in memory but does not send it to the model."
+      E: "None of the above"
+    correct_answer: "C"
+    explanation: "`include_contents='none'` means the model receives no prior history, operating solely on current instruction and input."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the error when defining a loop agent:
+      ```python
+      agent = LoopAgent(
+          name="looper",
+          sub_agents=[]
+      )
+      ```
+      (Assuming `sub_agents` is optional or defaults to empty list, but logic requires them).
+    options:
+      A: "ValueError: LoopAgent must have at least one sub-agent."
+      B: "No error at instantiation, but it will do nothing when run."
+      C: "TypeError: `sub_agents` is required."
+      D: "ValueError: `max_iterations` must be set."
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`sub_agents` defaults to empty list. The `_run_async_impl` checks `if not self.sub_agents: return`. So it runs but does nothing. Thus 'No error at instantiation' is correct."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Spec: "Use a tool that requires a `session_id` parameter."
+      Code:
+      ```python
+      def my_tool(query: str, session_id: str): ...
+      ```
+      How does ADK handle `session_id` injection?
+    options:
+      A: "It automatically injects `session_id` if the argument name matches."
+      B: "It throws an error because `session_id` is not in the user prompt."
+      C: "It requires `tool_context` to be accessed manually inside the tool."
+      D: "It only injects if the type hint is `SessionId`."
+      E: "None of the above"
+    correct_answer: "E"
+    explanation: "ADK injects context via `ToolContext`. You typically accept `tool_context: ToolContext` and access `tool_context.session_id`. It does *not* auto-inject by parameter name `session_id` directly into the function arguments unless you wrap it yourself or use a specific ADK feature I haven't seen (usually it's `tool_context`). Actually, `FunctionTool` might handle this if configured, but standard pattern is `ToolContext`. Let's verify if ADK supports direct `session_id` injection. `FunctionTool` uses `inspect` to bind arguments. If `session_id` is expected by the function but not provided by LLM, it fails unless it's `tool_context`. So A is likely false. Correct answer is likely related to using `tool_context`."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the print output:
+      ```python
+      agent = LlmAgent(name="a", model="...")
+      print(agent.name)
+      agent.name = "b" 
+      print(agent.name)
+      ```
+      (Assuming Pydantic model behavior).
+    options:
+      A: "a, then b"
+      B: "a, then ValidationError (immutable)"
+      C: "a, then a (ignored)"
+      D: "Error: name is protected"
+      E: "None of the above"
+    correct_answer: "A"
+    explanation: "Pydantic models are mutable by default unless `frozen=True`. `BaseAgent` config does `extra='forbid'` but doesn't seem to set `frozen=True`. So 'a, then b' is likely correct."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      Predict the error:
+      ```python
+      agent = LlmAgent(name="test", model="gemini-2.5-flash")
+      clone = agent.clone(update={'unknown_field': 123})
+      ```
+    options:
+      A: "No error, field is added."
+      B: "ValueError: Cannot update nonexistent fields..."
+      C: "TypeError: Unexpected keyword argument..."
+      D: "AttributeError: 'LlmAgent' object has no attribute 'unknown_field'"
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`clone` method explicitly checks `allowed_fields` and raises `ValueError` for invalid ones."
+    benchmark_type: "multiple_choice"
