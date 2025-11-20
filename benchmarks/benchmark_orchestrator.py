@@ -68,7 +68,7 @@ async def _run_single_benchmark(
     )
 
     return BenchmarkRunResult(
-        suite=Path(suite_file).name,
+        suite=str(Path(suite_file).absolute()),
         benchmark_name=case.get_identifier(),
         answer_generator=generator.name,
         result=1 if result == "pass" else 0,
