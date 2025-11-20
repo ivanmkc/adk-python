@@ -511,10 +511,33 @@ benchmarks:
     explanation: "`on_tool_error_callback` is specifically designed to catch and potentially recover from exceptions raised during tool execution."
     benchmark_type: "multiple_choice"
 
+  - question: |
+      When defining an `EvalCase` for evaluation, which of the following statements is true regarding `conversation` and `conversation_scenario` fields?
+    options:
+      A: "Both must be provided to ensure coverage."
+      B: "Exactly one of them must be provided (XOR constraint)."
+      C: "Neither is required if `session_input` is set."
+      D: "`conversation_scenario` is deprecated; only `conversation` is supported."
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`EvalCase` enforces a validator ensuring exactly one of `conversation` or `conversation_scenario` is set."
+    benchmark_type: "multiple_choice"
+
+  - question: |
+      In the context of ADK evaluation, what does the `IntermediateData` object primarily capture?
+    options:
+      A: "The internal hidden states of the LSTM model."
+      B: "The trajectory of tool uses and tool responses generated during an agent's execution."
+      C: "The debug logs printed to stdout."
+      D: "The raw HTTP requests sent to the Vertex AI API."
+      E: "None of the above"
+    correct_answer: "B"
+    explanation: "`IntermediateData` stores `tool_uses`, `tool_responses`, and `intermediate_responses` to track the agent's path to the final answer."
+    benchmark_type: "multiple_choice"
+
 # --- Gap Assessment ---
 # While this benchmark suite covers a broad range of ADK functionality, the following areas could be expanded:
 # 1. **Specific Tool Implementations**: Questions about `GoogleSearchTool` configuration or `BigQueryTool` parameters.
-# 2. **Evaluation Framework**: Deeper questions on `EvalSet`, `EvalCase`, and custom metrics logic.
-# 3. **A2A Communication**: Specifics on the Agent-to-Agent protocol and `A2AClient`.
-# 4. **Flow Orchestration**: Questions about `AutoFlow` vs `SingleFlow` behavior in `LlmAgent`.
+# 2. **A2A Communication**: Specifics on the Agent-to-Agent protocol and `A2AClient`.
+# 3. **Flow Orchestration**: Questions about `AutoFlow` vs `SingleFlow` behavior in `LlmAgent`.
 
