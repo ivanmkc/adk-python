@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Verification script for advanced_adk_usage_benchmarks.yaml.
+Verification script for advanced_adk_usage/benchmark.yaml.
 This script verifies that the API surface, classes, and signatures assumed by the
 benchmark questions actually exist and behave as expected in the codebase.
 """
@@ -25,7 +25,6 @@ import importlib
 from pathlib import Path
 
 # Ensure src is in path to import adk
-# Assuming this script is run from project root or benchmarks/verification/
 project_root = Path(__file__).resolve().parents[3]
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root / "src"))
@@ -51,181 +50,238 @@ from google.adk.auth.credential_manager import CredentialManager
 from google.adk.cli.cli_tools_click import cli_api_server, cli_deploy_cloud_run
 from google.adk.evaluation.eval_case import EvalCase, IntermediateData
 
-
-def test_runner_import():
+# --- Question 1: Import Runner ---
+def test_q1_runner_import():
+    """Question 1: Correct import statement for Runner."""
+    # Correct Option B
     assert Runner.__module__ == "google.adk.runners"
-
-def test_event_import():
-    assert Event.__module__ == "google.adk.events.event"
-
-def test_runner_run_async_params():
-    sig = inspect.signature(Runner.run_async)
-    assert "new_message" in sig.parameters
-    assert "message" not in sig.parameters
-    assert "content" not in sig.parameters
-
-def test_app_init_params():
-    # App is a Pydantic model, so we check model_fields
-    assert "name" in App.model_fields
-    # Runner is a class, we can check init signature
-    sig_runner = inspect.signature(Runner.__init__)
-    assert "app" in sig_runner.parameters
-    assert "app_name" in sig_runner.parameters
-
-def test_base_agent_abc():
-    assert issubclass(BaseAgent, object)
-    # BaseAgent is a Pydantic model and doesn't use abc.ABCMeta, 
-    # but it enforces implementation via NotImplementedError in _run_async_impl.
-    assert hasattr(BaseAgent, "run_async")
-
-def test_base_tool_abc():
-    # BaseTool inherits from abc.ABC
-    from abc import ABC
-    assert issubclass(BaseTool, ABC)
-    assert hasattr(BaseTool, "run_async")
-
-def test_invocation_context_purpose():
-    # Check type hints instead of instantiation
-    type_hints = inspect.get_annotations(InvocationContext)
-    assert "session" in type_hints
-    assert "agent_states" in type_hints
-    assert "session_service" in type_hints
-
-def test_base_artifact_service_abc():
-    assert inspect.isabstract(BaseArtifactService)
-
-def test_in_memory_session_service_persistence():
-    service = InMemorySessionService()
-    # It should use a dict called 'sessions'
-    assert isinstance(service.sessions, dict)
-
-def test_loop_agent_max_iterations():
-    assert "max_iterations" in LoopAgent.model_fields
-
-def test_run_config_max_llm_calls():
-    config = RunConfig()
-    assert hasattr(config, "max_llm_calls")
-    assert config.max_llm_calls == 500
-
-def test_save_files_plugin():
-    assert SaveFilesAsArtifactsPlugin
-
-def test_run_config_modalities():
-    config = RunConfig()
-    assert hasattr(config, "response_modalities")
-
-def test_global_instruction_plugin():
-    assert GlobalInstructionPlugin
-
-def test_reflect_retry_tool_plugin():
-    # Ensure correct class name
-    assert ReflectAndRetryToolPlugin
-
-def test_context_filter_plugin():
-    assert ContextFilterPlugin
-
-def test_runner_run_debug():
-    assert hasattr(Runner, "run_debug")
-
-def test_base_toolset_close():
-    assert inspect.iscoroutinefunction(BaseToolset.close)
-
-def test_run_config_affective():
-    config = RunConfig()
-    assert hasattr(config, "enable_affective_dialog")
-
-def test_credential_manager_exists():
-    assert CredentialManager
-
-def test_cli_trace_flag():
-    # Check if --trace_to_cloud is a param for cli_api_server
-    params = cli_api_server.params
-    trace_param = next((p for p in params if p.name == "trace_to_cloud"), None)
-    assert trace_param is not None
-    assert trace_param.is_flag
-
-def test_deploy_service_name_flag():
-    params = cli_deploy_cloud_run.params
-    service_name_param = next((p for p in params if p.name == "service_name"), None)
-    assert service_name_param is not None
-    assert "--service_name" in service_name_param.opts
-
-def test_multimodal_part_blob():
-    # GenAI types.Part should accept inline_data
-    sig = inspect.signature(types.Part.__init__)
-    assert "inline_data" in sig.parameters
-
-def test_on_tool_error_callback():
-    # Check LlmAgent has on_tool_error_callback
-    assert "on_tool_error_callback" in LlmAgent.model_fields
-
-def test_eval_case_xor_constraint():
-    # Verify EvalCase has logic to enforce conversation XOR conversation_scenario
-    # We can try to instantiate it with both and expect error, or inspect the validator
-    # The validator is named 'ensure_conversation_xor_conversation_scenario'
-    assert hasattr(EvalCase, "ensure_conversation_xor_conversation_scenario")
-
-def test_intermediate_data_structure():
-    # Verify IntermediateData fields
-    type_hints = inspect.get_annotations(IntermediateData)
-    assert "tool_uses" in type_hints
-    assert "tool_responses" in type_hints
-    assert "intermediate_responses" in type_hints
-
-# --- Negative Test Cases (Verifying distractors are incorrect) ---
-
-def test_negative_runner_import():
-    # Option A in Q1: "from google.adk.factory import Runner" -> Should be invalid.
+    
+    # Distractor A: google.adk.factory (Invalid)
     try:
         import google.adk.factory
         assert False, "google.adk.factory should not exist"
     except ImportError:
         pass
     
-    # Option C: google.adk.core
+    # Distractor C: google.adk.core (Invalid)
     try:
         import google.adk.core
         assert not hasattr(google.adk.core, "Runner")
     except ImportError:
         pass
 
-def test_negative_app_init():
-    # Option B in Q4: App(application=...)
-    # We verify this raises a ValidationError (or TypeError due to extra='forbid')
+# --- Question 2: Import Event ---
+def test_q2_event_import():
+    """Question 2: Correct import for Event class."""
+    # Correct Option (implied via NOTA or corrected question): google.adk.events.event
+    assert Event.__module__ == "google.adk.events.event"
+
+# --- Question 3: runner.run_async params ---
+def test_q3_run_async_params():
+    """Question 3: Parameter for user input in run_async."""
+    sig = inspect.signature(Runner.run_async)
+    assert "new_message" in sig.parameters
+    assert "message" not in sig.parameters
+    assert "content" not in sig.parameters
+
+# --- Question 4: App initialization ---
+def test_q4_app_init():
+    """Question 4: App parameters and validation."""
+    # Verify 'name' exists (via Pydantic fields)
+    assert "name" in App.model_fields
+    
+    # Verify Runner takes 'app' or 'app_name'
+    sig_runner = inspect.signature(Runner.__init__)
+    assert "app" in sig_runner.parameters
+    assert "app_name" in sig_runner.parameters
+
+    # Negative Test (Distractor B): App(application=...)
     from pydantic import ValidationError
     try:
-        # App requires name and root_agent, passing 'application' should fail
-        # We use a dummy agent to satisfy required fields
         dummy_agent = BaseAgent(name="dummy", sub_agents=[]) 
         App(name="test", root_agent=dummy_agent, application="something")
         assert False, "App(application=...) should have failed"
     except ValidationError as e:
-        # Expect "Extra inputs are not permitted"
         assert "application" in str(e) or "Extra inputs" in str(e)
 
-def test_negative_run_config():
-    # Option C in Q26: llm_call_limit
+# --- Question 5: GenAI content unit ---
+def test_q5_genai_content_part():
+    """Question 5: Fundamental unit of content."""
+    # Just checking existence of types.Part
+    assert types.Part
+
+# --- Question 6: User message construction ---
+def test_q6_user_message():
+    """Question 6: Constructing user message."""
+    # types.Content takes parts
+    sig = inspect.signature(types.Content)
+    assert "parts" in sig.parameters or "parts" in types.Content.model_fields
+
+# --- Question 7: Custom Agent Base Class ---
+def test_q7_base_agent_abc():
+    """Question 7: Base class for custom agents."""
+    assert issubclass(BaseAgent, object)
+    assert hasattr(BaseAgent, "run_async")
+
+# --- Question 8: Custom Tool Implementation ---
+def test_q8_base_tool_abc():
+    """Question 8: BaseTool implementation."""
+    from abc import ABC
+    assert issubclass(BaseTool, ABC)
+    assert hasattr(BaseTool, "run_async")
+
+# --- Question 9: before_tool_callback signature ---
+# (Implicitly verified by usage in codebase, hard to verify exact signature enforcement dynamically without deeper inspection)
+
+# --- Question 10: run_on_event_callback signature ---
+# (Same as above)
+
+# --- Question 11: InvocationContext purpose ---
+def test_q11_invocation_context():
+    """Question 11: InvocationContext structure."""
+    type_hints = inspect.get_annotations(InvocationContext)
+    assert "session" in type_hints
+    assert "agent_states" in type_hints
+    assert "session_service" in type_hints
+
+# --- Question 12: Artifact Service ---
+def test_q12_artifact_service_abc():
+    """Question 12: BaseArtifactService."""
+    assert inspect.isabstract(BaseArtifactService)
+
+# --- Question 13: Event Compaction Config ---
+# (Verified by existence of EventsCompactionConfig in App - see test_q4 implicitly or explicitly here)
+def test_q13_compaction_config():
+    assert "events_compaction_config" in App.model_fields
+
+# --- Question 14: InMemory Persistence ---
+def test_q14_in_memory_persistence():
+    """Question 14: InMemorySessionService storage."""
+    service = InMemorySessionService()
+    assert isinstance(service.sessions, dict)
+
+# --- Question 15: state_delta ---
+# (Hard to verify without running, but checking if run_async accepts it)
+def test_q15_state_delta_param():
+    """Question 15: state_delta in run_async."""
+    sig = inspect.signature(Runner.run_async)
+    assert "state_delta" in sig.parameters
+
+# --- Questions 16-24: Various API checks ---
+# Skipped explicit tests for some purely conceptual ones, but covering key classes.
+
+# --- Question 25: LoopAgent parameters ---
+def test_q25_loop_agent_params():
+    """Question 25: LoopAgent max_iterations."""
+    assert "max_iterations" in LoopAgent.model_fields
+
+# --- Question 26: RunConfig limits ---
+def test_q26_run_config_limits():
+    """Question 26: RunConfig max_llm_calls."""
     config = RunConfig()
+    assert hasattr(config, "max_llm_calls")
+    assert config.max_llm_calls == 500
+    # Negative: llm_call_limit
     assert not hasattr(config, "llm_call_limit")
 
-def test_negative_reflect_plugin():
-    # Option C in Q30: ReflectRetryToolPlugin
-    # We verify that the module does not export a class with this EXACT name
-    # or if it does, it's deprecated/not the primary one. 
-    # Actually, we just check if we can import it.
+# --- Question 27: Save Artifacts Plugin ---
+def test_q27_save_files_plugin():
+    """Question 27: SaveFilesAsArtifactsPlugin."""
+    assert SaveFilesAsArtifactsPlugin
+
+# --- Question 28: Response Modality ---
+def test_q28_response_modality():
+    """Question 28: RunConfig response_modalities."""
+    config = RunConfig()
+    assert hasattr(config, "response_modalities")
+
+# --- Question 29: Global Instruction ---
+def test_q29_global_instruction():
+    """Question 29: GlobalInstructionPlugin."""
+    assert GlobalInstructionPlugin
+
+# --- Question 30: Retry Plugin ---
+def test_q30_retry_plugin():
+    """Question 30: ReflectAndRetryToolPlugin."""
+    assert ReflectAndRetryToolPlugin
+    # Negative: ReflectRetryToolPlugin (incorrect name check)
     try:
         from google.adk.plugins.reflect_retry_tool_plugin import ReflectRetryToolPlugin
-        # If it exists, we should check if it's the recommended one or if the question implies otherwise.
-        # But based on previous steps, it likely doesn't exist.
         assert False, "ReflectRetryToolPlugin should not exist (or is not the correct answer)"
     except ImportError:
-        pass # This is expected
+        pass 
 
-def test_negative_credential_manager():
-    # Option A in Q35: AuthService
-    # Check if google.adk.auth.credential_manager exports AuthService
+# --- Question 31: Context Filter ---
+def test_q31_context_filter():
+    """Question 31: ContextFilterPlugin."""
+    assert ContextFilterPlugin
+
+# --- Question 32: Debug Runner ---
+def test_q32_runner_debug():
+    """Question 32: Runner.run_debug."""
+    assert hasattr(Runner, "run_debug")
+
+# --- Question 33: Toolset Lifecycle ---
+def test_q33_toolset_close():
+    """Question 33: BaseToolset.close."""
+    assert inspect.iscoroutinefunction(BaseToolset.close)
+
+# --- Question 34: Affective Dialog ---
+def test_q34_affective_dialog():
+    """Question 34: RunConfig enable_affective_dialog."""
+    config = RunConfig()
+    assert hasattr(config, "enable_affective_dialog")
+
+# --- Question 35: Credential Manager (New) ---
+def test_q35_credential_manager():
+    """Question 35: CredentialManager."""
+    assert CredentialManager
+    # Negative: AuthService
     import google.adk.auth.credential_manager as cm
     assert not hasattr(cm, "AuthService")
+
+# --- Question 36: Telemetry Flag (New) ---
+def test_q36_telemetry_flag():
+    """Question 36: CLI trace flag."""
+    params = cli_api_server.params
+    trace_param = next((p for p in params if p.name == "trace_to_cloud"), None)
+    assert trace_param is not None
+    assert trace_param.is_flag
+
+# --- Question 37: Persistence URI (New) ---
+# (Implicit check, documentation based)
+
+# --- Question 38: Deployment Flag (New) ---
+def test_q38_deploy_flag():
+    """Question 38: Cloud Run service name flag."""
+    params = cli_deploy_cloud_run.params
+    service_name_param = next((p for p in params if p.name == "service_name"), None)
+    assert service_name_param is not None
+    assert "--service_name" in service_name_param.opts
+
+# --- Question 39: Multi-modal Input (New) ---
+def test_q39_multimodal_input():
+    """Question 39: Image input structure."""
+    sig = inspect.signature(types.Part.__init__)
+    assert "inline_data" in sig.parameters
+
+# --- Question 40: Error Handling (New) ---
+def test_q40_error_callback():
+    """Question 40: on_tool_error_callback."""
+    assert "on_tool_error_callback" in LlmAgent.model_fields
+
+# --- Question 41: EvalCase (New) ---
+def test_q41_eval_case_structure():
+    """Question 41: EvalCase fields."""
+    assert hasattr(EvalCase, "ensure_conversation_xor_conversation_scenario")
+
+# --- Question 42: IntermediateData (New) ---
+def test_q42_intermediate_data():
+    """Question 42: IntermediateData fields."""
+    type_hints = inspect.get_annotations(IntermediateData)
+    assert "tool_uses" in type_hints
+    assert "tool_responses" in type_hints
+    assert "intermediate_responses" in type_hints
 
 
 if __name__ == "__main__":
