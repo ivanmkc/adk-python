@@ -35,13 +35,13 @@ benchmarks:
   - question: |
       Which is the correct import statement for the `Runner` class?
     options:
-      A: "from google.adk import Runner"
+      A: "from google.adk.factory import Runner"
       B: "from google.adk.runners import Runner"
       C: "from google.adk.core import Runner"
       D: "from google.adk.agent_runner import Runner"
       E: "None of the above"
     correct_answer: "B"
-    explanation: "`Runner` is located in `google.adk.runners`."
+    explanation: "`Runner` is defined in `google.adk.runners` (and re-exported in `google.adk`)."
     benchmark_type: "multiple_choice"
 
   - question: |

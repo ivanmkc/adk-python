@@ -172,6 +172,62 @@ def test_intermediate_data_structure():
     assert "tool_responses" in type_hints
     assert "intermediate_responses" in type_hints
 
+# --- Negative Test Cases (Verifying distractors are incorrect) ---
+
+def test_negative_runner_import():
+    # Option A in Q1: "from google.adk.factory import Runner" -> Should be invalid.
+    try:
+        import google.adk.factory
+        assert False, "google.adk.factory should not exist"
+    except ImportError:
+        pass
+    
+    # Option C: google.adk.core
+    try:
+        import google.adk.core
+        assert not hasattr(google.adk.core, "Runner")
+    except ImportError:
+        pass
+
+def test_negative_app_init():
+    # Option B in Q4: App(application=...)
+    # We verify this raises a ValidationError (or TypeError due to extra='forbid')
+    from pydantic import ValidationError
+    try:
+        # App requires name and root_agent, passing 'application' should fail
+        # We use a dummy agent to satisfy required fields
+        dummy_agent = BaseAgent(name="dummy", sub_agents=[]) 
+        App(name="test", root_agent=dummy_agent, application="something")
+        assert False, "App(application=...) should have failed"
+    except ValidationError as e:
+        # Expect "Extra inputs are not permitted"
+        assert "application" in str(e) or "Extra inputs" in str(e)
+
+def test_negative_run_config():
+    # Option C in Q26: llm_call_limit
+    config = RunConfig()
+    assert not hasattr(config, "llm_call_limit")
+
+def test_negative_reflect_plugin():
+    # Option C in Q30: ReflectRetryToolPlugin
+    # We verify that the module does not export a class with this EXACT name
+    # or if it does, it's deprecated/not the primary one. 
+    # Actually, we just check if we can import it.
+    try:
+        from google.adk.plugins.reflect_retry_tool_plugin import ReflectRetryToolPlugin
+        # If it exists, we should check if it's the recommended one or if the question implies otherwise.
+        # But based on previous steps, it likely doesn't exist.
+        assert False, "ReflectRetryToolPlugin should not exist (or is not the correct answer)"
+    except ImportError:
+        pass # This is expected
+
+def test_negative_credential_manager():
+    # Option A in Q35: AuthService
+    # Check if google.adk.auth.credential_manager exports AuthService
+    import google.adk.auth.credential_manager as cm
+    assert not hasattr(cm, "AuthService")
+
+
 if __name__ == "__main__":
     print(f"Running verification script from: {__file__}")
     # Manually run all test functions
