@@ -46,7 +46,14 @@ class TrivialAnswerGenerator(AnswerGenerator):
             output = FixErrorAnswerOutput(code="")
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
-            output = MultipleChoiceAnswerOutput(answer="A")
+            import random  # pylint: disable=import-outside-toplevel
+            options = benchmark_case.options
+            if options:
+                random_answer_key = random.choice(list(options.keys()))
+                output = MultipleChoiceAnswerOutput(answer=random_answer_key)
+            else:
+                # Fallback if no options (shouldn't happen with validation)
+                output = MultipleChoiceAnswerOutput(answer="A")
             return GeneratedAnswer(output=output)
         else:
             raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")
