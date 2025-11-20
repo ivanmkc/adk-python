@@ -195,7 +195,6 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```\n\n"
             "Now, answer the following question:\n\n"
             f"Question: {case.question}\n"
-            f"Rationale: {case.rationale}\n"
             f"Template: {template_info.description}\n"
             f"Examples:\n{examples}\n"
         )
