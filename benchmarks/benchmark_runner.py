@@ -75,29 +75,30 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
     def _inject_code(self, content: str, code: str) -> str:
         """Injects code between markers, respecting indentation."""
         import textwrap
+
         lines = content.splitlines()
         new_lines = []
         in_block = False
-        
+
         for line in lines:
             if "# BEGIN: CODE" in line:
                 new_lines.append(line)
                 in_block = True
-                
+
                 # Determine indentation from the marker line
-                indent = line[:line.find("# BEGIN: CODE")]
-                
+                indent = line[: line.find("# BEGIN: CODE")]
+
                 # Indent the code to match
                 if code:
                     indented_code = textwrap.indent(code, indent)
                     new_lines.append(indented_code)
-                
+
             elif "# END: CODE" in line:
                 in_block = False
                 new_lines.append(line)
             elif not in_block:
                 new_lines.append(line)
-        
+
         return "\n".join(new_lines)
 
     async def run_benchmark(
@@ -113,7 +114,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
         with open(test_file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         # Replace the code block with the code to test using robust injection
         new_content = self._inject_code(content, code_to_test)
 
@@ -166,10 +167,11 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
         output = generated_answer.output
         code_to_test = output.code
 
-
         for ground_truth in benchmark_case.answers:
             try:
-                validation_utils.validate_answer_against_template(code_to_test, benchmark_case.template)
+                validation_utils.validate_answer_against_template(
+                    code_to_test, benchmark_case.template
+                )
                 normalized_code = self._normalize_code(code_to_test)
                 normalized_ground_truth = self._normalize_code(ground_truth.answer)
                 if normalized_ground_truth not in normalized_code:

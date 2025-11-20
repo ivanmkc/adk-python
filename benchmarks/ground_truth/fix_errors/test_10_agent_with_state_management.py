@@ -47,7 +47,9 @@ root_agent = SequentialAgent(
 async def run_test() -> str:
     """Runs the agent and returns the response."""
     # Ensure the mock response allows the test to pass by providing the expected word.
-    return await run_agent_test(root_agent, "Run state management test.", mock_llm_response="The secret is xyz")
+    return await run_agent_test(
+        root_agent, "Run state management test.", mock_llm_response="The secret is xyz"
+    )
 
 
 def assert_test(response: str):

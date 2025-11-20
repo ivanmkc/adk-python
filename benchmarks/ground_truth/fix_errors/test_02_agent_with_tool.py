@@ -36,9 +36,9 @@ async def run_test() -> str:
     """Runs the agent and returns the response."""
     # Mock response must contain "test" to satisfy assertion
     return await run_agent_test(
-        root_agent, 
-        "Can you use your tool?", 
-        mock_llm_response="I used the tool with query 'test'."
+        root_agent,
+        "Can you use your tool?",
+        mock_llm_response="I used the tool with query 'test'.",
     )
 
 

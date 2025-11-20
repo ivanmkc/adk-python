@@ -46,6 +46,7 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
     def _extract_code_snippet(self, file_path: Path) -> str:
         """Extracts the code snippet from a file."""
         import textwrap
+
         with open(file_path, "r") as f:
             content = f.read()
         match = re.search(r"# BEGIN: CODE\n(.*?)# END: CODE", content, re.DOTALL)
@@ -53,22 +54,28 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
             raise ValueError(f"Could not find code snippet in {file_path}")
         return textwrap.dedent(match.group(1)).strip()
 
-    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(
+        self, benchmark_case: BaseBenchmarkCase
+    ) -> GeneratedAnswer:
         """Returns the ground truth answer for the benchmark case."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             # The benchmark case points to the test file template (which has empty code blocks).
             # We need to read the *ground truth* file which has the filled-in code.
             ground_truth_map = self._get_ground_truth_file_map()
             test_filename = benchmark_case.test_file.name
-            
+
             if test_filename not in ground_truth_map:
-                 # Fallback: try to find it directly if map fails or is incomplete
-                 ground_truth_path = Path("benchmarks/ground_truth/fix_errors") / test_filename
+                # Fallback: try to find it directly if map fails or is incomplete
+                ground_truth_path = (
+                    Path("benchmarks/ground_truth/fix_errors") / test_filename
+                )
             else:
-                 ground_truth_path = ground_truth_map[test_filename]
+                ground_truth_path = ground_truth_map[test_filename]
 
             if not ground_truth_path.exists():
-                raise FileNotFoundError(f"Ground truth file not found for {test_filename} at {ground_truth_path}")
+                raise FileNotFoundError(
+                    f"Ground truth file not found for {test_filename} at {ground_truth_path}"
+                )
 
             code = self._extract_code_snippet(ground_truth_path)
             output = FixErrorAnswerOutput(code=code)
@@ -76,7 +83,8 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
         elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             answer = benchmark_case.answers[0]
             output = ApiUnderstandingAnswerOutput(
-                code=answer.answer, fully_qualified_class_name=answer.fully_qualified_class_name[0]
+                code=answer.answer,
+                fully_qualified_class_name=answer.fully_qualified_class_name[0],
             )
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):

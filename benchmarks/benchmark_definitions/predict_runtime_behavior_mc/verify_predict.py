@@ -31,6 +31,7 @@ from google.adk.agents.loop_agent import LoopAgent
 from google.adk.plugins.reflect_retry_tool_plugin import ReflectAndRetryToolPlugin
 from google.adk.apps.app import App
 
+
 def test_llm_agent_user_name_check():
     # Q: name="user" error?
     # A: BaseAgent validates name != "user".
@@ -40,11 +41,13 @@ def test_llm_agent_user_name_check():
     except ValueError as e:
         assert "user" in str(e)
 
+
 def test_reflect_retry_plugin_max_retries():
     # Q: max_retries=3 valid?
     # A: Yes.
     plugin = ReflectAndRetryToolPlugin(max_retries=3)
     assert plugin.max_retries == 3
+
 
 def test_generate_content_config_tools_error():
     # Q: tools in generate_content_config?
@@ -64,15 +67,18 @@ def test_generate_content_config_tools_error():
     # except ValueError as e:
     #     assert "tools" in str(e)
 
+
 def test_output_schema_valid():
     # Q: output_schema usage?
     # A: Valid.
     pass
 
+
 def test_loop_agent_sub_agents():
     # Q: Empty sub_agents?
     # A: Valid init.
     LoopAgent(name="loop", sub_agents=[])
+
 
 def test_immutable_agent_name():
     # Q: agent.name reassignment?
@@ -80,6 +86,7 @@ def test_immutable_agent_name():
     agent = LlmAgent(name="a", model="m")
     agent.name = "b"
     assert agent.name == "b"
+
 
 if __name__ == "__main__":
     print(f"Running verification script from: {__file__}")
@@ -92,7 +99,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"F {name} failed: {e}")
                 failed = True
-    
+
     if failed:
         sys.exit(1)
     else:

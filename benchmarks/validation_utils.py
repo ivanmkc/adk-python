@@ -103,9 +103,7 @@ TEMPLATES = {
 }
 
 
-def validate_module_path(
-    fully_qualified_class_name: str, expected_paths: list[str]
-):
+def validate_module_path(fully_qualified_class_name: str, expected_paths: list[str]):
     """Validates that the module_path correctly corresponds to the file_path."""
     for expected_path in expected_paths:
         if fully_qualified_class_name == expected_path:
@@ -125,8 +123,67 @@ def validate_answer_against_template(answer: str, template: AnswerTemplate):
         raise TemplateMismatchError(f"No template defined for '{template.value}'")
 
     regex = template_info.regex
-    if not re.match(regex, answer):
-        raise TemplateMismatchError(
-            f"Answer '{answer}' does not match the format for template"
-            f" '{template.value}'. Expected format: {template_info.description}"
-        )
+
+def load_snippet(ref: Any) -> str:
+    """
+    Loads a code snippet from a file, including the file header (imports/setup).
+    
+    Args:
+        ref: A CodeSnippetRef object or a dict with 'file' and 'section' keys.
+    
+    Returns:
+        The content of the snippet including the file header.
+    
+    Raises:
+        FileNotFoundError: If the referenced file does not exist.
+        ValueError: If the section is not found in the file.
+    """
+    # Determine project root (benchmarks/.. -> root)
+    project_root = Path(__file__).resolve().parents[1]
+    
+    if isinstance(ref, dict):
+        file_rel_path = ref['file']
+        section = ref['section']
+    else:
+        # Assume CodeSnippetRef object
+        file_rel_path = ref.file
+        section = ref.section
+        
+    file_path = project_root / file_rel_path
+    
+    if not file_path.exists():
+        raise FileNotFoundError(f"Snippet file not found: {file_path}")
+        
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        
+    header = []
+    snippet = []
+    in_snippet = False
+    found_snippet = False
+    
+    # Header is everything before the first `[start:` tag.
+    header_done = False
+    
+    for line in lines:
+        if "# --8<-- [start:" in line:
+            header_done = True
+            if f"[start:{section}]" in line:
+                in_snippet = True
+                found_snippet = True
+            continue
+            
+        if "# --8<-- [end:" in line:
+            if f"[end:{section}]" in line:
+                in_snippet = False
+            continue
+            
+        if in_snippet:
+            snippet.append(line)
+        elif not header_done:
+            header.append(line)
+            
+    if not found_snippet:
+        raise ValueError(f"Section '{section}' not found in {file_path}")
+        
+    return "".join(header + snippet)

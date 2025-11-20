@@ -35,7 +35,9 @@ class TrivialAnswerGenerator(AnswerGenerator):
         """Returns the name of the generator."""
         return "TrivialAnswerGenerator"
 
-    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(
+        self, benchmark_case: BaseBenchmarkCase
+    ) -> GeneratedAnswer:
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             output = ApiUnderstandingAnswerOutput(
@@ -47,6 +49,7 @@ class TrivialAnswerGenerator(AnswerGenerator):
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
             import random  # pylint: disable=import-outside-toplevel
+
             options = benchmark_case.options
             if options:
                 random_answer_key = random.choice(list(options.keys()))

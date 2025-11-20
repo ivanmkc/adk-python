@@ -32,6 +32,7 @@ class UserInfo(BaseModel):
 async def test_input_schema_validation():
     """Tests that LlmAgent respects input_schema for structured input."""
     # BEGIN: CODE
+    # BEGIN: CODE
     # END: CODE
     response = await run_agent_test(agent, '{"name": "Alice", "age": 30}')
     assert "Alice" in response and "30" in response

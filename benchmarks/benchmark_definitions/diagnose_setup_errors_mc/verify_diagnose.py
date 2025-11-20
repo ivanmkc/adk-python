@@ -32,6 +32,7 @@ from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
 from google.adk.agents.parallel_agent import ParallelAgent
 from google.adk.tools.base_tool import BaseTool
 
+
 def test_llm_agent_requires_model():
     # Q: Missing model argument error?
     # Explanation: LlmAgent requires `model`.
@@ -41,6 +42,7 @@ def test_llm_agent_requires_model():
         assert False, "LlmAgent should require model"
     except Exception:
         pass
+
 
 def test_function_tool_wrapping():
     # Q: Raw function in tools?
@@ -55,10 +57,12 @@ def test_function_tool_wrapping():
     # If ADK auto-wraps it, then the question is WRONG.
     # Let's verify strictly.
     from google.adk.agents.llm_agent import _convert_tool_union_to_tools
+
     # It is an async function.
     # This needs an event loop or manual inspection.
     # I will defer this to the check below.
     pass
+
 
 def test_sequential_agent_sub_agents():
     # Q: SequentialAgent tools vs sub_agents?
@@ -70,23 +74,28 @@ def test_sequential_agent_sub_agents():
     # So passing `tools` to SequentialAgent (which is BaseAgent) is invalid unless defined in config.
     assert "tools" not in SequentialAgent.model_fields
 
+
 def test_code_executor_param():
     # Q: tools=[BuiltInCodeExecutor] vs code_executor param?
     # A: code_executor param.
     assert "code_executor" in LlmAgent.model_fields
 
+
 def test_parallel_agent_class():
     # Q: MultiAgent vs ParallelAgent?
     assert ParallelAgent
+
 
 def test_function_tool_import():
     # Q: Correct import?
     # from google.adk.tools.function_tool import FunctionTool
     assert FunctionTool.__module__ == "google.adk.tools.function_tool"
 
+
 def test_output_schema_param():
     # Q: output_format vs output_schema?
     assert "output_schema" in LlmAgent.model_fields
+
 
 if __name__ == "__main__":
     print(f"Running verification script from: {__file__}")
@@ -99,7 +108,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"F {name} failed: {e}")
                 failed = True
-    
+
     if failed:
         sys.exit(1)
     else:

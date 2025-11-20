@@ -22,6 +22,8 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 # BEGIN: CODE
+# BEGIN: CODE
+# END: CODE
 # END: CODE
 
 

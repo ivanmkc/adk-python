@@ -31,6 +31,7 @@ from typing import List, Dict, Any
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFINITIONS_DIR = PROJECT_ROOT / "benchmarks" / "benchmark_definitions"
 
+
 def get_mc_benchmark_files() -> List[Path]:
     """
     Discovers all benchmark.yaml files that contain multiple_choice questions.
@@ -38,44 +39,49 @@ def get_mc_benchmark_files() -> List[Path]:
     mc_files = []
     if not DEFINITIONS_DIR.exists():
         return []
-        
+
     for yaml_file in DEFINITIONS_DIR.rglob("benchmark.yaml"):
         try:
-            with open(yaml_file, 'r') as f:
+            with open(yaml_file, "r") as f:
                 data = yaml.safe_load(f)
-                if not data or 'benchmarks' not in data:
+                if not data or "benchmarks" not in data:
                     continue
-                
+
                 # Check if at least one question is MC
-                if any(bm.get('benchmark_type') == 'multiple_choice' for bm in data['benchmarks']):
+                if any(
+                    bm.get("benchmark_type") == "multiple_choice"
+                    for bm in data["benchmarks"]
+                ):
                     mc_files.append(yaml_file)
         except Exception:
             continue
-            
+
     return sorted(mc_files)
+
 
 def calculate_bias_threshold(n_samples: int, n_options: int) -> float:
     """
     Calculates a dynamic threshold for the maximum allowable proportion of a single answer.
-    
+
     Uses a statistical heuristic: Expected proportion (1/N) + Margin.
     Margin is derived from standard error (3 * sigma) to allow for random variance,
     plus a base buffer.
-    
+
     For small N, the statistical bound is wide.
     """
     if n_samples == 0:
         return 1.0
-        
+
     p = 1.0 / n_options if n_options > 0 else 1.0
-    
+
     # Standard Error for proportion
     sigma = math.sqrt(p * (1 - p) / n_samples)
-    
+
     # Allow 4 standard deviations (very loose) or a minimum practical buffer of 15%
     margin = 4 * sigma
-    
+
     return p + margin
+
 
 def check_distribution(answers: List[str], context_name: str):
     """
@@ -88,13 +94,13 @@ def check_distribution(answers: List[str], context_name: str):
 
     counts = Counter(answers)
     unique_options = len(counts.keys())
-    
+
     # Assume at least 4 options (A, B, C, D) typically, or use observed count if higher.
     # Most MC questions have 4-5 options.
     n_options_estimate = max(unique_options, 4)
-    
+
     threshold = calculate_bias_threshold(total, n_options_estimate)
-    
+
     most_common_opt, count = counts.most_common(1)[0]
     percentage = count / total
 
@@ -109,35 +115,41 @@ def check_distribution(answers: List[str], context_name: str):
         f"Exceeds dynamic threshold of {threshold:.2%}. "
     )
 
+
 # --- Tests ---
+
 
 @pytest.mark.parametrize("file_path", get_mc_benchmark_files())
 def test_intra_file_distribution(file_path):
     """Checks distribution within each individual benchmark file."""
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         data = yaml.safe_load(f)
-        
+
     answers = [
-        bm.get('correct_answer') 
-        for bm in data['benchmarks'] 
-        if bm.get('benchmark_type') == 'multiple_choice' and bm.get('correct_answer')
+        bm.get("correct_answer")
+        for bm in data["benchmarks"]
+        if bm.get("benchmark_type") == "multiple_choice" and bm.get("correct_answer")
     ]
-    
+
     check_distribution(answers, f"File: {file_path.name} ({file_path.parent.name})")
+
 
 def test_global_distribution():
     """Checks the aggregate distribution across all discovered MC files."""
     all_files = get_mc_benchmark_files()
     all_answers = []
-    
+
     for file_path in all_files:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             data = yaml.safe_load(f)
-            
-        all_answers.extend([
-            bm.get('correct_answer') 
-            for bm in data['benchmarks'] 
-            if bm.get('benchmark_type') == 'multiple_choice' and bm.get('correct_answer')
-        ])
-    
+
+        all_answers.extend(
+            [
+                bm.get("correct_answer")
+                for bm in data["benchmarks"]
+                if bm.get("benchmark_type") == "multiple_choice"
+                and bm.get("correct_answer")
+            ]
+        )
+
     check_distribution(all_answers, "GLOBAL (All MC Benchmarks)")

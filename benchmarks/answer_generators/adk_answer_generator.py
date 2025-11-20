@@ -56,7 +56,9 @@ class AdkAnswerGenerator(AnswerGenerator):
         """Returns a unique name for this generator instance."""
         return f"AdkAnswerGenerator({self.model_name})"
 
-    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(
+        self, benchmark_case: BaseBenchmarkCase
+    ) -> GeneratedAnswer:
         """Generates an answer using the ADK Agent."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             # The ADK agent is not designed to handle fix_error cases.
@@ -83,16 +85,14 @@ class AdkAnswerGenerator(AnswerGenerator):
         session = await self.runner.session_service.create_session(
             app_name=self.runner.app_name,
             user_id="benchmark_user",
-            session_id="benchmark_session"
+            session_id="benchmark_session",
         )
         final_response = ""
-        
+
         new_message = types.UserContent(parts=[types.Part(text=prompt)])
 
         async for event in self.runner.run_async(
-            user_id=session.user_id,
-            session_id=session.id,
-            new_message=new_message
+            user_id=session.user_id, session_id=session.id, new_message=new_message
         ):
             if event.is_final_response():
                 if event.content and event.content.parts:

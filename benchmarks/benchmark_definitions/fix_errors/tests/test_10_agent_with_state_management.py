@@ -21,6 +21,8 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 # BEGIN: CODE
+# BEGIN: CODE
+# END: CODE
 # END: CODE
 
 

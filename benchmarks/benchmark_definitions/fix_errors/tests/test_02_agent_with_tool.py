@@ -23,12 +23,18 @@ from benchmarks.test_helpers import MODEL_NAME, basic_tool, run_agent_test
 
 
 # BEGIN: CODE
+# BEGIN: CODE
+# END: CODE
 # END: CODE
 
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Can you use your tool?", mock_llm_response="I used the tool with query 'test'")
+    return await run_agent_test(
+        root_agent,
+        "Can you use your tool?",
+        mock_llm_response="I used the tool with query 'test'",
+    )
 
 
 def assert_test(response: str):

@@ -21,11 +21,12 @@ import yaml
 import sys
 from pathlib import Path
 
+
 def verify_fix_errors():
     # Define paths
     base_dir = Path(__file__).parent
     yaml_path = base_dir / "benchmark.yaml"
-    
+
     if not yaml_path.exists():
         print(f"Error: {yaml_path} does not exist.")
         sys.exit(1)
@@ -40,9 +41,11 @@ def verify_fix_errors():
     for bm in benchmarks:
         test_file_path_str = bm.get("test_file")
         if not test_file_path_str:
-            print(f"Warning: Benchmark '{bm.get('name')}' is missing 'test_file' field.")
+            print(
+                f"Warning: Benchmark '{bm.get('name')}' is missing 'test_file' field."
+            )
             continue
-        
+
         # Resolve path relative to project root (since paths in YAML are relative to project root)
         # or strictly check file existence.
         # The script is in benchmarks/benchmark_definitions/fix_errors/verify.py
@@ -50,7 +53,7 @@ def verify_fix_errors():
         # Project root is 3 levels up.
         project_root = base_dir.parents[2]
         full_path = project_root / test_file_path_str
-        
+
         if not full_path.exists():
             print(f"Error: Test file not found: {full_path}")
             missing_files.append(test_file_path_str)
@@ -59,7 +62,9 @@ def verify_fix_errors():
             try:
                 content = full_path.read_text()
                 if "# BEGIN: CODE" not in content or "# END: CODE" not in content:
-                    print(f"Error: Test file {full_path.name} missing '# BEGIN: CODE' or '# END: CODE' placeholders.")
+                    print(
+                        f"Error: Test file {full_path.name} missing '# BEGIN: CODE' or '# END: CODE' placeholders."
+                    )
                     missing_files.append(full_path.name)
             except Exception as e:
                 print(f"Error reading {full_path}: {e}")
@@ -70,6 +75,7 @@ def verify_fix_errors():
         sys.exit(1)
     else:
         print("\nAll fix_error benchmark files verified successfully.")
+
 
 if __name__ == "__main__":
     verify_fix_errors()

@@ -24,6 +24,8 @@ from benchmarks.test_helpers import MODEL_NAME, BasicOutputSchema, run_agent_tes
 
 
 # BEGIN: CODE
+# BEGIN: CODE
+# END: CODE
 # END: CODE
 
 

@@ -30,6 +30,8 @@ def my_callback(**kwargs):
 
 
 # BEGIN: CODE
+# BEGIN: CODE
+# END: CODE
 # END: CODE
 
 

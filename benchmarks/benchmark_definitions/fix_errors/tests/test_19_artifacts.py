@@ -28,6 +28,7 @@ async def test_artifact_usage_in_instruction():
     artifact_data = {"my_data": "important information"}
 
     # BEGIN: CODE
+    # BEGIN: CODE
     # END: CODE
 
     response = await run_agent_test(

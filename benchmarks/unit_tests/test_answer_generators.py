@@ -36,9 +36,11 @@ from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     StringMatchAnswer,
     AnswerTemplate,
+    MultipleChoiceBenchmarkCase,
+    CodeSnippetRef,
 )
 from google.genai import types
-from google.adk.events.event import Event # Added import
+from google.adk.events.event import Event  # Added import
 
 
 @pytest.fixture
@@ -64,13 +66,16 @@ def mock_api_case() -> ApiUnderstandingBenchmarkCase:
 
 
 @pytest.mark.asyncio
-async def test_ground_truth_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase):
+async def test_ground_truth_answer_generator(
+    mock_api_case: ApiUnderstandingBenchmarkCase,
+):
     """Tests that the GroundTruthAnswerGenerator returns the correct answer."""
     generator = GroundTruthAnswerGenerator()
     generated_answer = await generator.generate_answer(mock_api_case)
     assert generated_answer.output.code == "class Session(BaseModel):"
     assert (
-        generated_answer.output.fully_qualified_class_name == "google.adk.sessions.session"
+        generated_answer.output.fully_qualified_class_name
+        == "google.adk.sessions.session"
     )
 
 
@@ -107,6 +112,48 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
 
 
 @pytest.mark.asyncio
+async def test_gemini_answer_generator_multiple_choice_with_snippet():
+    """Tests GeminiAnswerGenerator with a MultipleChoiceBenchmarkCase containing a code snippet."""
+    
+    # Create a dummy snippet file
+    snippet_file = project_root / "dummy_snippet.py"
+    with open(snippet_file, "w") as f:
+        f.write("# Header\n# --8<-- [start:test_section]\nprint('Hello')\n# --8<-- [end:test_section]\n")
+        
+    try:
+        case = MultipleChoiceBenchmarkCase(
+            question="What does this code do?",
+            options={"A": "Prints Hello", "B": "Nothing"},
+            correct_answer="A",
+            code_snippet_ref=CodeSnippetRef(file="dummy_snippet.py", section="test_section")
+        )
+
+        with patch(
+            "benchmarks.answer_generators.gemini_answer_generator.genai.Client"
+        ) as mock_client:
+            mock_response = MagicMock()
+            mock_response.text = '{"answer": "A"}'
+            mock_client.return_value.aio.models.generate_content = AsyncMock(
+                return_value=mock_response
+            )
+
+            generator = GeminiAnswerGenerator()
+            generated_answer = await generator.generate_answer(case)
+
+            assert generated_answer.output.answer == "A"
+            
+            # Verify prompt contains the code
+            call_args = mock_client.return_value.aio.models.generate_content.call_args
+            prompt = call_args.kwargs["contents"]
+            assert "Code:" in prompt
+            assert "print('Hello')" in prompt
+            assert "# Header" in prompt
+            
+    finally:
+        if snippet_file.exists():
+            snippet_file.unlink()
+
+@pytest.mark.asyncio
 async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase):
     """Tests the AdkAnswerGenerator with a mocked ADK runner."""
     with patch(
@@ -116,7 +163,9 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
 
         mock_runner_instance.session_service = MagicMock()
         mock_runner_instance.session_service.create_session = AsyncMock()
-        mock_runner_instance.session_service.create_session.return_value = MagicMock(id="benchmark_session", user_id="benchmark_user")
+        mock_runner_instance.session_service.create_session.return_value = MagicMock(
+            id="benchmark_session", user_id="benchmark_user"
+        )
 
         mock_events = [
             Event(
@@ -135,13 +184,15 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
         async def real_async_generator(*args, **kwargs):
             for event in mock_events:
                 yield event
-        
+
         call_count = 0
+
         async def counting_async_generator(*args, **kwargs):
             nonlocal call_count
             call_count += 1
             async for event in real_async_generator(*args, **kwargs):
                 yield event
+
         mock_runner_instance.run_async = counting_async_generator
 
         generator = AdkAnswerGenerator()

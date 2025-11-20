@@ -37,7 +37,9 @@ async def run_test() -> str:
     async for event in runner.run_async(
         user_id=session.user_id,
         session_id=session.id,
-        new_message=types.Content(role="user", parts=[types.Part(text="Hello, runner.")]),
+        new_message=types.Content(
+            role="user", parts=[types.Part(text="Hello, runner.")]
+        ),
     ):
         if event.is_final_response() and event.content and event.content.parts:
             final_response = event.content.parts[0].text

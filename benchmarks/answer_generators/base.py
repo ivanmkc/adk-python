@@ -29,6 +29,8 @@ class AnswerGenerator(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(
+        self, benchmark_case: BaseBenchmarkCase
+    ) -> GeneratedAnswer:
         """Generates an answer for a given benchmark case."""
         pass

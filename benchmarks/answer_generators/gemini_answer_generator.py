@@ -17,7 +17,7 @@
 from google import genai
 
 from benchmarks.answer_generators.base import AnswerGenerator
-from benchmarks.validation_utils import TEMPLATES
+from benchmarks.validation_utils import TEMPLATES, load_snippet
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
@@ -34,7 +34,9 @@ from benchmarks.data_models import (
 class GeminiAnswerGenerator(AnswerGenerator):
     """An AnswerGenerator that uses the Gemini API."""
 
-    def __init__(self, model_name: str = "gemini-3-pro-preview", context: str | None = None):
+    def __init__(
+        self, model_name: str = "gemini-3-pro-preview", context: str | None = None
+    ):
         super().__init__()
         self.model_name = model_name
         self.context = context
@@ -46,7 +48,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
         context_suffix = "-with-context" if self.context else ""
         return f"GeminiAnswerGenerator({self.model_name}{context_suffix})"
 
-    async def generate_answer(self, benchmark_case: BaseBenchmarkCase) -> GeneratedAnswer:
+    async def generate_answer(
+        self, benchmark_case: BaseBenchmarkCase
+    ) -> GeneratedAnswer:
         """Generates an answer using the Gemini API's structured output feature."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             prompt = self._create_prompt_for_fix_error(benchmark_case)
@@ -61,16 +65,19 @@ class GeminiAnswerGenerator(AnswerGenerator):
             raise TypeError(f"Unsupported benchmark case type: {type(benchmark_case)}")
 
         json_schema = response_schema.model_json_schema()
-        
+
         # Remove benchmark_type from schema to prevent LLM confusion
-        if "properties" in json_schema and "benchmark_type" in json_schema["properties"]:
+        if (
+            "properties" in json_schema
+            and "benchmark_type" in json_schema["properties"]
+        ):
             del json_schema["properties"]["benchmark_type"]
         if "required" in json_schema and "benchmark_type" in json_schema["required"]:
             json_schema["required"].remove("benchmark_type")
-            
+
         response = await self.client.models.generate_content(
             model=self.model_name,
-            contents=prompt, 
+            contents=prompt,
             config={
                 "response_mime_type": "application/json",
                 "response_json_schema": json_schema,
@@ -92,10 +99,14 @@ class GeminiAnswerGenerator(AnswerGenerator):
             f"{self._read_code_from_file(case.test_file, case.start_line, case.end_line)}\n"
             "```"
         )
-    
-    def _create_prompt_for_multiple_choice(self, case: MultipleChoiceBenchmarkCase) -> str:
+
+    def _create_prompt_for_multiple_choice(
+        self, case: MultipleChoiceBenchmarkCase
+    ) -> str:
         """Creates a prompt for a multiple choice benchmark case."""
-        options_str = "\n".join(f"{key}: {value}" for key, value in case.options.items())
+        options_str = "\n".join(
+            f"{key}: {value}" for key, value in case.options.items()
+        )
         prompt = (
             "You are an expert on the Google ADK Python framework. "
             "Answer the following multiple choice question. "
@@ -105,11 +116,15 @@ class GeminiAnswerGenerator(AnswerGenerator):
 
         if self.context:
             prompt += f"Context:\n{self.context}\n\n"
+            
+        if case.code_snippet_ref:
+            try:
+                code_content = load_snippet(case.code_snippet_ref)
+                prompt += f"Code:\n```python\n{code_content}\n```\n\n"
+            except Exception as e:
+                print(f"Warning: Failed to load code snippet: {e}")
 
-        prompt += (
-            f"Question: {case.question}\n\n"
-            f"Options:\n{options_str}\n"
-        )
+        prompt += f"Question: {case.question}\n\n" f"Options:\n{options_str}\n"
         return prompt
 
     def _create_prompt_for_api_understanding(
@@ -134,7 +149,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "parameter names in the fully qualified class name)."
             "\n\n"
         )
-        
+
         if self.context:
             prompt += f"Context:\n{self.context}\n\n"
 

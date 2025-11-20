@@ -60,7 +60,10 @@ async def test_before_and_after_tool_callbacks():
     # END: CODE
 
     # Manually run the agent logic without run_agent_test to have full control over mocking
-    with patch("google.adk.models.google_llm.Gemini.generate_content_async") as mock_generate:
+    with patch(
+        "google.adk.models.google_llm.Gemini.generate_content_async"
+    ) as mock_generate:
+
         async def async_response_gen_tool_call():
             # First response: Tool call
             response = types.GenerateContentResponse()
@@ -70,17 +73,16 @@ async def test_before_and_after_tool_callbacks():
                         parts=[
                             types.Part(
                                 function_call=types.FunctionCall(
-                                    name="_mock_tool_func",
-                                    args={"query": "hello"}
+                                    name="_mock_tool_func", args={"query": "hello"}
                                 )
                             )
                         ],
-                        role="model"
+                        role="model",
                     )
                 )
             ]
             yield LlmResponse.create(response)
-            
+
         async def async_response_gen_final():
             # Second response: Final text
             response = types.GenerateContentResponse()
@@ -88,15 +90,17 @@ async def test_before_and_after_tool_callbacks():
                 types.Candidate(
                     finish_reason="STOP",
                     content=types.Content(
-                        parts=[types.Part(text="UNIQUE_TOOL_OUTPUT_FOR_TEST: hello")], 
-                        role="model"
-                    )
+                        parts=[types.Part(text="UNIQUE_TOOL_OUTPUT_FOR_TEST: hello")],
+                        role="model",
+                    ),
                 )
             ]
             yield LlmResponse.create(response)
 
         # Mock side_effect to return sequential responses
-        response_iter = iter([async_response_gen_tool_call(), async_response_gen_final()])
+        response_iter = iter(
+            [async_response_gen_tool_call(), async_response_gen_final()]
+        )
         mock_generate.side_effect = lambda *args, **kwargs: next(response_iter)
 
         app = App(name=f"test_app_{agent.name}", root_agent=agent)
@@ -115,12 +119,12 @@ async def test_before_and_after_tool_callbacks():
             ),
         ):
             if event.is_final_response() and event.content and event.content.parts:
-                 text_parts = [
+                text_parts = [
                     part.text
                     for part in event.content.parts
                     if hasattr(part, "text") and part.text is not None
                 ]
-                 if text_parts:
+                if text_parts:
                     final_response = "".join(text_parts)
 
         assert before_called

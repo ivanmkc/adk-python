@@ -52,6 +52,7 @@ from google.adk.apps.app import App
 from google.adk.events.event import Event
 from google.adk.tools.base_tool import BaseTool
 
+
 def test_base_agent():
     # Q: Foundational class? A: BaseAgent
     assert BaseAgent
@@ -65,25 +66,31 @@ def test_base_agent():
     # Q: find_agent?
     assert hasattr(BaseAgent, "find_agent")
 
+
 def test_sequential_agent():
     # Q: Sequence of agents? A: SequentialAgent
     assert SequentialAgent
+
 
 def test_runner():
     # Q: Entry point? A: Runner
     assert Runner
 
+
 def test_base_llm():
     # Q: Core interface for LLM? A: BaseLlm
     assert BaseLlm
+
 
 def test_agent_evaluator():
     # Q: evaluate method?
     assert hasattr(AgentEvaluator, "evaluate")
 
+
 def test_loop_agent():
     # Q: max_iterations?
     assert "max_iterations" in LoopAgent.model_fields
+
 
 def test_llm_agent():
     # Q: model param?
@@ -101,9 +108,11 @@ def test_llm_agent():
     # Q: static_instruction?
     assert "static_instruction" in LlmAgent.model_fields
 
+
 def test_llm_registry():
     # Q: register method?
     assert hasattr(LLMRegistry, "register")
+
 
 def test_base_plugin():
     # Q: Foundational class? A: BasePlugin
@@ -112,17 +121,21 @@ def test_base_plugin():
     # (Hard to verify logic without running, but existence is checked)
     assert hasattr(BasePlugin, "before_agent_callback")
 
+
 def test_plugin_manager():
     # Q: Invoking callbacks? A: PluginManager
     assert PluginManager
+
 
 def test_logging_plugin():
     # Q: Observational plugin? A: LoggingPlugin
     assert LoggingPlugin
 
+
 def test_global_instruction_plugin():
     # Q: System-wide instruction? A: GlobalInstructionPlugin
     assert GlobalInstructionPlugin
+
 
 def test_invocation_context():
     # Q: set_agent_state?
@@ -130,35 +143,43 @@ def test_invocation_context():
     # Q: What is InvocationContext? (Concept check)
     assert InvocationContext
 
+
 def test_base_session_service():
     # Q: Abstract base class? A: BaseSessionService
     assert BaseSessionService
     # Q: append_event?
     assert hasattr(BaseSessionService, "append_event")
 
+
 def test_callback_context():
     # Q: What is CallbackContext?
     assert CallbackContext
+
 
 def test_session():
     # Q: Session data model?
     assert Session
 
+
 def test_tool_context():
     # Q: Access services? A: ToolContext
     assert ToolContext
+
 
 def test_function_tool():
     # Q: Create tool from function? A: FunctionTool
     assert FunctionTool
 
+
 def test_tool_config():
     # Q: Configure tools in YAML? A: ToolConfig
     assert ToolConfig
 
+
 def test_base_toolset():
     # Q: Manage collection of tools? A: BaseToolset
     assert BaseToolset
+
 
 def test_google_search_tool():
     # Q: Native search? A: GoogleSearchTool
@@ -170,25 +191,31 @@ def test_google_search_tool():
     # BaseTool has abstract run_async. GoogleSearchTool might override it or not.
     # If it relies on built-in, it might raise NotImplemented or be a pass.
 
+
 def test_parallel_agent():
     # Q: Run concurrent? A: ParallelAgent
     assert ParallelAgent
+
 
 def test_app():
     # Q: Add plugins? A: App
     assert App
 
+
 def test_event():
     # Q: Conversation history structure? A: Event
     assert Event
+
 
 def test_in_memory_runner():
     # Q: Local dev runner? A: InMemoryRunner
     assert InMemoryRunner
 
+
 def test_base_tool():
     # Q: Base class for tools? A: BaseTool
     assert BaseTool
+
 
 if __name__ == "__main__":
     print(f"Running verification script from: {__file__}")
@@ -201,9 +228,10 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"F {name} failed: {e}")
                 import traceback
+
                 traceback.print_exc()
                 failed = True
-    
+
     if failed:
         sys.exit(1)
     else:

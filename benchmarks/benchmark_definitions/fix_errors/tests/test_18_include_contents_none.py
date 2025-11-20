@@ -26,6 +26,7 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 async def test_include_contents_none_stateless_agent():
     """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
     # BEGIN: CODE
+    # BEGIN: CODE
     # END: CODE
 
     # First turn: Agent should introduce itself
