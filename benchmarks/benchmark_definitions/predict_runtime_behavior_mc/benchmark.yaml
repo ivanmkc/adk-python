@@ -12,9 +12,9 @@ benchmarks:
 
     ```'
   options:
-    A: 'TypeError: LlmAgent cannot be instantiated twice.'
-    B: 'ValueError: Agent name must be unique within the agent tree.'
-    C: No error, but the second agent will be ignored.
+    A: 'ValueError: Agent name must be unique within the agent tree.'
+    B: No error, but the second agent will be ignored.
+    C: 'TypeError: LlmAgent cannot be instantiated twice.'
     D: No error, but 'worker' will be renamed to 'worker_1' automatically.
     E: None of the above
   correct_answer: E
@@ -34,11 +34,11 @@ benchmarks:
     \ a helpful assistant.\"\n)\n```"
   options:
     A: 'ValueError: Model name `gemini-2.5-flash` is invalid.'
-    B: No error.
-    C: 'ValueError: Agent name cannot be `user`.'
+    B: 'ValueError: Agent name cannot be `user`.'
+    C: No error.
     D: 'TypeError: `instruction` must be a list.'
     E: None of the above
-  correct_answer: C
+  correct_answer: B
   explanation: '`BaseAgent` validates that `name` cannot be ''user'' as it is reserved.'
   benchmark_type: multiple_choice
 - question: "Predict the print output order for the following code (assuming the runner\
@@ -47,12 +47,12 @@ benchmarks:
     ,\n    before_agent_callback=pre, \n    after_agent_callback=post\n)\n# ... runner\
     \ setup and execution ...\n```"
   options:
-    A: (Agent Output), Pre, Post
-    B: Post, Pre, (Agent Output)
-    C: Pre, Post, (Agent Output)
-    D: Pre, (Agent Output), Post
+    A: Pre, Post, (Agent Output)
+    B: (Agent Output), Pre, Post
+    C: Pre, (Agent Output), Post
+    D: Post, Pre, (Agent Output)
     E: None of the above
-  correct_answer: D
+  correct_answer: C
   explanation: '`before_agent_callback` runs before the agent execution, and `after_agent_callback`
     runs after.'
   benchmark_type: multiple_choice
@@ -61,12 +61,12 @@ benchmarks:
     \ ... imports ...\napp = App(\n    name=\"my_app\",\n    root_agent=my_agent,\n\
     \    plugins=[ReflectAndRetryToolPlugin(max_retries=3)]\n)\n```"
   options:
-    A: Yes, this is the standard way to enable tool retries.
-    B: No, `ReflectAndRetryToolPlugin` is not a valid plugin.
-    C: No, you must configure retries in `RunConfig`.
-    D: No, max_retries defaults to 0 so it must be set to 4.
+    A: No, you must configure retries in `RunConfig`.
+    B: No, max_retries defaults to 0 so it must be set to 4.
+    C: No, `ReflectAndRetryToolPlugin` is not a valid plugin.
+    D: Yes, this is the standard way to enable tool retries.
     E: None of the above
-  correct_answer: A
+  correct_answer: D
   explanation: '`ReflectAndRetryToolPlugin` with `max_retries=3` correctly implements
     the requirement.'
   benchmark_type: multiple_choice
@@ -74,12 +74,12 @@ benchmarks:
     ,\n    model=\"gemini-2.5-flash\",\n    generate_content_config=types.GenerateContentConfig(\n\
     \        tools=[my_tool]\n    )\n)\n```"
   options:
-    A: No error.
-    B: 'TypeError: `tools` in `generate_content_config` must be a dict.'
-    C: 'ValueError: All tools must be set via LlmAgent.tools.'
+    A: 'ValueError: All tools must be set via LlmAgent.tools.'
+    B: No error.
+    C: 'TypeError: `tools` in `generate_content_config` must be a dict.'
     D: 'ValueError: `my_tool` is not defined.'
     E: None of the above
-  correct_answer: C
+  correct_answer: A
   explanation: '`LlmAgent` validates that `generate_content_config` does not contain
     `tools`; they must be passed to the `tools` argument of `LlmAgent`.'
   benchmark_type: multiple_choice
@@ -87,11 +87,11 @@ benchmarks:
     ,\n    model=\"gemini-2.5-flash\",\n    response_schema=MyPydanticModel\n)\n```"
   options:
     A: 'TypeError: `response_schema` must be a dict.'
-    B: 'ValueError: `response_schema` is not a valid argument for `LlmAgent`.'
-    C: 'ValueError: Use `output_schema` instead of `response_schema`.'
-    D: No error.
+    B: No error.
+    C: 'ValueError: `response_schema` is not a valid argument for `LlmAgent`.'
+    D: 'ValueError: Use `output_schema` instead of `response_schema`.'
     E: None of the above
-  correct_answer: B
+  correct_answer: C
   explanation: '`LlmAgent` uses `output_schema`, not `response_schema`. `response_schema`
     is likely an invalid kwarg that Pydantic will reject if `extra=''forbid''` (which
     it is).'
@@ -101,12 +101,12 @@ benchmarks:
     \    name=\"json_agent\",\n    model=\"gemini-2.5-flash\",\n    output_schema=MySchema\n\
     )\n```"
   options:
-    A: Yes, `output_schema` enforces structured output.
-    B: No, structured output is only supported in `RunConfig`.
-    C: No, you must also set `output_format='json'`.
-    D: No, `MySchema` must be converted to a dict first.
+    A: No, structured output is only supported in `RunConfig`.
+    B: No, you must also set `output_format='json'`.
+    C: No, `MySchema` must be converted to a dict first.
+    D: Yes, `output_schema` enforces structured output.
     E: None of the above
-  correct_answer: A
+  correct_answer: D
   explanation: Setting `output_schema` on `LlmAgent` is the correct way to enforce
     structured JSON output.
   benchmark_type: multiple_choice
@@ -114,12 +114,12 @@ benchmarks:
     ,\n    model=\"gemini-2.5-flash\",\n    include_contents=\"none\"\n)\n```\nWhat\
     \ happens when this agent runs multiple times in the same session?"
   options:
-    A: It keeps history in memory but does not send it to the model.
-    B: It remembers previous turns but ignores tool outputs.
-    C: It throws a `ValueError` because `include_contents` is deprecated.
-    D: It treats every turn as a fresh start, ignoring previous conversation history.
+    A: It throws a `ValueError` because `include_contents` is deprecated.
+    B: It treats every turn as a fresh start, ignoring previous conversation history.
+    C: It remembers previous turns but ignores tool outputs.
+    D: It keeps history in memory but does not send it to the model.
     E: None of the above
-  correct_answer: D
+  correct_answer: B
   explanation: '`include_contents=''none''` means the model receives no prior history,
     operating solely on current instruction and input.'
   benchmark_type: multiple_choice
@@ -127,10 +127,10 @@ benchmarks:
     \    name=\"looper\",\n    sub_agents=[]\n)\n```\n(Assuming `sub_agents` is optional\
     \ or defaults to empty list, but logic requires them)."
   options:
-    A: 'ValueError: LoopAgent must have at least one sub-agent.'
+    A: 'ValueError: `max_iterations` must be set.'
     B: No error at instantiation, but it will do nothing when run.
-    C: 'TypeError: `sub_agents` is required.'
-    D: 'ValueError: `max_iterations` must be set.'
+    C: 'ValueError: LoopAgent must have at least one sub-agent.'
+    D: 'TypeError: `sub_agents` is required.'
     E: None of the above
   correct_answer: B
   explanation: '`sub_agents` defaults to empty list. The `_run_async_impl` checks
@@ -149,9 +149,9 @@ benchmarks:
 
     How does ADK handle `session_id` injection?'
   options:
-    A: It requires `tool_context` to be accessed manually inside the tool.
-    B: It only injects if the type hint is `SessionId`.
-    C: It automatically injects `session_id` if the argument name matches.
+    A: It only injects if the type hint is `SessionId`.
+    B: It automatically injects `session_id` if the argument name matches.
+    C: It requires `tool_context` to be accessed manually inside the tool.
     D: It throws an error because `session_id` is not in the user prompt.
     E: None of the above
   correct_answer: E
@@ -169,10 +169,10 @@ benchmarks:
     ...\")\nprint(agent.name)\nagent.name = \"b\" \nprint(agent.name)\n```\n(Assuming\
     \ Pydantic model behavior)."
   options:
-    A: a, then a (ignored)
+    A: a, then ValidationError (immutable)
     B: a, then b
-    C: a, then ValidationError (immutable)
-    D: 'Error: name is protected'
+    C: 'Error: name is protected'
+    D: a, then a (ignored)
     E: None of the above
   correct_answer: B
   explanation: Pydantic models are mutable by default unless `frozen=True`. `BaseAgent`
@@ -189,12 +189,12 @@ benchmarks:
 
     ```'
   options:
-    A: 'AttributeError: ''LlmAgent'' object has no attribute ''unknown_field'''
-    B: 'ValueError: Cannot update nonexistent fields...'
-    C: No error, field is added.
-    D: 'TypeError: Unexpected keyword argument...'
+    A: 'ValueError: Cannot update nonexistent fields...'
+    B: No error, field is added.
+    C: 'TypeError: Unexpected keyword argument...'
+    D: 'AttributeError: ''LlmAgent'' object has no attribute ''unknown_field'''
     E: None of the above
-  correct_answer: B
+  correct_answer: A
   explanation: '`clone` method explicitly checks `allowed_fields` and raises `ValueError`
     for invalid ones.'
   benchmark_type: multiple_choice
@@ -203,58 +203,58 @@ benchmarks:
 
     What happens?'
   options:
-    A: The transfer succeeds regardless of the flag.
-    B: The runner raises a RuntimeException.
-    C: The transfer is blocked, and the agent continues or terminates.
-    D: The agent enters an infinite loop.
+    A: The runner raises a RuntimeException.
+    B: The transfer is blocked, and the agent continues or terminates.
+    C: The agent enters an infinite loop.
+    D: The transfer succeeds regardless of the flag.
     E: None of the above
-  correct_answer: C
+  correct_answer: B
   explanation: The `disallow_transfer_to_parent` flag prevents the agent from transferring
     control back up the hierarchy.
   benchmark_type: multiple_choice
 - question: An `LlmAgent` has `include_contents='none'`. It has run for 3 turns. On
     the 4th turn, what history does the model see?
   options:
-    A: No previous history, only the current input/instruction.
-    B: Only the immediately preceding turn.
-    C: Only the system instruction.
-    D: All 3 previous turns.
+    A: Only the immediately preceding turn.
+    B: Only the system instruction.
+    C: All 3 previous turns.
+    D: No previous history, only the current input/instruction.
     E: None of the above
-  correct_answer: A
+  correct_answer: D
   explanation: '`include_contents=''none''` forces the agent to be stateless for the
     model, sending no history.'
   benchmark_type: multiple_choice
 - question: A `before_agent_callback` returns a `types.Content` object. What does
     the agent do?
   options:
-    A: Skips the LLM call/agent logic and returns this content immediately.
-    B: Sends this content to the model as a system instruction.
-    C: Raises an error because callbacks must return None.
-    D: Appends this content to the user input and continues.
+    A: Appends this content to the user input and continues.
+    B: Raises an error because callbacks must return None.
+    C: Skips the LLM call/agent logic and returns this content immediately.
+    D: Sends this content to the model as a system instruction.
     E: None of the above
-  correct_answer: A
+  correct_answer: C
   explanation: If `before_agent_callback` returns content, the agent's execution is
     short-circuited.
   benchmark_type: multiple_choice
 - question: A `before_tool_callback` returns a dictionary. What happens?
   options:
-    A: The runner raises a ValueError.
-    B: The tool runs, and this dictionary is ignored.
-    C: The actual tool execution is skipped, and this dictionary is used as the result.
-    D: The dictionary is merged with the tool arguments.
+    A: The tool runs, and this dictionary is ignored.
+    B: The actual tool execution is skipped, and this dictionary is used as the result.
+    C: The dictionary is merged with the tool arguments.
+    D: The runner raises a ValueError.
     E: None of the above
-  correct_answer: C
+  correct_answer: B
   explanation: Returning a value from `before_tool_callback` mocks the tool execution.
   benchmark_type: multiple_choice
 - question: You have a `SequentialAgent` with `[agent_a, agent_b]`. `agent_a` fails
     with an exception. What happens to `agent_b`?
   options:
-    A: It is not executed.
-    B: The runner retries `agent_a` then runs `agent_b`.
-    C: It runs with the exception as input.
-    D: It runs immediately after the exception is logged.
+    A: It runs immediately after the exception is logged.
+    B: It is not executed.
+    C: The runner retries `agent_a` then runs `agent_b`.
+    D: It runs with the exception as input.
     E: None of the above
-  correct_answer: A
+  correct_answer: B
   explanation: An unhandled exception in a sequential step halts the sequence.
   benchmark_type: multiple_choice
 - question: 'You define a `before_agent_callback` that returns a `types.Content` (not
@@ -263,8 +263,8 @@ benchmarks:
     What is the runtime behavior?'
   options:
     A: The runner raises a warning.
-    B: The return value is ignored.
-    C: The runner raises a TypeError.
+    B: The runner raises a TypeError.
+    C: The return value is ignored.
     D: Agent execution is skipped, content returned.
     E: None of the above
   correct_answer: D
@@ -277,8 +277,8 @@ benchmarks:
     What is the runtime behavior?'
   options:
     A: The runner raises a TypeError.
-    B: The return value is ignored.
-    C: The runner raises a warning.
+    B: The runner raises a warning.
+    C: The return value is ignored.
     D: Content overrides or appends to response.
     E: None of the above
   correct_answer: D
@@ -290,12 +290,12 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The runner raises a TypeError.
-    B: The runner raises a warning.
-    C: The return value is ignored.
-    D: Model call is skipped, response used.
+    A: The runner raises a warning.
+    B: The return value is ignored.
+    C: Model call is skipped, response used.
+    D: The runner raises a TypeError.
     E: None of the above
-  correct_answer: D
+  correct_answer: C
   explanation: Returning a non-None value from this callback intercepts/modifies the
     flow.
   benchmark_type: multiple_choice
@@ -304,12 +304,12 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The return value is ignored.
-    B: The runner raises a warning.
+    A: The runner raises a warning.
+    B: Model response ignored, content returned.
     C: The runner raises a TypeError.
-    D: Model response ignored, content returned.
+    D: The return value is ignored.
     E: None of the above
-  correct_answer: D
+  correct_answer: B
   explanation: Returning a non-None value from this callback intercepts/modifies the
     flow.
   benchmark_type: multiple_choice
@@ -318,8 +318,8 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The return value is ignored.
-    B: The runner raises a TypeError.
+    A: The runner raises a TypeError.
+    B: The return value is ignored.
     C: Error ignored, content returned.
     D: The runner raises a warning.
     E: None of the above
@@ -331,12 +331,12 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The runner raises a TypeError.
-    B: Tool execution skipped, dict returned.
+    A: Tool execution skipped, dict returned.
+    B: The runner raises a TypeError.
     C: The runner raises a warning.
     D: The return value is ignored.
     E: None of the above
-  correct_answer: B
+  correct_answer: A
   explanation: Returning a non-None value from this callback intercepts/modifies the
     flow.
   benchmark_type: multiple_choice
@@ -344,12 +344,12 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The runner raises a TypeError.
-    B: The return value is ignored.
-    C: The runner raises a warning.
-    D: Tool result replaced by dict.
+    A: The runner raises a warning.
+    B: Tool result replaced by dict.
+    C: The return value is ignored.
+    D: The runner raises a TypeError.
     E: None of the above
-  correct_answer: D
+  correct_answer: B
   explanation: Returning a non-None value from this callback intercepts/modifies the
     flow.
   benchmark_type: multiple_choice
@@ -357,12 +357,12 @@ benchmarks:
 
     What is the runtime behavior?'
   options:
-    A: The runner raises a TypeError.
+    A: The runner raises a warning.
     B: The return value is ignored.
-    C: The runner raises a warning.
-    D: Error ignored, dict returned as result.
+    C: Error ignored, dict returned as result.
+    D: The runner raises a TypeError.
     E: None of the above
-  correct_answer: D
+  correct_answer: C
   explanation: Returning a non-None value from this callback intercepts/modifies the
     flow.
   benchmark_type: multiple_choice
@@ -370,12 +370,12 @@ benchmarks:
 
     How does this affect runtime?'
   options:
-    A: It has no effect.
-    B: It causes a crash.
+    A: It causes a crash.
+    B: Agent cannot transfer to parent.
     C: It only warns.
-    D: Agent cannot transfer to parent.
+    D: It has no effect.
     E: None of the above
-  correct_answer: D
+  correct_answer: B
   explanation: 'Setting `disallow_transfer_to_parent` to `True` enables the specific
     behavior: Agent cannot transfer to parent.'
   benchmark_type: multiple_choice
@@ -384,9 +384,9 @@ benchmarks:
     How does this affect runtime?'
   options:
     A: Agent cannot transfer to siblings.
-    B: It only warns.
+    B: It causes a crash.
     C: It has no effect.
-    D: It causes a crash.
+    D: It only warns.
     E: None of the above
   correct_answer: A
   explanation: 'Setting `disallow_transfer_to_peers` to `True` enables the specific
@@ -396,12 +396,12 @@ benchmarks:
 
     How does this affect runtime?'
   options:
-    A: It causes a crash.
-    B: It has no effect.
-    C: It only warns.
-    D: Agent receives no history.
+    A: It has no effect.
+    B: Agent receives no history.
+    C: It causes a crash.
+    D: It only warns.
     E: None of the above
-  correct_answer: D
+  correct_answer: B
   explanation: 'Setting `include_contents` to `''none''` enables the specific behavior:
     Agent receives no history.'
   benchmark_type: multiple_choice
@@ -409,36 +409,36 @@ benchmarks:
 
     What happens?'
   options:
-    A: on_tool_error_callback...
+    A: Retry.
     B: Ignore.
-    C: Crash.
-    D: Retry.
+    C: on_tool_error_callback...
+    D: Crash.
     E: None of the above
-  correct_answer: A
+  correct_answer: C
   explanation: Error propagated to model if no callback.
   benchmark_type: multiple_choice
 - question: 'Scenario: Tool returns None.
 
     What happens?'
   options:
-    A: on_after_tool_callback...
-    B: Crash.
-    C: Ignore.
-    D: Retry.
+    A: Ignore.
+    B: Retry.
+    C: Crash.
+    D: on_after_tool_callback...
     E: None of the above
-  correct_answer: A
+  correct_answer: D
   explanation: Model receives empty result.
   benchmark_type: multiple_choice
 - question: 'Scenario: Tool returns unexpected type.
 
     What happens?'
   options:
-    A: Pydantic...
+    A: Ignore.
     B: Crash.
-    C: Retry.
-    D: Ignore.
+    C: Pydantic...
+    D: Retry.
     E: None of the above
-  correct_answer: A
+  correct_answer: C
   explanation: RuntimeError.
   benchmark_type: multiple_choice
 - question: 'A `LoopAgent` is configured with `max_iterations=1`. The loop condition
@@ -446,12 +446,12 @@ benchmarks:
 
     How many times does the loop body execute?'
   options:
-    A: '1'
-    B: Infinite
-    C: '0'
+    A: Infinite
+    B: '0'
+    C: '1'
     D: '2'
     E: None of the above
-  correct_answer: A
+  correct_answer: C
   explanation: The loop executes exactly `max_iterations` times before terminating.
   benchmark_type: multiple_choice
 - question: 'A `LoopAgent` is configured with `max_iterations=5`. The loop condition
@@ -459,117 +459,55 @@ benchmarks:
 
     How many times does the loop body execute?'
   options:
-    A: '6'
-    B: Infinite
+    A: Infinite
+    B: '4'
     C: '5'
-    D: '4'
+    D: '6'
     E: None of the above
   correct_answer: C
-  explanation: The loop executes exactly `max_iterations` times before terminating.
-  benchmark_type: multiple_choice
-- question: 'A `LoopAgent` is configured with `max_iterations=10`. The loop condition
-    remains true.
-
-    How many times does the loop body execute?'
-  options:
-    A: '10'
-    B: '11'
-    C: Infinite
-    D: '9'
-    E: None of the above
-  correct_answer: A
-  explanation: The loop executes exactly `max_iterations` times before terminating.
-  benchmark_type: multiple_choice
-- question: 'A `LoopAgent` is configured with `max_iterations=100`. The loop condition
-    remains true.
-
-    How many times does the loop body execute?'
-  options:
-    A: Infinite
-    B: '99'
-    C: '100'
-    D: '101'
-    E: None of the above
-  correct_answer: C
-  explanation: The loop executes exactly `max_iterations` times before terminating.
-  benchmark_type: multiple_choice
-- question: 'A `LoopAgent` is configured with `max_iterations=2`. The loop condition
-    remains true.
-
-    How many times does the loop body execute?'
-  options:
-    A: Infinite
-    B: '2'
-    C: '1'
-    D: '3'
-    E: None of the above
-  correct_answer: B
-  explanation: The loop executes exactly `max_iterations` times before terminating.
-  benchmark_type: multiple_choice
-- question: 'A `LoopAgent` is configured with `max_iterations=20`. The loop condition
-    remains true.
-
-    How many times does the loop body execute?'
-  options:
-    A: Infinite
-    B: '20'
-    C: '21'
-    D: '19'
-    E: None of the above
-  correct_answer: B
   explanation: The loop executes exactly `max_iterations` times before terminating.
   benchmark_type: multiple_choice
 - question: A `SequentialAgent` has 2 sub-agents. If the sequence runs successfully,
     how many agents are executed?
   options:
-    A: '2'
-    B: '0'
+    A: '0'
+    B: '1'
     C: '1'
-    D: '1'
+    D: '2'
     E: None of the above
-  correct_answer: A
+  correct_answer: D
   explanation: SequentialAgent runs all sub-agents in order.
   benchmark_type: multiple_choice
 - question: A `ParallelAgent` has 2 sub-agents. If run with sufficient workers, how
     do they execute?
   options:
-    A: Random order.
-    B: Reverse order.
-    C: Concurrently.
-    D: Sequentially.
+    A: Reverse order.
+    B: Concurrently.
+    C: Sequentially.
+    D: Random order.
     E: None of the above
-  correct_answer: C
+  correct_answer: B
   explanation: ParallelAgent runs sub-agents concurrently.
   benchmark_type: multiple_choice
 - question: A `ParallelAgent` has 5 sub-agents. If run with sufficient workers, how
     do they execute?
   options:
-    A: Sequentially.
-    B: Concurrently.
-    C: Random order.
-    D: Reverse order.
+    A: Concurrently.
+    B: Sequentially.
+    C: Reverse order.
+    D: Random order.
     E: None of the above
-  correct_answer: B
+  correct_answer: A
   explanation: ParallelAgent runs sub-agents concurrently.
   benchmark_type: multiple_choice
 - question: App configured with `compaction_interval=10`. When does compaction trigger?
   options:
-    A: Every invocation.
-    B: Never.
-    C: After 10 new invocations.
-    D: After 10 seconds.
+    A: After 10 new invocations.
+    B: After 10 seconds.
+    C: Every invocation.
+    D: Never.
     E: None of the above
-  correct_answer: C
-  explanation: Compaction triggers based on the count of new invocations.
-  benchmark_type: multiple_choice
-- question: App configured with `compaction_interval=20`. When does compaction trigger?
-  options:
-    A: Every invocation.
-    B: After 20 seconds.
-    C: Never.
-    D: After 20 new invocations.
-    E: None of the above
-  correct_answer: D
+  correct_answer: A
   explanation: Compaction triggers based on the count of new invocations.
   benchmark_type: multiple_choice
 - question: 'An agent returns an event with `state_delta={''k'': ''v''}`. When is
@@ -586,11 +524,11 @@ benchmarks:
 - question: 'A `SequentialAgent` has 20 sub-agents. Agent #1 fails. How many agents
     ran successfully?'
   options:
-    A: '0'
+    A: '1'
     B: '0'
-    C: '1'
-    D: '20'
+    C: '20'
+    D: '0'
     E: None of the above
-  correct_answer: B
+  correct_answer: D
   explanation: Execution stops at the failed agent.
   benchmark_type: multiple_choice
