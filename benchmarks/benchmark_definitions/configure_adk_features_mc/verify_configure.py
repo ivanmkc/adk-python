@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Verification script for advanced_adk_usage/benchmark.yaml.
+Verification script for configure_adk_features_mc/benchmark.yaml.
 This script verifies that the API surface, classes, and signatures assumed by the
 benchmark questions actually exist and behave as expected in the codebase.
 """

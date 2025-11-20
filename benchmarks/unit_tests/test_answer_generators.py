@@ -37,6 +37,8 @@ from benchmarks.data_models import (
     StringMatchAnswer,
     AnswerTemplate,
 )
+from google.genai import types
+from google.adk.events.event import Event # Added import
 
 
 @pytest.fixture
@@ -109,15 +111,19 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
     """Tests the AdkAnswerGenerator with a mocked ADK runner."""
     with patch(
         "benchmarks.answer_generators.adk_answer_generator.InMemoryRunner"
-    ) as mock_runner:
-        mock_runner.return_value.create_session = AsyncMock()
-        mock_runner.return_value.run = MagicMock()
-        mock_runner.return_value.run.return_value.__aiter__.return_value = [
-            MagicMock(
-                is_final_response=lambda: True,
-                content=MagicMock(
+    ) as MockInMemoryRunner:
+        mock_runner_instance = MockInMemoryRunner.return_value
+
+        mock_runner_instance.session_service = MagicMock()
+        mock_runner_instance.session_service.create_session = AsyncMock()
+        mock_runner_instance.session_service.create_session.return_value = MagicMock(id="benchmark_session", user_id="benchmark_user")
+
+        mock_events = [
+            Event(
+                author="model",
+                content=types.Content(
                     parts=[
-                        MagicMock(
+                        types.Part(
                             text='{"code": "adk class", "fully_qualified_class_name": "adk.module"}'
                         )
                     ]
@@ -125,9 +131,24 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
             )
         ]
 
+        # Manually create an async generator to ensure __aiter__ behavior
+        async def real_async_generator(*args, **kwargs):
+            for event in mock_events:
+                yield event
+        
+        call_count = 0
+        async def counting_async_generator(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            async for event in real_async_generator(*args, **kwargs):
+                yield event
+        mock_runner_instance.run_async = counting_async_generator
+
         generator = AdkAnswerGenerator()
         generated_answer = await generator.generate_answer(mock_api_case)
 
         assert generated_answer.output.code == "adk class"
         assert generated_answer.output.fully_qualified_class_name == "adk.module"
-        mock_runner.return_value.run.assert_called_once()
+        assert call_count == 1
+        mock_runner_instance.session_service.create_session.assert_called_once()
+        MockInMemoryRunner.assert_called_once()

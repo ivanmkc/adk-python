@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Verification script for multiple_choice/benchmark.yaml.
+Verification script for diagnose_setup_errors_mc/benchmark.yaml.
 """
 
 import sys

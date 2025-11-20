@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Verification script for skill_based/benchmark.yaml.
+Verification script for predict_runtime_behavior_mc/benchmark.yaml.
 """
 
 import sys

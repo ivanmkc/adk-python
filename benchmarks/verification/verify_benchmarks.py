@@ -32,10 +32,6 @@ def test_runner_import():
 def test_event_import():
     assert Event.__module__ == "google.adk.events.event"
 
-def test_event_import():
-    assert Event.__module__ == "google.adk.events.event"
-
-def test_runner_run_async_params():
     sig = inspect.signature(Runner.run_async)
     assert "new_message" in sig.parameters
     assert "message" not in sig.parameters
@@ -47,8 +43,7 @@ def test_app_init_params():
     # But the logic is: if app is passed, app_name/root_agent are inferred.
     # The question asks about "mutually exclusive" in concept.
     # We can check if `app` is a parameter.
-    assert "name" in sig.parameters # app_name is passed as name to App
-    # The question is about Runner init really.
+    assert "name" in App.model_fields    # The question is about Runner init really.
     sig_runner = inspect.signature(Runner.__init__)
     assert "app" in sig_runner.parameters
     assert "app_name" in sig_runner.parameters

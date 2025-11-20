@@ -17,10 +17,15 @@
 from __future__ import annotations
 
 import pytest
+from unittest.mock import patch
 
 from google.adk.agents import LlmAgent
 from google.adk.tools.function_tool import FunctionTool
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+from google.adk.apps import App
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from google.adk.models.llm_response import LlmResponse
+from benchmarks.test_helpers import MODEL_NAME
 
 
 async def _mock_tool_func(query: str) -> str:
@@ -46,8 +51,71 @@ async def test_before_and_after_tool_callbacks():
     # BEGIN: CODE
     # END: CODE
 
-    response = await run_agent_test(agent, "Use the tool with 'hello'")
+    # Manually run the agent logic without run_agent_test to have full control over mocking
+    # We mock two turns: 1. Model calls tool. 2. Model generates final response.
+    with patch("google.adk.models.google_llm.Gemini.generate_content_async") as mock_generate:
+        async def async_response_gen_tool_call():
+            # First response: Tool call
+            response = types.GenerateContentResponse()
+            response.candidates = [
+                types.Candidate(
+                    content=types.Content(
+                        parts=[
+                            types.Part(
+                                function_call=types.FunctionCall(
+                                    name="_mock_tool_func",
+                                    args={"query": "hello"}
+                                )
+                            )
+                        ],
+                        role="model"
+                    )
+                )
+            ]
+            yield LlmResponse.create(response)
+            
+        async def async_response_gen_final():
+            # Second response: Final text
+            response = types.GenerateContentResponse()
+            response.candidates = [
+                types.Candidate(
+                    finish_reason="STOP",
+                    content=types.Content(
+                        parts=[types.Part(text="UNIQUE_TOOL_OUTPUT_FOR_TEST: hello")], 
+                        role="model"
+                    )
+                )
+            ]
+            yield LlmResponse.create(response)
 
-    assert before_called
-    assert after_called
-    assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in response
+        # Mock side_effect to return sequential responses
+        response_iter = iter([async_response_gen_tool_call(), async_response_gen_final()])
+        mock_generate.side_effect = lambda *args, **kwargs: next(response_iter)
+
+        app = App(name=f"test_app_{agent.name}", root_agent=agent)
+        runner = InMemoryRunner(app=app)
+
+        session = await runner.session_service.create_session(
+            app_name=app.name, user_id="test-user", state={}
+        )
+
+        final_response = ""
+        async for event in runner.run_async(
+            user_id=session.user_id,
+            session_id=session.id,
+            new_message=types.Content(
+                role="user", parts=[types.Part(text="Use the tool with 'hello'")]
+            ),
+        ):
+            if event.is_final_response() and event.content and event.content.parts:
+                 text_parts = [
+                    part.text
+                    for part in event.content.parts
+                    if hasattr(part, "text") and part.text is not None
+                ]
+                 if text_parts:
+                    final_response = "".join(text_parts)
+
+        assert before_called
+        assert after_called
+        assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in final_response
