@@ -1,6 +1,6 @@
 # Fix Error Benchmark Templates
 
-This directory contains the Python test files that serve as templates for the `fix_error` benchmark suite. Each file in this directory corresponds to a benchmark case defined in `fix_error_benchmarks.yaml`.
+This directory contains the Python test files that serve as templates for the `fix_error` benchmark suite. Each file in this directory corresponds to a benchmark case defined in `benchmark.yaml`.
 
 ## Structure
 
@@ -25,5 +25,5 @@ If the test passes, the benchmark is considered a "pass." If it fails, the bench
 
 To add a new `fix_error` benchmark, you would:
 1. Create a new test file in this directory with a broken code snippet and the placeholder.
-2. Add a corresponding entry to the `fix_error_benchmarks.yaml` file, pointing to your new test file.
-3. Add the correct, working code to a corresponding file in `benchmarks/ground_truth/fix_error_suite/`.
+2. Add a corresponding entry to the `benchmark.yaml` file, pointing to your new test file.
+3. Add the correct, working code to a corresponding file in `benchmarks/ground_truth/fix_errors/`.

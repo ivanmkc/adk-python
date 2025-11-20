@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Verify Fix Errors Benchmarks",
+            "type": "shell",
+            "command": "env/bin/python benchmarks/benchmark_definitions/fix_errors/verify.py",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Verify API Understanding Benchmarks",
+            "type": "shell",
+            "command": "env/bin/python benchmarks/benchmark_definitions/api_understanding/verify.py",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run All Benchmarks",
+            "type": "shell",
+            "command": "env/bin/pytest benchmarks/test_benchmarks.py",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Ground Truth Unit Tests",
+            "type": "shell",
+            "command": "env/bin/pytest benchmarks/unit_tests/",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Verification script for fix_error_suite/benchmark.yaml.
+Verification script for fix_errors/benchmark.yaml.
 This script verifies that all test files referenced in the benchmark YAML actually exist.
 """
 
@@ -21,7 +21,7 @@ import yaml
 import sys
 from pathlib import Path
 
-def verify_fix_error_suite():
+def verify_fix_errors():
     # Define paths
     base_dir = Path(__file__).parent
     yaml_path = base_dir / "benchmark.yaml"
@@ -45,8 +45,8 @@ def verify_fix_error_suite():
         
         # Resolve path relative to project root (since paths in YAML are relative to project root)
         # or strictly check file existence.
-        # The script is in benchmarks/benchmark_definitions/fix_error_suite/verify.py
-        # The path in YAML is like benchmarks/benchmark_definitions/fix_error_suite/tests/test_01...
+        # The script is in benchmarks/benchmark_definitions/fix_errors/verify.py
+        # The path in YAML is like benchmarks/benchmark_definitions/fix_errors/tests/test_01...
         # Project root is 3 levels up.
         project_root = base_dir.parents[2]
         full_path = project_root / test_file_path_str
@@ -72,4 +72,4 @@ def verify_fix_error_suite():
         print("\nAll fix_error benchmark files verified successfully.")
 
 if __name__ == "__main__":
-    verify_fix_error_suite()
+    verify_fix_errors()

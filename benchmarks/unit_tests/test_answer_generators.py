@@ -55,7 +55,7 @@ def mock_api_case() -> ApiUnderstandingBenchmarkCase:
                 answer="class Session(BaseModel):",
                 line_number=42,
                 answer_template="StringMatchAnswer",
-                module_path="google.adk.sessions.session",
+                fully_qualified_class_name=["google.adk.sessions.session"],
             )
         ],
     )
@@ -68,7 +68,7 @@ async def test_ground_truth_answer_generator(mock_api_case: ApiUnderstandingBenc
     generated_answer = await generator.generate_answer(mock_api_case)
     assert generated_answer.output.code == "class Session(BaseModel):"
     assert (
-        generated_answer.output.module_path == "google.adk.sessions.session"
+        generated_answer.output.fully_qualified_class_name == "google.adk.sessions.session"
     )
 
 
@@ -78,7 +78,7 @@ async def test_trivial_answer_generator(mock_api_case: ApiUnderstandingBenchmark
     generator = TrivialAnswerGenerator()
     generated_answer = await generator.generate_answer(mock_api_case)
     assert generated_answer.output.code == "class Trivial:"
-    assert generated_answer.output.module_path == "trivial.module"
+    assert generated_answer.output.fully_qualified_class_name == "trivial.module"
 
 
 @pytest.mark.asyncio
@@ -89,9 +89,10 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
     ) as mock_client:
         mock_response = MagicMock()
         mock_response.text = (
-            '{"code": "mocked class", "module_path": "mocked.module"}'
+            '{"code": "mocked class", "fully_qualified_class_name": "mocked.module"}'
         )
-        mock_client.return_value.models.generate_content = AsyncMock(
+        # The generator uses client.aio.models.generate_content
+        mock_client.return_value.aio.models.generate_content = AsyncMock(
             return_value=mock_response
         )
 
@@ -99,8 +100,8 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
         generated_answer = await generator.generate_answer(mock_api_case)
 
         assert generated_answer.output.code == "mocked class"
-        assert generated_answer.output.module_path == "mocked.module"
-        mock_client.return_value.models.generate_content.assert_called_once()
+        assert generated_answer.output.fully_qualified_class_name == "mocked.module"
+        mock_client.return_value.aio.models.generate_content.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -117,7 +118,7 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
                 content=MagicMock(
                     parts=[
                         MagicMock(
-                            text='{"code": "adk class", "module_path": "adk.module"}'
+                            text='{"code": "adk class", "fully_qualified_class_name": "adk.module"}'
                         )
                     ]
                 ),
@@ -128,5 +129,5 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
         generated_answer = await generator.generate_answer(mock_api_case)
 
         assert generated_answer.output.code == "adk class"
-        assert generated_answer.output.module_path == "adk.module"
+        assert generated_answer.output.fully_qualified_class_name == "adk.module"
         mock_runner.return_value.run.assert_called_once()

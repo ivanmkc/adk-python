@@ -28,7 +28,7 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
                       | Reads from
                       v
         +---------------------------+
-        | test_data/ground_truth/   |
+        | ground_truth/               |
         +---------------------------+
 
 ```
@@ -41,7 +41,7 @@ The benchmark framework is orchestrated by `benchmark_orchestrator.py` and initi
 *   **`answer_generators/`**: A package containing different code generation strategies (e.g., `GroundTruthAnswerGenerator`, `GeminiAnswerGenerator`).
 *   **`data_models.py`**: Pydantic models for the benchmark YAML files, structured `AnswerOutput` schemas, and the `BenchmarkRunResult`.
 *   **`benchmark_definitions/`**: Contains the YAML data files and test templates.
-*   **`test_data/ground_truth/`**: Contains the correct code snippets for `fix_error` benchmarks.
+*   **`ground_truth/`**: Contains the correct code snippets for `fix_error` benchmarks.
 
 ## Usage Philosophy
 
@@ -55,7 +55,7 @@ These tests are not for evaluating candidates; they are for **validating the fra
 
 **To run the validation tests:**
 ```bash
-pytest benchmarks/test_benchmarks.py
+env/bin/pytest benchmarks/test_benchmarks.py
 ```
 A successful run is a prerequisite for meaningful evaluation of other answer generators.
 
@@ -91,8 +91,8 @@ from benchmarks.answer_generators import (
 
 async def main():
     benchmark_suites = [
-        "benchmarks/benchmark_definitions/fix_error_benchmarks.yaml",
-        "benchmarks/benchmark_definitions/api_understanding_benchmarks.yaml",
+        "benchmarks/benchmark_definitions/fix_errors/benchmark.yaml",
+        "benchmarks/benchmark_definitions/api_understanding/benchmark.yaml",
     ]
     answer_generators_to_test = [
         GroundTruthAnswerGenerator(),

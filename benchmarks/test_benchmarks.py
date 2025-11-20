@@ -36,7 +36,7 @@ async def test_benchmarks():
     """
     benchmark_suites = [
         "benchmarks/benchmark_definitions/api_understanding/benchmark.yaml",
-        "benchmarks/benchmark_definitions/fix_error_suite/benchmark.yaml",
+        "benchmarks/benchmark_definitions/fix_errors/benchmark.yaml",
         "benchmarks/benchmark_definitions/multiple_choice/benchmark.yaml",
         "benchmarks/benchmark_definitions/advanced_adk_usage/benchmark.yaml",
         "benchmarks/benchmark_definitions/skill_based/benchmark.yaml",

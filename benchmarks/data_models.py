@@ -293,22 +293,10 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
 
     file: Path
 
-
-
-
-
     @pydantic.validator("answers", pre=True, each_item=True)
-
-
     def anwers_str_to_list(cls, v):
-
-
-        if isinstance(v.get("fully_qualified_class_name"), str):
-
-
+        if isinstance(v, dict) and isinstance(v.get("fully_qualified_class_name"), str):
             v["fully_qualified_class_name"] = [v["fully_qualified_class_name"]]
-
-
         return v
 
 

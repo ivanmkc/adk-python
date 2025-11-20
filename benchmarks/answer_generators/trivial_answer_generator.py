@@ -39,7 +39,7 @@ class TrivialAnswerGenerator(AnswerGenerator):
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             output = ApiUnderstandingAnswerOutput(
-                code="", fully_qualified_class_name=""
+                code="class Trivial:", fully_qualified_class_name="trivial.module"
             )
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, FixErrorBenchmarkCase):
