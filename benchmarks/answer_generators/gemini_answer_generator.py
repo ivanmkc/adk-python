@@ -31,11 +31,14 @@ from benchmarks.data_models import (
 )
 
 
+import hashlib
+from pathlib import Path
+
 class GeminiAnswerGenerator(AnswerGenerator):
     """An AnswerGenerator that uses the Gemini API."""
 
     def __init__(
-        self, model_name: str = "gemini-3-pro-preview", context: str | None = None
+        self, model_name: str = "gemini-3-pro-preview", context: str | Path | None = None
     ):
         super().__init__()
         self.model_name = model_name
@@ -45,8 +48,29 @@ class GeminiAnswerGenerator(AnswerGenerator):
     @property
     def name(self) -> str:
         """Returns a unique name for this generator instance."""
-        context_suffix = "-with-context" if self.context else ""
-        return f"GeminiAnswerGenerator({self.model_name}{context_suffix})"
+        base_name = f"GeminiAnswerGenerator({self.model_name})"
+        if self.context:
+            if isinstance(self.context, Path):
+                # Use the file name if context is a Path
+                return f"{base_name}-with-context-{self.context.name}"
+            elif isinstance(self.context, str):
+                # For string context, always use a stable hash
+                context_id = self.context.strip()
+                if context_id:
+                    context_hash_digest = hashlib.md5(context_id.encode('utf-8')).hexdigest()[:8]
+                    return f"{base_name}-with-context-hash-{context_hash_digest}"
+        return base_name
+        
+    def _get_context_content(self) -> str:
+        """Retrieves the context content, reading from file if necessary."""
+        if not self.context:
+            return ""
+        if isinstance(self.context, Path):
+            if not self.context.exists():
+                raise FileNotFoundError(f"Context file not found: {self.context}")
+            with open(self.context, "r", encoding="utf-8") as f:
+                return f.read()
+        return self.context
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase
@@ -89,16 +113,24 @@ class GeminiAnswerGenerator(AnswerGenerator):
 
     def _create_prompt_for_fix_error(self, case: FixErrorBenchmarkCase) -> str:
         """Creates a prompt for a fix_error benchmark case."""
-        return (
+        prompt = (
             "Please fix the following Python code snippet. "
             "Return the result as a JSON object with a key 'code' "
             "containing the corrected code and a key 'rationale' explaining the fix.\n\n"
             f"Description of the error: {case.description}\n\n"
+        )
+        
+        context_content = self._get_context_content()
+        if context_content:
+            prompt += f"Context:\n{context_content}\n\n"
+
+        prompt += (
             "Code with error:\n"
             "```python\n"
             f"{self._read_code_from_file(case.test_file, case.start_line, case.end_line)}\n"
             "```"
         )
+        return prompt
 
     def _create_prompt_for_multiple_choice(
         self, case: MultipleChoiceBenchmarkCase
@@ -115,8 +147,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "and a key 'rationale' explaining your reasoning.\n\n"
         )
 
-        if self.context:
-            prompt += f"Context:\n{self.context}\n\n"
+        context_content = self._get_context_content()
+        if context_content:
+            prompt += f"Context:\n{context_content}\n\n"
             
         if case.code_snippet_ref:
             try:
@@ -152,8 +185,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "\n\n"
         )
 
-        if self.context:
-            prompt += f"Context:\n{self.context}\n\n"
+        context_content = self._get_context_content()
+        if context_content:
+            prompt += f"Context:\n{context_content}\n\n"
 
         prompt += (
             "Here are a few examples:\n\n"

@@ -52,21 +52,53 @@ import time
 from typing import Union
 
 
+import tenacity
+
 async def _run_single_benchmark(
     suite_file: str,
     case: BaseBenchmarkCase,
     generator: AnswerGenerator,
+    semaphore: asyncio.Semaphore,
+    max_retries: int,
+    min_wait: float,
+    max_wait: float,
 ) -> BenchmarkRunResult:
     """Helper coroutine to run one benchmark case and return its result."""
-    runner = case.runner
+    async with semaphore:
+        runner = case.runner
 
-    start_time = time.time()
-    generated_answer = await generator.generate_answer(case)
-    latency = time.time() - start_time
+        start_time = time.time()
+        try:
+            # Define retry strategy dynamically
+            retryer = tenacity.AsyncRetrying(
+                stop=tenacity.stop_after_attempt(max_retries),
+                wait=tenacity.wait_exponential(multiplier=1, min=min_wait, max=max_wait),
+                retry=tenacity.retry_if_exception_type(Exception),
+                reraise=True # Ensure the exception is raised if retries fail
+            )
+            
+            async for attempt in retryer:
+                with attempt:
+                    generated_answer = await generator.generate_answer(case)
+                    
+        except Exception as e:
+             # If all retries fail, return a failure result with the error message
+            return BenchmarkRunResult(
+                suite=str(Path(suite_file).absolute()),
+                benchmark_name=case.get_identifier(),
+                answer_generator=generator.name,
+                result=0,
+                answer="",
+                validation_error=f"Generation failed after {max_retries} retries: {e}",
+                temp_test_file=None,
+                latency=time.time() - start_time,
+            )
+            
+        latency = time.time() - start_time
 
-    result, validation_error, temp_file_path = await runner.run_benchmark(
-        case, generated_answer
-    )
+        result, validation_error, temp_file_path = await runner.run_benchmark(
+            case, generated_answer
+        )
 
     return BenchmarkRunResult(
         suite=str(Path(suite_file).absolute()),
@@ -82,11 +114,17 @@ async def _run_single_benchmark(
 
 
 async def run_benchmarks(
-    benchmark_suites: list[str], answer_generators: list[AnswerGenerator]
+    benchmark_suites: list[str],
+    answer_generators: list[AnswerGenerator],
+    max_concurrency: int = 50,
+    max_retries: int = 7,
+    min_wait: float = 4.0,
+    max_wait: float = 60.0,
 ) -> list[BenchmarkRunResult]:
     """
     Runs all benchmark suites against all answer generators in parallel and returns raw results.
     """
+    semaphore = asyncio.Semaphore(max_concurrency)
     tasks = []
 
     for suite_file in benchmark_suites:
@@ -98,35 +136,22 @@ async def run_benchmarks(
         for generator in answer_generators:
             print("  - Queuing tests for answer generator:" f" {generator.name}")
             for case in benchmark_file.benchmarks:
-                tasks.append(_run_single_benchmark(suite_file, case, generator))
+                tasks.append(
+                    _run_single_benchmark(
+                        suite_file,
+                        case,
+                        generator,
+                        semaphore,
+                        max_retries,
+                        min_wait,
+                        max_wait,
+                    )
+                )
 
-    print(f"\n--- Running {len(tasks)} benchmarks in parallel ---")
+    print(
+        f"\n--- Running {len(tasks)} benchmarks in parallel (max_concurrency={max_concurrency}) ---"
+    )
     results = [await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks))]
 
     return results
 
-
-def main():
-    """Main entry point for the script."""
-
-    parser = argparse.ArgumentParser(description="Run the benchmark suites.")
-
-    parser.add_argument(
-        "benchmark_files",
-        type=str,
-        nargs="+",
-        help="Paths to the benchmark YAML files.",
-    )
-
-    args = parser.parse_args()
-
-    answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
-
-    if not asyncio.run(run_benchmarks(args.benchmark_files, answer_generators)):
-
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-
-    main()
