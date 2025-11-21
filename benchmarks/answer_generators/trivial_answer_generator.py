@@ -41,11 +41,13 @@ class TrivialAnswerGenerator(AnswerGenerator):
         """Returns an empty answer for any benchmark case."""
         if isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             output = ApiUnderstandingAnswerOutput(
-                code="class Trivial:", fully_qualified_class_name="trivial.module"
+                code="class Trivial:",
+                fully_qualified_class_name="trivial.module",
+                rationale="Trivial answer.",
             )
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, FixErrorBenchmarkCase):
-            output = FixErrorAnswerOutput(code="")
+            output = FixErrorAnswerOutput(code="", rationale="Trivial answer.")
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
             import random  # pylint: disable=import-outside-toplevel
@@ -53,10 +55,14 @@ class TrivialAnswerGenerator(AnswerGenerator):
             options = benchmark_case.options
             if options:
                 random_answer_key = random.choice(list(options.keys()))
-                output = MultipleChoiceAnswerOutput(answer=random_answer_key)
+                output = MultipleChoiceAnswerOutput(
+                    answer=random_answer_key, rationale="Trivial answer."
+                )
             else:
                 # Fallback if no options (shouldn't happen with validation)
-                output = MultipleChoiceAnswerOutput(answer="A")
+                output = MultipleChoiceAnswerOutput(
+                    answer="A", rationale="Trivial answer."
+                )
             return GeneratedAnswer(output=output)
         else:
             raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")

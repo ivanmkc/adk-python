@@ -74,6 +74,7 @@ async def _run_single_benchmark(
         answer_generator=generator.name,
         result=1 if result == "pass" else 0,
         answer=str(generated_answer.output),
+        rationale=generated_answer.output.rationale,
         validation_error=validation_error,
         temp_test_file=temp_file_path,
         latency=latency,

@@ -66,6 +66,8 @@ def test_duplicate_agent_name():
     root = SequentialAgent(name="root", sub_agents=[a1, a2])
     # --8<-- [end:duplicate_agent_name]
     
+    # Currently, SequentialAgent allows duplicate sub-agent names during initialization.
+    # This assertion confirms that no error is raised and both agents are stored.
     assert len(root.sub_agents) == 2
 
 

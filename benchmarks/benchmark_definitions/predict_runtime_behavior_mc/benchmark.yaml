@@ -11,7 +11,7 @@ benchmarks:
     D: 'ValueError: Agent name must be unique within the agent tree.'
     E: None of the above
   correct_answer: E
-  explanation: ADK generally enforces unique agent names.
+  explanation: While unique agent names are a best practice, the `SequentialAgent` constructor does not strictly enforce uniqueness at runtime, so no error is raised.
   benchmark_type: multiple_choice
 
 - question: "Predict the error (if any) for this code:"

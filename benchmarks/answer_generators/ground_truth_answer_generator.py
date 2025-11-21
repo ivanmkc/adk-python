@@ -78,17 +78,20 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
                 )
 
             code = self._extract_code_snippet(ground_truth_path)
-            output = FixErrorAnswerOutput(code=code)
+            output = FixErrorAnswerOutput(code=code, rationale="Ground truth answer.")
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):
             answer = benchmark_case.answers[0]
             output = ApiUnderstandingAnswerOutput(
                 code=answer.answer,
                 fully_qualified_class_name=answer.fully_qualified_class_name[0],
+                rationale="Ground truth answer.",
             )
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, MultipleChoiceBenchmarkCase):
-            output = MultipleChoiceAnswerOutput(answer=benchmark_case.correct_answer)
+            output = MultipleChoiceAnswerOutput(
+                answer=benchmark_case.correct_answer, rationale="Ground truth answer."
+            )
             return GeneratedAnswer(output=output)
         else:
             raise TypeError(f"Unknown benchmark case type: {type(benchmark_case)}")

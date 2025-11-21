@@ -91,8 +91,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
         """Creates a prompt for a fix_error benchmark case."""
         return (
             "Please fix the following Python code snippet. "
-            "Return the result as a JSON object with a single key 'code' "
-            "containing the corrected code.\n\n"
+            "Return the result as a JSON object with a key 'code' "
+            "containing the corrected code and a key 'rationale' explaining the fix.\n\n"
             f"Description of the error: {case.description}\n\n"
             "Code with error:\n"
             "```python\n"
@@ -110,8 +110,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
         prompt = (
             "You are an expert on the Google ADK Python framework. "
             "Answer the following multiple choice question. "
-            "Return the result as a JSON object with a single key 'answer' "
-            "containing the single letter of the correct option (e.g., 'A', 'B', 'C', or 'D').\n\n"
+            "Return the result as a JSON object with a key 'answer' "
+            "containing the single letter of the correct option (e.g., 'A', 'B', 'C', or 'D') "
+            "and a key 'rationale' explaining your reasoning.\n\n"
         )
 
         if self.context:
@@ -138,15 +139,16 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "framework. Your task is to identify the precise and exact Python "
             "definition from the ADK API that correctly answers the following "
             "question. The definition must conform to the specified template "
-            "structure. Return the result as a JSON object with two keys: 'code' for "
+            "structure. Return the result as a JSON object with three keys. First, 'code' for "
             "the resulting definition. If the template specifies an identifier (e.g., "
             "a parameter, class, or method name), ensure 'code' contains *only* "
             "that identifier (e.g., 'parameter_name', not 'parameter_name: str'). "
             "If the question asks for a specific named tool (like GoogleSearchTool), "
-            "'code' should be the exact class name of that tool. The second key is "
+            "'code' should be the exact class name of that tool. Second, "
             "'fully_qualified_class_name' for the fully qualified name of the "
             "*class* where the API element is defined (do not include method or "
-            "parameter names in the fully qualified class name)."
+            "parameter names in the fully qualified class name). Third, 'rationale' "
+            "explaining your reasoning."
             "\n\n"
         )
 
@@ -164,7 +166,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "class SequentialAgent(google.adk.agents.agent.Agent):",\n'
-            '    "fully_qualified_class_name": "google.adk.agents.sequential_agent.SequentialAgent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.sequential_agent.SequentialAgent",\n'
+            '    "rationale": "The user is asking for the primary class to instantiate a sequential agent."\n'
             "}\n"
             "```\n\n"
             "Question: Which method is used to execute an agent in the ADK?\n"
@@ -174,7 +177,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "def run(self, request: "RunnerRequest") -> "RunnerResponse":",\n'
-            '    "fully_qualified_class_name": "google.adk.runners.Runner"\n'
+            '    "fully_qualified_class_name": "google.adk.runners.Runner",\n'
+            '    "rationale": "The user wants to know the function to run an agent."\n'
             "}\n"
             "```\n\n"
             "Question: What parameter defines the LLM to be used in an LlmAgent?\n"
@@ -185,7 +189,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "model",\n'
-            '    "fully_qualified_class_name": "google.adk.agents.llm_agent.LlmAgent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.llm_agent.LlmAgent",\n'
+            '    "rationale": "The user needs to identify the specific parameter for setting the language model in an LlmAgent."\n'
             "}\n"
             "```\n\n"
             "Question: Which specific tool class in ADK leverages Google's native search capability?"
@@ -195,7 +200,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "GoogleSearchTool",\n'
-            '    "fully_qualified_class_name": "google.adk.tools.google_search_tool.GoogleSearchTool"\n'
+            '    "fully_qualified_class_name": "google.adk.tools.google_search_tool.GoogleSearchTool",\n'
+            '    "rationale": "The user is asking for the specific class that integrates Google Search natively."\n'
             "}\n"
             "```\n\n"
             "Question: Which class is used to run multiple agents concurrently in ADK?"
@@ -205,7 +211,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "```json\n"
             "{\n"
             '    "code": "ParallelAgent",\n'
-            '    "fully_qualified_class_name": "google.adk.agents.parallel_agent.ParallelAgent"\n'
+            '    "fully_qualified_class_name": "google.adk.agents.parallel_agent.ParallelAgent",\n'
+            '    "rationale": "The user is asking for the class that enables parallel execution of agents."\n'
             "}\n"
             "```\n\n"
             "Now, answer the following question:\n\n"

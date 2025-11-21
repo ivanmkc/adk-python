@@ -183,8 +183,8 @@ def load_snippet(ref: Any) -> str:
         elif not header_done:
             header.append(line)
             
-        if not found_snippet:
-            raise ValueError(f"Section '{section}' not found in {file_path}")
-    
-        import textwrap
-        return "".join(header + [textwrap.dedent("".join(snippet))])
+    if not found_snippet:
+        raise ValueError(f"Section '{section}' not found in {file_path}")
+
+    import textwrap
+    return "".join(header + [textwrap.dedent("".join(snippet))])

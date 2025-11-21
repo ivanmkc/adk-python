@@ -964,47 +964,13 @@ benchmarks:
   correct_answer: A
   explanation: Tools are enabled by adding them to the agent's tool list.
   benchmark_type: multiple_choice
-- question: You want to configure an `LlmAgent` with 1 specific tools. How do you
-    pass them?
+- question: You want to configure an `LlmAgent` with a specific set of tools (e.g., 5 tools). How do you pass them?
   options:
     A: Use a Toolset.
     B: Pass them one by one to `add_tool`.
-    C: Define {i} separate agents.
-    D: Pass a list of length {i} to the `tools` parameter.
+    C: Define separate agents for each tool.
+    D: Pass a list containing the tool instances to the `tools` parameter.
     E: None of the above
   correct_answer: D
-  explanation: Tools are passed as a list.
-  benchmark_type: multiple_choice
-- question: You want to configure an `LlmAgent` with 2 specific tools. How do you
-    pass them?
-  options:
-    A: Pass them one by one to `add_tool`.
-    B: Define {i} separate agents.
-    C: Pass a list of length {i} to the `tools` parameter.
-    D: Use a Toolset.
-    E: None of the above
-  correct_answer: C
-  explanation: Tools are passed as a list.
-  benchmark_type: multiple_choice
-- question: You want to configure an `LlmAgent` with 5 specific tools. How do you
-    pass them?
-  options:
-    A: Pass them one by one to `add_tool`.
-    B: Use a Toolset.
-    C: Define {i} separate agents.
-    D: Pass a list of length {i} to the `tools` parameter.
-    E: None of the above
-  correct_answer: D
-  explanation: Tools are passed as a list.
-  benchmark_type: multiple_choice
-- question: You want to configure an `LlmAgent` with 10 specific tools. How do you
-    pass them?
-  options:
-    A: Use a Toolset.
-    B: Pass a list of length {i} to the `tools` parameter.
-    C: Define {i} separate agents.
-    D: Pass them one by one to `add_tool`.
-    E: None of the above
-  correct_answer: B
-  explanation: Tools are passed as a list.
+  explanation: Tools are passed as a list to the `tools` parameter of the `LlmAgent`.
   benchmark_type: multiple_choice

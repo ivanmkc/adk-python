@@ -228,7 +228,9 @@ class BenchmarkResult(pydantic.BaseModel):
 class BaseAnswerOutput(pydantic.BaseModel, abc.ABC):
     """A base model for the structured output of an AnswerGenerator."""
 
-    pass
+    rationale: str = Field(
+        ..., description="Explanation of the thinking process leading to the answer."
+    )
 
 
 class FixErrorAnswerOutput(BaseAnswerOutput):
@@ -319,6 +321,7 @@ class BenchmarkRunResult(pydantic.BaseModel):
         ..., description="The result of the benchmark run: 1 for pass, 0 for fail."
     )
     answer: str
+    rationale: Optional[str] = None
     validation_error: Optional[str] = None
     temp_test_file: Optional[str] = None
     latency: float = 0.0
