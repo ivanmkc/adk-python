@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """11: A direct implementation test for InMemoryRunner."""
 
 from __future__ import annotations
@@ -44,6 +45,7 @@ async def run_test() -> str:
         if event.is_final_response() and event.content and event.content.parts:
             final_response = event.content.parts[0].text
     return final_response
+# LLM_CONTEXT_END
 
 
 def assert_test(response: str):

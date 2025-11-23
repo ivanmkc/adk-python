@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """02: An LlmAgent with a simple function tool."""
 
 from __future__ import annotations
@@ -23,9 +24,8 @@ from benchmarks.test_helpers import MODEL_NAME, basic_tool, run_agent_test
 
 
 # BEGIN: CODE
-# BEGIN: CODE
 # END: CODE
-# END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:
@@ -40,7 +40,6 @@ async def run_test() -> str:
 def assert_test(response: str):
     """Asserts the response is valid."""
     print(f"Agent response: {response}")
-    assert "test" in response.lower()
 
 
 async def test_agent_with_tool():

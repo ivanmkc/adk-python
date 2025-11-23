@@ -90,7 +90,8 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
                 # Indent the code to match
                 if code:
-                    indented_code = textwrap.indent(code, indent)
+                    dedented_code = textwrap.dedent(code)
+                    indented_code = textwrap.indent(dedented_code, indent)
                     new_lines.append(indented_code)
 
             elif "# END: CODE" in line:

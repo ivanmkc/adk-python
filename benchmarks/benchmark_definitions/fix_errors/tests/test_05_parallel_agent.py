@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """05: A ParallelAgent running two agents concurrently."""
 
 from __future__ import annotations
@@ -22,9 +23,8 @@ from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
 
 # BEGIN: CODE
-# BEGIN: CODE
 # END: CODE
-# END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

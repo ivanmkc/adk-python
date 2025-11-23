@@ -1,6 +1,6 @@
 # Copyright 2025 Google LLC
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 20 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """Build integrity test for LlmAgent with expanded callbacks."""
 
 from __future__ import annotations
@@ -32,25 +33,29 @@ async def _mock_tool_func(query: str) -> str:
     return f"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}"
 
 
+before_tool_callback_called = []
+after_tool_callback_called = []
+
+
+async def my_before_tool_callback(tool, args, tool_context):
+    before_tool_callback_called.append(True)
+    return None  # Do not modify tool args
+
+
+async def my_after_tool_callback(tool, args, tool_context, tool_response):
+    after_tool_callback_called.append(True)
+    return None  # Do not modify tool response
+
+
+# BEGIN: CODE
+# END: CODE
+# LLM_CONTEXT_END
+
+
 @pytest.mark.asyncio
 async def test_before_and_after_tool_callbacks():
     """Tests that before_tool_callback and after_tool_callback are invoked."""
-    before_called = []
-    after_called = []
-
-    async def before_callback_func(tool, args, tool_context):
-        before_called.append(True)
-        return None  # Do not modify tool args
-
-    async def after_callback_func(tool, args, tool_context, tool_response):
-        after_called.append(True)
-        return None  # Do not modify tool response
-
     test_tool = FunctionTool(func=_mock_tool_func)
-
-    # BEGIN: CODE
-    # BEGIN: CODE
-    # END: CODE
 
     # Manually run the agent logic without run_agent_test to have full control over mocking
     # We mock two turns: 1. Model calls tool. 2. Model generates final response.
@@ -121,6 +126,6 @@ async def test_before_and_after_tool_callbacks():
                 if text_parts:
                     final_response = "".join(text_parts)
 
-        assert before_called
-        assert after_called
+        assert before_tool_callback_called
+        assert after_tool_callback_called
         assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in final_response

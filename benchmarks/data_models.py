@@ -81,6 +81,12 @@ class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
         raise NotImplementedError
 
 
+class CodeContext(pydantic.BaseModel):
+    """Specifies the code context to be provided to the LLM."""
+
+    file: Path
+
+
 class FixErrorBenchmarkCase(BaseBenchmarkCase):
     """Represents a single fix_error benchmark case."""
 
@@ -92,9 +98,15 @@ class FixErrorBenchmarkCase(BaseBenchmarkCase):
 
     test_file: Path
 
-    start_line: int
+    # DEPRECATED: These fields will be replaced by code_context.
+    start_line: int | None = None
 
-    end_line: int
+    end_line: int | None = None
+
+    # NEW FIELDS
+    requirements: list[str] | None = None
+
+    code_context: CodeContext | None = None
 
     def get_identifier(self) -> str:
 

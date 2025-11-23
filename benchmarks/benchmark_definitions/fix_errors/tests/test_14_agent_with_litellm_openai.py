@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """14: An LlmAgent using an OpenAI model via LiteLlm."""
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ pytestmark = pytest.mark.skipif(
 
 # BEGIN: CODE
 # END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

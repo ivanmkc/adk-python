@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """01: A minimal LlmAgent."""
 
 from __future__ import annotations
@@ -21,9 +22,8 @@ from benchmarks.test_helpers import MODEL_NAME, run_agent_test
 
 
 # BEGIN: CODE
-# BEGIN: CODE
 # END: CODE
-# END: CODE
+# LLM_CONTEXT_END
 
 print(f"root_agent defined: { 'root_agent' in globals() }")
 

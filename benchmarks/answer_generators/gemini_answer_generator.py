@@ -74,7 +74,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase
-    ) -> GeneratedAnswer:
+    ) -> tuple[GeneratedAnswer, str]:
         """Generates an answer using the Gemini API's structured output feature."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             prompt = self._create_prompt_for_fix_error(benchmark_case)
@@ -99,6 +99,8 @@ class GeminiAnswerGenerator(AnswerGenerator):
         if "required" in json_schema and "benchmark_type" in json_schema["required"]:
             json_schema["required"].remove("benchmark_type")
 
+        print(f"--- PROMPT SENT TO GEMINI ---\n{prompt}\n------------------------------")
+
         response = await self.client.models.generate_content(
             model=self.model_name,
             contents=prompt,
@@ -107,27 +109,88 @@ class GeminiAnswerGenerator(AnswerGenerator):
                 "response_json_schema": json_schema,
             },
         )
+        
+        print(f"--- RAW RESPONSE FROM GEMINI ---\n{response.text}\n---------------------------------")
+        
         output = response_schema.model_validate_json(response.text)
 
-        return GeneratedAnswer(output=output)
+        return GeneratedAnswer(output=output), prompt
+
+    def _get_llm_context_from_file(self, file_path: Path) -> str:
+        """Reads a file and extracts the content between LLM_CONTEXT_BEGIN and LLM_CONTEXT_END tags."""
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        try:
+            start_index = -1
+            end_index = -1
+            for i, line in enumerate(lines):
+                if "# LLM_CONTEXT_BEGIN" in line:
+                    start_index = i + 1
+                if "# LLM_CONTEXT_END" in line:
+                    end_index = i
+                    break
+
+            if start_index == -1 or end_index == -1:
+                raise ValueError()
+
+            return "".join(lines[start_index:end_index])
+        except ValueError as e:
+            raise ValueError(
+                f"Could not find # LLM_CONTEXT_BEGIN or # LLM_CONTEXT_END tags in {file_path}"
+            ) from e
 
     def _create_prompt_for_fix_error(self, case: FixErrorBenchmarkCase) -> str:
         """Creates a prompt for a fix_error benchmark case."""
         prompt = (
-            "Please fix the following Python code snippet. "
-            "Return the result as a JSON object with a key 'code' "
-            "containing the corrected code and a key 'rationale' explaining the fix.\n\n"
-            f"Description of the error: {case.description}\n\n"
+            "You are an expert Python software engineer specializing in the ADK (Agent Development Kit) framework. "
+            "Your task is to fill in the missing code at the `[YOUR CODE GOES HERE]` placeholder in the Python code snippet below. "
+            "You must provide the complete, corrected code for the placeholder within the `code` field of the JSON output. "
+            "The code should seamlessly integrate into the existing test file, so DO NOT include unnecessary imports "
+            "or redefine classes/functions that are already provided by the ADK framework or `test_helpers.py`. "
+            "Specifically:\n\n"
+            "1.  **Always include necessary ADK imports.** Common imports are: `from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent, LoopAgent, BaseAgent`, `from google.adk.tools.function_tool import FunctionTool`.\n"
+            "2.  **All ADK agents (like `LlmAgent`, `SequentialAgent`, `ParallelAgent`, `LoopAgent`) MUST be initialized with a `name` argument.** The `LlmAgent` also REQUIRES a `model` argument (you can use `MODEL_NAME` from `test_helpers`).\n"
+            "3.  **The parameter for agent instructions is `instruction`, NOT `instructions`.**\n"
+            "4.  **Use helper functions from `benchmarks.test_helpers` where appropriate**, such as `create_basic_llm_agent`.\n"
+            "5.  **DO NOT redefine core ADK classes** (e.g., `LlmAgent`, `App`, `Runner`, `BuiltInCodeExecutor`, `BasePlugin`) or other test helper components unless the task explicitly asks you to implement a *custom* class that *inherits* from an ADK base class (e.g., inheriting `BaseAgent` or `BasePlugin`).\n"
+            "6.  **`MODEL_NAME`, `basic_tool`, `BasicOutputSchema`, `create_basic_llm_agent`, and `run_agent_test` are available from `benchmarks.test_helpers`.**\n"
+            "7.  **When initializing `FunctionTool`, use the argument `func` to pass the callable, not `fn`.**\n"
+            "8.  **Your output should ONLY be the Python code for the agent definition.** Do not include any other code, functions, or classes.\n"
+            "9.  **When creating a `SequentialAgent`, `ParallelAgent`, or `LoopAgent`, the list of sub-agents should be passed to the `sub_agents` parameter.**\n"
+            "10. **When creating a `LoopAgent`, the number of iterations should be passed to the `max_iterations` parameter.**\n"
+            "11. **`FunctionTool` does not accept a `name` argument.** The tool's name is inferred from the function itself.\n"
+            "12. **When implementing a custom agent's `_call` method, you must use `async for` to iterate over and `yield` events from sub-agents.** Do not use `yield from` with async generators.\n"
+            "13. **If you define a custom agent class, you must instantiate it and assign it to the `root_agent` variable.** For simple `LlmAgent` definitions, use the variable name specified in the description.\n"
+            "14. **The `create_basic_llm_agent` function takes `name` and `instruction` as arguments.** Do not use any other arguments.\n"
+            "15. **All plugins that inherit from `BasePlugin` must be initialized with a `name` argument.**\n"
+            "16. **The `App` class requires a `name` argument upon initialization.**\n"
+            "17. **When using `input_schema`, the fields from the schema are available to the model in the user's message.** Do not use `{field_name}` templating in the instruction string; the model will extract the values from the input content.\n\n"
+            f"Here is the detailed description of what the missing code should do: {case.description}\n\n"
         )
-        
+
+        if case.requirements:
+            prompt += "The generated code must satisfy the following requirements:\n"
+            for req in case.requirements:
+                prompt += f"- {req}\n"
+            prompt += "\n"
+
         context_content = self._get_context_content()
         if context_content:
             prompt += f"Context:\n{context_content}\n\n"
 
+        code_context_file = case.code_context.file if case.code_context else case.test_file
+
+        # Replace the code block with a placeholder
+        import re
+
+        context_code = self._get_llm_context_from_file(code_context_file)
+        context_code = re.sub(r"# BEGIN: CODE.*# END: CODE", "[YOUR CODE GOES HERE]", context_code, flags=re.DOTALL)
+
         prompt += (
-            "Code with error:\n"
+            "Fill in the missing code in the file below:\n"
             "```python\n"
-            f"{self._read_code_from_file(case.test_file, case.start_line, case.end_line)}\n"
+            f"{context_code}\n"
             "```"
         )
         return prompt
@@ -150,7 +213,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
         context_content = self._get_context_content()
         if context_content:
             prompt += f"Context:\n{context_content}\n\n"
-            
+
         if case.code_snippet_ref:
             try:
                 code_content = load_snippet(case.code_snippet_ref)
@@ -255,9 +318,3 @@ class GeminiAnswerGenerator(AnswerGenerator):
             f"Examples:\n{examples}\n"
         )
         return prompt
-
-    def _read_code_from_file(self, file_path, start_line, end_line) -> str:
-        """Reads a specific range of lines from a file."""
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        return "".join(lines[start_line - 1 : end_line])

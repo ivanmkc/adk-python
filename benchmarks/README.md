@@ -175,3 +175,77 @@ To add a new type of benchmark (e.g., "code_completion"), follow these steps:
 
 5.  **Add to the Validation Suite:**
     *   In `test_benchmarks.py`, add the path to your new YAML file to the `benchmark_suites` list to include it in the framework's integrity validation run.
+
+### `fix_error` Benchmark Requirements
+
+When creating a `fix_error` benchmark case, the goal is to test the LLM's ability to solve a problem based on a description of the requirements, not its ability to simply pass a test.
+
+To this end, the test's assertions should be translated into natural language requirements that are passed to the model in the prompt. **Do not include the test code itself in the prompt.**
+
+**Example:**
+
+*   **Instead of**: Providing the test code with `assert "test" in response.lower()`.
+*   **Do**: Provide a natural language requirement like: "The agent's final response must contain the word 'test'."
+
+This approach prevents the model from "gaming" the benchmark and encourages it to generate code that solves the underlying problem.
+
+### Structuring `fix_error` YAML
+
+To implement this, the YAML definition for a `fix_error` case should be structured to separate the high-level task description and natural language requirements from the test implementation.
+
+A robust way to implement this is to use special comments or tags within the test file to explicitly mark the sections of code that should be passed to the LLM as context.
+
+#### Bad Example (Legacy Approach)
+
+This example is not ideal because the description is generic and it implicitly sends the entire test file to the LLM, including the assertion logic which can be "gamed".
+
+```yaml
+- name: "02: An LlmAgent with a simple function tool."
+  description: "02: An LlmAgent with a simple function tool." # Vague description
+  benchmark_type: fix_error
+  test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
+  # Implicitly sends the whole file, including the test assertions.
+```
+
+#### Good Example (Recommended Approach)
+
+This structure provides clear, natural language requirements. The YAML configuration specifies the test file, a high-level description of the task, and a list of specific requirements that the generated code must meet.
+
+```yaml
+- name: "02: An LlmAgent with a simple function tool."
+  benchmark_type: fix_error
+  test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
+  description: "Create a minimal LlmAgent named 'root_agent' that can use the `basic_tool`."
+  requirements:
+    - "When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'."
+    - "The agent's final response must contain the word 'test'."
+```
+
+The benchmark runner will then extract the relevant code context from the `test_file` by looking for special tags. This ensures that test-specific logic, like assertions, is not shown to the model.
+
+For example, the corresponding test file would be structured with tags like `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` to delineate the context.
+
+```python
+# test_02_agent_with_tool.py
+
+# LLM_CONTEXT_BEGIN
+"""02: An LlmAgent with a simple function tool."""
+
+from __future__ import annotations
+
+from google.adk.agents import LlmAgent
+from benchmarks.test_helpers import MODEL_NAME, basic_tool
+
+# The LLM is expected to fill in the code between BEGIN: CODE and END: CODE
+# BEGIN: CODE
+# END: CODE
+# LLM_CONTEXT_END
+
+# This part of the file, containing the test runner and assertions,
+# is excluded from the LLM's view.
+async def run_test() -> str:
+    ...
+
+def assert_test(response: str):
+    ...
+```

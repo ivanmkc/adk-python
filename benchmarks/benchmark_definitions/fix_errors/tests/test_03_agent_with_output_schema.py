@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
 """03: An LlmAgent that uses output_schema to enforce JSON output."""
 
 from __future__ import annotations
@@ -24,9 +25,8 @@ from benchmarks.test_helpers import MODEL_NAME, BasicOutputSchema, run_agent_tes
 
 
 # BEGIN: CODE
-# BEGIN: CODE
 # END: CODE
-# END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:
