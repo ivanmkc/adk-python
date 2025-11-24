@@ -16,9 +16,9 @@
 Verification script for diagnose_setup_errors_mc/benchmark.yaml.
 """
 
-import sys
 import inspect
 from pathlib import Path
+import sys
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[3]
@@ -26,11 +26,11 @@ if str(project_root) not in sys.path:
     sys.path.append(str(project_root / "src"))
 
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.tools.function_tool import FunctionTool
+from google.adk.agents.parallel_agent import ParallelAgent
 from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
-from google.adk.agents.parallel_agent import ParallelAgent
 from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.function_tool import FunctionTool
 
 
 def test_llm_agent_requires_model():

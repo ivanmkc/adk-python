@@ -14,14 +14,12 @@
 
 """Master test file for running all benchmarks."""
 
-import pytest
 import pandas as pd
+import pytest
 
-from benchmarks.answer_generators import (
-    GroundTruthAnswerGenerator,
-    TrivialAnswerGenerator,
-)
 from benchmarks import benchmark_orchestrator
+from benchmarks.answer_generators import GroundTruthAnswerGenerator
+from benchmarks.answer_generators import TrivialAnswerGenerator
 
 
 @pytest.mark.asyncio

@@ -16,9 +16,11 @@
 
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent, SequentialAgent
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+from google.adk.agents import LlmAgent
+from google.adk.agents import SequentialAgent
 
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
 writer_agent = LlmAgent(

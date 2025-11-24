@@ -17,9 +17,10 @@ Verification script for fix_errors/benchmark.yaml.
 This script verifies that all test files referenced in the benchmark YAML actually exist.
 """
 
-import yaml
-import sys
 from pathlib import Path
+import sys
+
+import yaml
 
 
 def verify_fix_errors():

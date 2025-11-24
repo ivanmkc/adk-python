@@ -16,9 +16,9 @@
 Verification script for predict_runtime_behavior_mc/benchmark.yaml.
 """
 
-import sys
 import inspect
 from pathlib import Path
+import sys
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[3]
@@ -26,10 +26,10 @@ if str(project_root) not in sys.path:
     sys.path.append(str(project_root / "src"))
 
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.agents.loop_agent import LoopAgent
-from google.adk.plugins.reflect_retry_tool_plugin import ReflectAndRetryToolPlugin
+from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.apps.app import App
+from google.adk.plugins.reflect_retry_tool_plugin import ReflectAndRetryToolPlugin
 
 
 def test_llm_agent_user_name_check():

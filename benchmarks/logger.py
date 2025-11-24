@@ -19,7 +19,8 @@ from datetime import datetime
 import json
 from pathlib import Path
 import time
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
 
 
 class BenchmarkLogger(abc.ABC):
@@ -39,7 +40,7 @@ class BenchmarkLogger(abc.ABC):
 
     @abc.abstractmethod
     def log_test_result(
-        self, 
+        self,
         benchmark_name: str,
         result: str,
         validation_error: Optional[str],
@@ -68,7 +69,7 @@ class ConsoleBenchmarkLogger(BenchmarkLogger):
         print(f"Prompt:\n{prompt}\n")
 
     def log_test_result(
-        self, 
+        self,
         benchmark_name: str,
         result: str,
         validation_error: Optional[str],
@@ -109,7 +110,7 @@ class TraceMarkdownLogger(BenchmarkLogger):
             f.write(f"### Prompt\n```\n{prompt}\n```\n\n")
 
     def log_test_result(
-        self, 
+        self,
         benchmark_name: str,
         result: str,
         validation_error: Optional[str],
@@ -168,7 +169,7 @@ class JsonTraceLogger(BenchmarkLogger):
         )
 
     def log_test_result(
-        self, 
+        self,
         benchmark_name: str,
         result: str,
         validation_error: Optional[str],

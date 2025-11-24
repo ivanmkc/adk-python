@@ -17,8 +17,8 @@ Verification script for api_understanding/benchmark.yaml.
 """
 
 import inspect
-import sys
 from pathlib import Path
+import sys
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[3]
@@ -27,30 +27,31 @@ if str(project_root) not in sys.path:
 
 # Imports based on the "file" field in the benchmark YAML
 from google.adk.agents.base_agent import BaseAgent
-from google.adk.agents.sequential_agent import SequentialAgent
-from google.adk.runners import Runner, InMemoryRunner
-from google.adk.models.base_llm import BaseLlm
-from google.adk.evaluation.agent_evaluator import AgentEvaluator
-from google.adk.agents.loop_agent import LoopAgent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.agents.invocation_context import InvocationContext
 from google.adk.agents.llm_agent import LlmAgent
+from google.adk.agents.loop_agent import LoopAgent
+from google.adk.agents.parallel_agent import ParallelAgent
+from google.adk.agents.sequential_agent import SequentialAgent
+from google.adk.apps.app import App
+from google.adk.evaluation.agent_evaluator import AgentEvaluator
+from google.adk.events.event import Event
+from google.adk.models.base_llm import BaseLlm
 from google.adk.models.registry import LLMRegistry
 from google.adk.plugins.base_plugin import BasePlugin
-from google.adk.plugins.plugin_manager import PluginManager
-from google.adk.plugins.logging_plugin import LoggingPlugin
 from google.adk.plugins.global_instruction_plugin import GlobalInstructionPlugin
-from google.adk.agents.invocation_context import InvocationContext
-from google.adk.agents.callback_context import CallbackContext
+from google.adk.plugins.logging_plugin import LoggingPlugin
+from google.adk.plugins.plugin_manager import PluginManager
+from google.adk.runners import InMemoryRunner
+from google.adk.runners import Runner
 from google.adk.sessions.base_session_service import BaseSessionService
 from google.adk.sessions.session import Session
-from google.adk.tools.tool_context import ToolContext
-from google.adk.tools.function_tool import FunctionTool
-from google.adk.tools.tool_configs import ToolConfig
-from google.adk.tools.base_toolset import BaseToolset
-from google.adk.tools.google_search_tool import GoogleSearchTool
-from google.adk.agents.parallel_agent import ParallelAgent
-from google.adk.apps.app import App
-from google.adk.events.event import Event
 from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.base_toolset import BaseToolset
+from google.adk.tools.function_tool import FunctionTool
+from google.adk.tools.google_search_tool import GoogleSearchTool
+from google.adk.tools.tool_configs import ToolConfig
+from google.adk.tools.tool_context import ToolContext
 
 
 def test_base_agent():

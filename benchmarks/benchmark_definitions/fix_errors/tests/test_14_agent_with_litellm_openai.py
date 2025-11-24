@@ -18,8 +18,10 @@
 from __future__ import annotations
 
 import os
-import pytest
+
 from google.adk.agents import LlmAgent
+import pytest
+
 from benchmarks.test_helpers import run_agent_test
 
 # Skip this test if the OPENAI_API_KEY is not set.

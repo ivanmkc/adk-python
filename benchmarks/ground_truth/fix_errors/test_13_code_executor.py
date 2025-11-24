@@ -17,11 +17,10 @@
 from __future__ import annotations
 
 from google.adk.agents import LlmAgent
-from google.adk.code_executors.built_in_code_executor import (
-    BuiltInCodeExecutor,
-)
-from benchmarks.test_helpers import MODEL_NAME, run_agent_test
+from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
 
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
 root_agent = LlmAgent(

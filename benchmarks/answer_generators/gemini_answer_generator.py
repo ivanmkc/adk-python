@@ -14,31 +14,31 @@
 
 """An AnswerGenerator that uses the Gemini API to generate answers."""
 
-from google import genai
-
-from benchmarks.answer_generators.base import AnswerGenerator
-from benchmarks.validation_utils import TEMPLATES, load_snippet
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    BaseBenchmarkCase,
-    FixErrorBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    GeneratedAnswer,
-    FixErrorAnswerOutput,
-    ApiUnderstandingAnswerOutput,
-    MultipleChoiceAnswerOutput,
-    AnswerTemplate,
-)
-
-
 import hashlib
 from pathlib import Path
+
+from benchmarks.answer_generators.base import AnswerGenerator
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingAnswerOutput
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import FixErrorAnswerOutput
+from benchmarks.data_models import FixErrorBenchmarkCase
+from benchmarks.data_models import GeneratedAnswer
+from benchmarks.data_models import MultipleChoiceAnswerOutput
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.validation_utils import load_snippet
+from benchmarks.validation_utils import TEMPLATES
+from google import genai
+
 
 class GeminiAnswerGenerator(AnswerGenerator):
     """An AnswerGenerator that uses the Gemini API."""
 
     def __init__(
-        self, model_name: str = "gemini-3-pro-preview", context: str | Path | None = None
+        self,
+        model_name: str = "gemini-3-pro-preview",
+        context: str | Path | None = None,
     ):
         super().__init__()
         self.model_name = model_name
@@ -57,10 +57,12 @@ class GeminiAnswerGenerator(AnswerGenerator):
                 # For string context, always use a stable hash
                 context_id = self.context.strip()
                 if context_id:
-                    context_hash_digest = hashlib.md5(context_id.encode('utf-8')).hexdigest()[:8]
+                    context_hash_digest = hashlib.md5(
+                        context_id.encode("utf-8")
+                    ).hexdigest()[:8]
                     return f"{base_name}-with-context-hash-{context_hash_digest}"
         return base_name
-        
+
     def _get_context_content(self) -> str:
         """Retrieves the context content, reading from file if necessary."""
         if not self.context:
@@ -99,8 +101,6 @@ class GeminiAnswerGenerator(AnswerGenerator):
         if "required" in json_schema and "benchmark_type" in json_schema["required"]:
             json_schema["required"].remove("benchmark_type")
 
-    
-
         response = await self.client.models.generate_content(
             model=self.model_name,
             contents=prompt,
@@ -109,7 +109,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
                 "response_json_schema": json_schema,
             },
         )
-        
+
         output = response_schema.model_validate_json(response.text)
 
         return GeneratedAnswer(output=output), prompt
@@ -177,13 +177,20 @@ class GeminiAnswerGenerator(AnswerGenerator):
         if context_content:
             prompt += f"Context:\n{context_content}\n\n"
 
-        code_context_file = case.code_context.file if case.code_context else case.test_file
+        code_context_file = (
+            case.code_context.file if case.code_context else case.test_file
+        )
 
         # Replace the code block with a placeholder
         import re
 
         context_code = self._get_llm_context_from_file(code_context_file)
-        context_code = re.sub(r"# BEGIN: CODE.*# END: CODE", "[YOUR CODE GOES HERE]", context_code, flags=re.DOTALL)
+        context_code = re.sub(
+            r"# BEGIN: CODE.*# END: CODE",
+            "[YOUR CODE GOES HERE]",
+            context_code,
+            flags=re.DOTALL,
+        )
 
         prompt += (
             "Fill in the missing code in the file below:\n"

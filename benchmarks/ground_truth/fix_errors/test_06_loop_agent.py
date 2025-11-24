@@ -19,8 +19,9 @@ from __future__ import annotations
 from google.adk.agents import LoopAgent
 from google.adk.agents.llm_agent import InstructionProvider
 from google.adk.sessions import Session
-from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
 
+from benchmarks.test_helpers import create_basic_llm_agent
+from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
 looper_agent = create_basic_llm_agent(

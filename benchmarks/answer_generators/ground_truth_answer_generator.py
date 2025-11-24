@@ -14,20 +14,18 @@
 
 """An answer generator that returns the ground truth answer."""
 
-import re
 from pathlib import Path
+import re
 
 from benchmarks.answer_generators.base import AnswerGenerator
-from benchmarks.data_models import (
-    ApiUnderstandingAnswerOutput,
-    ApiUnderstandingBenchmarkCase,
-    BaseBenchmarkCase,
-    FixErrorAnswerOutput,
-    FixErrorBenchmarkCase,
-    GeneratedAnswer,
-    MultipleChoiceAnswerOutput,
-    MultipleChoiceBenchmarkCase,
-)
+from benchmarks.data_models import ApiUnderstandingAnswerOutput
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import FixErrorAnswerOutput
+from benchmarks.data_models import FixErrorBenchmarkCase
+from benchmarks.data_models import GeneratedAnswer
+from benchmarks.data_models import MultipleChoiceAnswerOutput
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
 
 
 class GroundTruthAnswerGenerator(AnswerGenerator):

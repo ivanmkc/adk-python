@@ -17,13 +17,14 @@ Unit tests for verifying code prediction benchmarks.
 Dynamically loads 'benchmark.yaml', executes code snippets, and asserts outputs.
 """
 
-import sys
-import io
 import contextlib
-import yaml
-import re
-import pytest
+import io
 from pathlib import Path
+import re
+import sys
+
+import pytest
+import yaml
 
 # Add project root to sys.path so we can import google.adk.*
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -104,14 +105,12 @@ def execute_snippet(code_str: str) -> str:
     # (mimicking a context where these are available, or fixing snippets that omitted them)
     try:
         from google.adk.agents.llm_agent import LlmAgent
-        from google.adk.agents.sequential_agent import SequentialAgent
         from google.adk.agents.loop_agent import LoopAgent
         from google.adk.agents.parallel_agent import ParallelAgent
+        from google.adk.agents.sequential_agent import SequentialAgent
         from google.adk.apps.app import App
+        from google.adk.plugins.reflect_retry_tool_plugin import ReflectAndRetryToolPlugin
         from google.adk.runners import Runner
-        from google.adk.plugins.reflect_retry_tool_plugin import (
-            ReflectAndRetryToolPlugin,
-        )
         from google.genai import types
 
         exec_globals.update(

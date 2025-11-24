@@ -16,20 +16,20 @@
 
 import abc
 import asyncio
+from pathlib import Path
 import sys
 import tempfile
-from pathlib import Path
-from typing import Generic, TypeVar, Optional
+from typing import Generic
+from typing import Optional
+from typing import TypeVar
 
 import pytest
 
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    BaseBenchmarkCase,
-    FixErrorBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    GeneratedAnswer,
-)
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import FixErrorBenchmarkCase
+from benchmarks.data_models import GeneratedAnswer
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
 import benchmarks.validation_utils as validation_utils
 
 # A TypeVar to create a generic link between a runner and the case it handles.

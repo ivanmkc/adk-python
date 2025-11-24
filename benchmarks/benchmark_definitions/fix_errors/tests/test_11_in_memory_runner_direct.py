@@ -21,6 +21,7 @@ from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.runners import InMemoryRunner
 from google.genai import types
+
 from benchmarks.test_helpers import MODEL_NAME
 
 
@@ -45,6 +46,8 @@ async def run_test() -> str:
         if event.is_final_response() and event.content and event.content.parts:
             final_response = event.content.parts[0].text
     return final_response
+
+
 # LLM_CONTEXT_END
 
 

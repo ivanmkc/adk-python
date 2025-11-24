@@ -17,10 +17,11 @@
 
 from __future__ import annotations
 
-import pytest
 from google.adk.agents import ParallelAgent
-from benchmarks.test_helpers import create_basic_llm_agent, run_agent_test
+import pytest
 
+from benchmarks.test_helpers import create_basic_llm_agent
+from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
 # END: CODE

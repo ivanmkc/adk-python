@@ -17,23 +17,19 @@
 import abc
 import enum
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Annotated,
-    Literal,
-    Union,
-    Optional,
-)
+from typing import Annotated
+from typing import Literal
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
 import pydantic
 from pydantic import Field
 
 if TYPE_CHECKING:
-    from benchmarks.benchmark_runner import (
-        BaseBenchmarkRunner,
-        PytestBenchmarkRunner,
-        ApiUnderstandingRunner,
-    )
+    from benchmarks.benchmark_runner import ApiUnderstandingRunner
+    from benchmarks.benchmark_runner import BaseBenchmarkRunner
+    from benchmarks.benchmark_runner import PytestBenchmarkRunner
 
 
 class BenchmarkType(str, enum.Enum):

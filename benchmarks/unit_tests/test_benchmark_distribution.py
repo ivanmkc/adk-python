@@ -20,12 +20,15 @@ Dynamically discovers all MC benchmark files and verifies distribution both
 per-file and globally.
 """
 
-import yaml
-import pytest
-import math
 from collections import Counter
+import math
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+
+import pytest
+import yaml
 
 # Define project root
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

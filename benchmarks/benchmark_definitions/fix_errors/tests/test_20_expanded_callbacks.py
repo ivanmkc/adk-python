@@ -17,15 +17,16 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import patch
 
 from google.adk.agents import LlmAgent
-from google.adk.tools.function_tool import FunctionTool
 from google.adk.apps import App
-from google.adk.runners import InMemoryRunner
-from google.genai import types
 from google.adk.models.llm_response import LlmResponse
+from google.adk.runners import InMemoryRunner
+from google.adk.tools.function_tool import FunctionTool
+from google.genai import types
+import pytest
+
 from benchmarks.test_helpers import MODEL_NAME
 
 

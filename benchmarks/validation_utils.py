@@ -14,14 +14,18 @@
 
 """Utilities for validating generated answers against templates."""
 
-import re
 import enum
 from pathlib import Path
-from typing import Any, Callable, Coroutine, Union
+import re
+from typing import Any
+from typing import Callable
+from typing import Coroutine
+from typing import Union
 
 import pydantic
-from benchmarks.data_models import AnswerTemplate, StringMatchAnswer
 
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import StringMatchAnswer
 
 # --- Custom Exceptions ---
 
@@ -124,47 +128,48 @@ def validate_answer_against_template(answer: str, template: AnswerTemplate):
 
     regex = template_info.regex
 
+
 def load_snippet(ref: Any) -> str:
     """
     Loads a code snippet from a file, including the file header (imports/setup).
-    
+
     Args:
         ref: A CodeSnippetRef object or a dict with 'file' and 'section' keys.
-    
+
     Returns:
         The content of the snippet including the file header.
-    
+
     Raises:
         FileNotFoundError: If the referenced file does not exist.
         ValueError: If the section is not found in the file.
     """
     # Determine project root (benchmarks/.. -> root)
     project_root = Path(__file__).resolve().parents[1]
-    
+
     if isinstance(ref, dict):
-        file_rel_path = ref['file']
-        section = ref['section']
+        file_rel_path = ref["file"]
+        section = ref["section"]
     else:
         # Assume CodeSnippetRef object
         file_rel_path = ref.file
         section = ref.section
-        
+
     file_path = project_root / file_rel_path
-    
+
     if not file_path.exists():
         raise FileNotFoundError(f"Snippet file not found: {file_path}")
-        
-    with open(file_path, 'r') as f:
+
+    with open(file_path, "r") as f:
         lines = f.readlines()
-        
+
     header = []
     snippet = []
     in_snippet = False
     found_snippet = False
-    
+
     # Header is everything before the first `[start:` tag.
     header_done = False
-    
+
     for line in lines:
         if "# --8<-- [start:" in line:
             header_done = True
@@ -172,19 +177,20 @@ def load_snippet(ref: Any) -> str:
                 in_snippet = True
                 found_snippet = True
             continue
-            
+
         if "# --8<-- [end:" in line:
             if f"[end:{section}]" in line:
                 in_snippet = False
             continue
-            
+
         if in_snippet:
             snippet.append(line)
         elif not header_done:
             header.append(line)
-            
+
     if not found_snippet:
         raise ValueError(f"Section '{section}' not found in {file_path}")
 
     import textwrap
+
     return "".join(header + [textwrap.dedent("".join(snippet))])

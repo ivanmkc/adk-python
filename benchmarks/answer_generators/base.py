@@ -15,13 +15,10 @@
 """Abstract base class for answer generators."""
 
 import abc
-
-from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer
-
-
 from typing import Optional
 
-from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer
+from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import GeneratedAnswer
 from benchmarks.logger import BenchmarkLogger
 
 
@@ -43,4 +40,3 @@ class AnswerGenerator(abc.ABC):
     ) -> GeneratedAnswer:
         """Generates an answer for a given benchmark case."""
         pass
-

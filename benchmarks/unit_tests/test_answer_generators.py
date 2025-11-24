@@ -15,32 +15,30 @@
 """Unit tests for the answer generators."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+import sys
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
-import sys
-from pathlib import Path
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[2]
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
 
-from benchmarks.answer_generators import (
-    AdkAnswerGenerator,
-    GeminiAnswerGenerator,
-    GroundTruthAnswerGenerator,
-    TrivialAnswerGenerator,
-)
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    StringMatchAnswer,
-    AnswerTemplate,
-    MultipleChoiceBenchmarkCase,
-    CodeSnippetRef,
-)
-from google.genai import types
 from google.adk.events.event import Event  # Added import
+from google.genai import types
+
+from benchmarks.answer_generators import AdkAnswerGenerator
+from benchmarks.answer_generators import GeminiAnswerGenerator
+from benchmarks.answer_generators import GroundTruthAnswerGenerator
+from benchmarks.answer_generators import TrivialAnswerGenerator
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import CodeSnippetRef
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import StringMatchAnswer
 
 
 @pytest.fixture
@@ -114,18 +112,22 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
 @pytest.mark.asyncio
 async def test_gemini_answer_generator_multiple_choice_with_snippet():
     """Tests GeminiAnswerGenerator with a MultipleChoiceBenchmarkCase containing a code snippet."""
-    
+
     # Create a dummy snippet file
     snippet_file = project_root / "dummy_snippet.py"
     with open(snippet_file, "w") as f:
-        f.write("# Header\n# --8<-- [start:test_section]\nprint('Hello')\n# --8<-- [end:test_section]\n")
-        
+        f.write(
+            "# Header\n# --8<-- [start:test_section]\nprint('Hello')\n# --8<-- [end:test_section]\n"
+        )
+
     try:
         case = MultipleChoiceBenchmarkCase(
             question="What does this code do?",
             options={"A": "Prints Hello", "B": "Nothing"},
             correct_answer="A",
-            code_snippet_ref=CodeSnippetRef(file="dummy_snippet.py", section="test_section")
+            code_snippet_ref=CodeSnippetRef(
+                file="dummy_snippet.py", section="test_section"
+            ),
         )
 
         with patch(
@@ -141,17 +143,18 @@ async def test_gemini_answer_generator_multiple_choice_with_snippet():
             generated_answer = await generator.generate_answer(case)
 
             assert generated_answer.output.answer == "A"
-            
+
             # Verify prompt contains the code
             call_args = mock_client.return_value.aio.models.generate_content.call_args
             prompt = call_args.kwargs["contents"]
             assert "Code:" in prompt
             assert "print('Hello')" in prompt
             assert "# Header" in prompt
-            
+
     finally:
         if snippet_file.exists():
             snippet_file.unlink()
+
 
 @pytest.mark.asyncio
 async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase):
