@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """Build integrity test for LlmAgent with artifacts."""
 
 from __future__ import annotations
@@ -23,15 +22,19 @@ import pytest
 from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
-# BEGIN: CODE
-# END: CODE
-# LLM_CONTEXT_END
-
 
 @pytest.mark.asyncio
 async def test_artifact_usage_in_instruction():
     """Tests that LlmAgent can use artifacts referenced in its instruction."""
     artifact_data = {"my_data": "important information"}
+
+    # BEGIN: CODE
+    agent = LlmAgent(
+        name="artifact_agent",
+        model=MODEL_NAME,
+        instruction="You are an assistant that uses provided data. The data is: {artifact.my_data}",
+    )
+    # END: CODE
 
     response = await run_agent_test(
         agent, "What is the data?", artifact_data=artifact_data

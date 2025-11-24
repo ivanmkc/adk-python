@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """12: An App instance that includes a basic plugin."""
 
 from __future__ import annotations
@@ -23,9 +22,29 @@ from google.adk.plugins import BasePlugin
 from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
 
+
 # BEGIN: CODE
+class SimplePlugin(BasePlugin):
+    """A simple plugin that adds a prefix to the response."""
+
+    def __init__(self) -> None:
+        super().__init__(name="simple_plugin")
+
+    async def after_agent_callback(self, **kwargs) -> None:
+        # This is a simplified example. A real plugin would modify the event.
+        print("SimplePlugin: after_agent_callback")
+
+
+root_agent = create_basic_llm_agent(
+    name="app_agent", instruction="You are an agent within an App."
+)
+
+app = App(
+    name="my_app",
+    root_agent=root_agent,
+    plugins=[SimplePlugin()],
+)
 # END: CODE
-# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

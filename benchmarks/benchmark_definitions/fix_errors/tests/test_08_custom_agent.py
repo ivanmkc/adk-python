@@ -28,6 +28,38 @@ from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+class CustomConditionalAgent(BaseAgent):
+    """A custom agent that runs one of two sub-agents based on session state."""
+
+    agent_a: LlmAgent
+    agent_b: LlmAgent
+
+    async def _run_async_impl(
+        self, ctx: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        should_run_a = ctx.session.state.get("run_agent_a", False)
+
+        if should_run_a:
+            async for event in self.agent_a.run_async(ctx):
+                yield event
+        else:
+            async for event in self.agent_b.run_async(ctx):
+                yield event
+
+
+agent_a = create_basic_llm_agent(
+    name="agent_a", instruction="Respond with only the text: Agent A was chosen."
+)
+agent_b = create_basic_llm_agent(
+    name="agent_b", instruction="Respond with only the text: Agent B was chosen."
+)
+
+root_agent = CustomConditionalAgent(
+    name="custom_conditional_agent",
+    agent_a=agent_a,
+    agent_b=agent_b,
+    sub_agents=[agent_a, agent_b],
+)
 # END: CODE
 # LLM_CONTEXT_END
 

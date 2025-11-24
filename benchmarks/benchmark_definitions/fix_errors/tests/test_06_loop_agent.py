@@ -23,6 +23,16 @@ from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+looper_agent = create_basic_llm_agent(
+    name="looper_agent",
+    instruction="This is a loop.",
+)
+
+root_agent = LoopAgent(
+    name="loop_coordinator",
+    sub_agents=[looper_agent],
+    max_iterations=2,
+)
 # END: CODE
 # LLM_CONTEXT_END
 

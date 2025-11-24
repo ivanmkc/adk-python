@@ -26,6 +26,12 @@ from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+root_agent = LlmAgent(
+    name="tool_agent",
+    model=MODEL_NAME,
+    instruction="Use the `basic_tool` with the query 'test'.",
+    tools=[FunctionTool(func=basic_tool)],
+)
 # END: CODE
 # LLM_CONTEXT_END
 

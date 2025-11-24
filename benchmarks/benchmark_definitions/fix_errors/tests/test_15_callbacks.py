@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """15: An LlmAgent with an after_model_callback."""
 
 from __future__ import annotations
@@ -33,8 +32,13 @@ def my_callback(**kwargs):
 
 
 # BEGIN: CODE
+root_agent = LlmAgent(
+    name="callback_agent",
+    model=MODEL_NAME,
+    instruction="You are a helpful assistant.",
+    after_model_callback=my_callback,
+)
 # END: CODE
-# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

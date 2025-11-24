@@ -24,6 +24,16 @@ from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+agent_one = create_basic_llm_agent(
+    name="agent_one", instruction="This is the first agent. Respond with 'one'."
+)
+agent_two = create_basic_llm_agent(
+    name="agent_two", instruction="This is the second agent. Respond with 'two'."
+)
+
+root_agent = SequentialAgent(
+    name="sequential_coordinator", sub_agents=[agent_one, agent_two]
+)
 # END: CODE
 # LLM_CONTEXT_END
 

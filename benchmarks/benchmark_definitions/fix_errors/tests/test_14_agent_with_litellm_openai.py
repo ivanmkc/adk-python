@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """14: An LlmAgent using an OpenAI model via LiteLlm."""
 
 from __future__ import annotations
@@ -30,8 +29,14 @@ pytestmark = pytest.mark.skipif(
 )
 
 # BEGIN: CODE
+from google.adk.models.lite_llm import LiteLlm
+
+root_agent = LlmAgent(
+    model=LiteLlm(model="openai/gpt-3.5-turo"),
+    name="openai_agent",
+    instruction="You are a helpful assistant.",
+)
 # END: CODE
-# LLM_CONTEXT_END
 
 
 async def run_test() -> str:
@@ -45,6 +50,9 @@ def assert_test(response: str):
     assert "Hello" in response
 
 
+@pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+)
 async def test_agent_with_litellm_openai():
     """Tests that an agent can use an OpenAI model via LiteLlm."""
     response = await run_test()

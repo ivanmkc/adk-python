@@ -59,6 +59,12 @@ env/bin/pytest benchmarks/test_benchmarks.py
 ```
 A successful run is a prerequisite for meaningful evaluation of other answer generators.
 
+### Running Benchmark Tests
+To run all the benchmark tests directly, you can use the following command from the root of the project:
+```bash
+python -m pytest ./benchmarks/
+```
+
 ### 2. Evaluating Candidate Answer Generators
 
 This is the primary purpose of the framework. The goal is to run one or more experimental `AnswerGenerator`s against the benchmark suites to gather performance metrics. This is not a simple pass/fail test but an experiment to produce a comparative analysis.

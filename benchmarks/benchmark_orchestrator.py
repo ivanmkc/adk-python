@@ -63,17 +63,18 @@ async def _run_single_benchmark(
 
             async for attempt in retryer:
                 with attempt:
-                    generated_answer, prompt_content = await generator.generate_answer(
+                    generated_answer = await generator.generate_answer(
                         case
                     )
 
         except Exception as e:
             error_message = f"Generation failed after {max_retries} retries: {e}"
-            logger.log_generation_failure(
-                benchmark_name=case.get_identifier(),
-                error_message=error_message,
-                prompt=prompt_content,
-            )
+            if logger:
+                logger.log_generation_failure(
+                    benchmark_name=case.get_identifier(),
+                    error_message=error_message
+                )
+                
             return BenchmarkRunResult(
                 suite=str(Path(suite_file).absolute()),
                 benchmark_name=case.get_identifier(),
@@ -156,5 +157,6 @@ async def run_benchmarks(
     )
     results = [await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks))]
 
-    logger.finalize_run()
+    if logger:
+        logger.finalize_run()
     return results

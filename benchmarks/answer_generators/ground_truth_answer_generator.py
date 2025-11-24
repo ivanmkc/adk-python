@@ -16,6 +16,7 @@
 
 from pathlib import Path
 import re
+import textwrap
 
 from benchmarks.answer_generators.base import AnswerGenerator
 from benchmarks.data_models import ApiUnderstandingAnswerOutput
@@ -47,10 +48,11 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
 
         with open(file_path, "r") as f:
             content = f.read()
-        match = re.search(r"# BEGIN: CODE\n(.*?)# END: CODE", content, re.DOTALL)
+        match = re.search(r"# BEGIN: CODE.*?\s*\n(.*?)\s*# END: CODE", content, re.DOTALL)
         if not match:
             raise ValueError(f"Could not find code snippet in {file_path}")
-        return textwrap.dedent(match.group(1)).strip()
+        # Dedent the extracted code to ensure it's at a consistent base level
+        return textwrap.dedent(match.group(1))
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase

@@ -28,6 +28,11 @@ from benchmarks.test_helpers import MODEL_NAME
 async def run_test() -> str:
     """Runs the agent and returns the response."""
     # BEGIN: CODE
+    agent = LlmAgent(
+        name="runnable_agent",
+        model=MODEL_NAME,
+        instruction="You are a runnable agent.",
+    )
     # END: CODE
     app = App(name="runner_test_app", root_agent=agent)
     runner = InMemoryRunner(app=app)

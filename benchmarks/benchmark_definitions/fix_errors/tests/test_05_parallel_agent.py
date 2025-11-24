@@ -24,6 +24,18 @@ from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+agent_one = create_basic_llm_agent(
+    name="agent_one",
+    instruction="Respond with only the text: This is the first parallel agent.",
+)
+agent_two = create_basic_llm_agent(
+    name="agent_two",
+    instruction="Respond with only the text: This is the second parallel agent.",
+)
+
+root_agent = ParallelAgent(
+    name="parallel_coordinator", sub_agents=[agent_one, agent_two]
+)
 # END: CODE
 # LLM_CONTEXT_END
 

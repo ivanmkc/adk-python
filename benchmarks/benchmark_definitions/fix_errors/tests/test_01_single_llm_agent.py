@@ -23,6 +23,11 @@ from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+root_agent = LlmAgent(
+    name="single_agent",
+    model=MODEL_NAME,
+    instruction="You are a helpful assistant.",
+)
 # END: CODE
 # LLM_CONTEXT_END
 

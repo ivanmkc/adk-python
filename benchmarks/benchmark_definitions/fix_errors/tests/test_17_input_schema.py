@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """Build integrity test for LlmAgent with input_schema."""
 
 from __future__ import annotations
@@ -31,14 +30,17 @@ class UserInfo(BaseModel):
     age: int = Field(description="The user's age.")
 
 
-# BEGIN: CODE
-# END: CODE
-# LLM_CONTEXT_END
-
-
 @pytest.mark.asyncio
 async def test_input_schema_validation():
     """Tests that LlmAgent respects input_schema for structured input."""
+    # BEGIN: CODE
+    agent = LlmAgent(
+        name="input_schema_agent",
+        model=MODEL_NAME,
+        instruction="You are an assistant that processes user information. Extract the name and age from the input.",
+        input_schema=UserInfo,
+    )
+    # END: CODE
     response = await run_agent_test(agent, '{"name": "Alice", "age": 30}')
     assert "Alice" in response and "30" in response
 

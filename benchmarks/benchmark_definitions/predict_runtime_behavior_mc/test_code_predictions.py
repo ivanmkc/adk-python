@@ -130,34 +130,20 @@ def execute_snippet(code_str: str) -> str:
 
     with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
         try:
-            # Debug: print code being executed (will be captured in stdout if not careful, but we want to see it in test failure)
-            # Actually, better to print to sys.__stdout__
+            # Debug: print code being executed
             # sys.__stdout__.write(f"\n--- Executing ---\n{code_str}\n-----------------\n")
-            exec(code_str, exec_globals)
-        except Exception as e:
-            # Print exception to the captured stdout so we can match it against options
-            # like "Error: ..." or "ValueError: ..."
-            # However, the benchmark questions usually format exceptions in a specific way.
-            # Let's print the exception type and message if not printed by the code.
+            
+            # Use compile to catch syntax errors before execution
+            compiled_code = compile(code_str, '<string>', 'exec')
+            exec(compiled_code, exec_globals)
 
+        except Exception as e:
+            # Capture any exception, including SyntaxError
             error_name = type(e).__name__
-            if error_name == "ValidationError":
-                # Extract clean error message from Pydantic ValidationError
-                try:
-                    # Pydantic V2
-                    errors = e.errors()
-                    if errors:
-                        first_msg = errors[0].get("msg", str(e))
-                        # Often starts with "Value error, "
-                        if first_msg.startswith("Value error, "):
-                            first_msg = first_msg[len("Value error, ") :]
-                        print(f"ValueError: {first_msg}")
-                    else:
-                        print(f"{error_name}: {e}")
-                except:
-                    print(f"{error_name}: {e}")
-            else:
-                print(f"{error_name}: {e}")
+            
+            # Format the error message to be clean and consistent
+            error_message = str(e).replace("\n", " ")
+            print(f"{error_name}: {error_message}")
 
     return f.getvalue().strip()
 

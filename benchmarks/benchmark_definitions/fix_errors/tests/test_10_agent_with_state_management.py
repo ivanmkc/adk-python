@@ -24,6 +24,26 @@ from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+writer_agent = LlmAgent(
+    name="writer_agent",
+    model=MODEL_NAME,
+    instruction="The secret word is 'xyz'. Respond with only that word.",
+    output_key="secret_word",
+)
+
+reader_agent = LlmAgent(
+    name="reader_agent",
+    model=MODEL_NAME,
+    instruction=(
+        "The secret word is in the session state with the key '{secret_word}'."
+        " Repeat the word back to the user."
+    ),
+)
+
+root_agent = SequentialAgent(
+    name="state_management_coordinator",
+    sub_agents=[writer_agent, reader_agent],
+)
 # END: CODE
 # LLM_CONTEXT_END
 

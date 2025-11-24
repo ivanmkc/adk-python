@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """13: An LlmAgent with a BuiltInCodeExecutor."""
 
 from __future__ import annotations
@@ -24,8 +23,13 @@ from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+root_agent = LlmAgent(
+    name="code_exec_agent",
+    model=MODEL_NAME,
+    instruction="You are a helpful assistant. Use the code executor to calculate 2 + 2.",
+    code_executor=BuiltInCodeExecutor(),
+)
 # END: CODE
-# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

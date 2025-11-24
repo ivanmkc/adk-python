@@ -76,7 +76,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase
-    ) -> tuple[GeneratedAnswer, str]:
+    ) -> GeneratedAnswer:
         """Generates an answer using the Gemini API's structured output feature."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
             prompt = self._create_prompt_for_fix_error(benchmark_case)
@@ -112,7 +112,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
 
         output = response_schema.model_validate_json(response.text)
 
-        return GeneratedAnswer(output=output), prompt
+        return GeneratedAnswer(output=output)
 
     def _get_llm_context_from_file(self, file_path: Path) -> str:
         """Reads a file and extracts the content between LLM_CONTEXT_BEGIN and LLM_CONTEXT_END tags."""

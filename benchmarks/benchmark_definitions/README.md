@@ -23,6 +23,12 @@ Each benchmark suite directory (e.g., `fix_errors/`) contains a `verify.py` scri
 2. All referenced test files exist.
 3. Test files contain the required placeholders (e.g., `# BEGIN: CODE` and `# END: CODE`).
 
+## Running Tests
+To run the `fix_errors` tests directly, you can use the following command from the root of the project:
+```bash
+python -m pytest ./benchmarks/benchmark_definitions/fix_errors/tests/
+```
+
 To run a verification script, execute it using the project's Python environment:
 
 ```bash

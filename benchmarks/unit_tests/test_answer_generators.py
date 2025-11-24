@@ -94,7 +94,7 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
     ) as mock_client:
         mock_response = MagicMock()
         mock_response.text = (
-            '{"code": "mocked class", "fully_qualified_class_name": "mocked.module"}'
+            '{"code": "mocked class", "fully_qualified_class_name": "mocked.module", "rationale": "mocked rationale"}'
         )
         # The generator uses client.aio.models.generate_content
         mock_client.return_value.aio.models.generate_content = AsyncMock(
@@ -134,7 +134,7 @@ async def test_gemini_answer_generator_multiple_choice_with_snippet():
             "benchmarks.answer_generators.gemini_answer_generator.genai.Client"
         ) as mock_client:
             mock_response = MagicMock()
-            mock_response.text = '{"answer": "A"}'
+            mock_response.text = '{"answer": "A", "rationale": "mocked rationale"}'
             mock_client.return_value.aio.models.generate_content = AsyncMock(
                 return_value=mock_response
             )
@@ -176,7 +176,7 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
                 content=types.Content(
                     parts=[
                         types.Part(
-                            text='{"code": "adk class", "fully_qualified_class_name": "adk.module"}'
+                            text='{"code": "adk class", "fully_qualified_class_name": "adk.module", "rationale": "mocked rationale"}'
                         )
                     ]
                 ),

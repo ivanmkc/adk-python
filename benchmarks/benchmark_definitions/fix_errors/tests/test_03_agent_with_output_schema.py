@@ -27,6 +27,12 @@ from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+root_agent = LlmAgent(
+    name="structured_output_agent",
+    model=MODEL_NAME,
+    instruction="Respond with a JSON object that conforms to the provided schema.",
+    output_schema=BasicOutputSchema,
+)
 # END: CODE
 # LLM_CONTEXT_END
 
