@@ -19,8 +19,17 @@ import abc
 from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer
 
 
+from typing import Optional
+
+from benchmarks.data_models import BaseBenchmarkCase, GeneratedAnswer
+from benchmarks.logger import BenchmarkLogger
+
+
 class AnswerGenerator(abc.ABC):
     """Abstract base class for answer generators."""
+
+    def __init__(self, logger: Optional[BenchmarkLogger] = None):
+        self.logger = logger
 
     @property
     @abc.abstractmethod
@@ -34,3 +43,4 @@ class AnswerGenerator(abc.ABC):
     ) -> GeneratedAnswer:
         """Generates an answer for a given benchmark case."""
         pass
+
