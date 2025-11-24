@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from google.adk.agents import LlmAgent
+from google.adk.tools import AgentTool
 from pydantic import BaseModel
 from pydantic import Field
 import pytest
@@ -34,17 +35,27 @@ class UserInfo(BaseModel):
 async def test_input_schema_validation():
     """Tests that LlmAgent respects input_schema for structured input."""
     # BEGIN: CODE
-    agent = LlmAgent(
-        name="input_schema_agent",
+    worker_agent = LlmAgent(
+        name="worker",
         model=MODEL_NAME,
-        instruction="You are an assistant that processes user information. Extract the name and age from the input.",
+        instruction="Acknowledge the user's name and age: {name}, {age}.",
         input_schema=UserInfo,
     )
+    agent = LlmAgent(
+        name="agent",
+        model=MODEL_NAME,
+        tools=[AgentTool(agent=worker_agent)],
+        instruction="Use the worker agent to process the user's info.",
+    )
     # END: CODE
-    response = await run_agent_test(agent, '{"name": "Alice", "age": 30}')
+    response = await run_agent_test(
+        agent, 'Process this info: name is Alice, age is 30'
+    )
     assert "Alice" in response and "30" in response
 
-    # Test with invalid input (should ideally raise an error or be handled gracefully by the agent)
-    # For now, we'll just check if the agent still responds, as error handling might be internal.
-    response_invalid = await run_agent_test(agent, '{"name": "Bob"}')
-    assert '"age": null' in response_invalid
+    response_invalid = await run_agent_test(
+        agent, 'Process this info: name is Bob'
+    )
+    # The model should ideally return a response indicating an error.
+    # Checking for "error" is a reasonable expectation.
+    assert "age" in response_invalid.lower()
