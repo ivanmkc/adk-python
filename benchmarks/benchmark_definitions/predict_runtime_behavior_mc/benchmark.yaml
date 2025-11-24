@@ -2,7 +2,7 @@
 benchmarks:
 - question: 'Predict the error (if any) when running the following code:'
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_duplicate_agent_name.py
     section: duplicate_agent_name
   options:
     A: No error, but the second agent will be ignored.
@@ -16,7 +16,7 @@ benchmarks:
 
 - question: "Predict the error (if any) for this code:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_reserved_agent_name.py
     section: reserved_agent_name
   options:
     A: 'ValueError: Model name `gemini-2.5-flash` is invalid.'
@@ -30,7 +30,7 @@ benchmarks:
 
 - question: "Predict the print output order for the following code (assuming the runner executes successfully):"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_callback_execution_order.py
     section: callback_execution_order
   options:
     A: Pre, Post, (Agent Output)
@@ -44,7 +44,7 @@ benchmarks:
 
 - question: "Does the following code satisfy the specification: \"Create an agent that automatically retries failed tool calls up to 3 times\"?"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_retry_plugin_config.py
     section: retry_plugin_config
   options:
     A: No, max_retries defaults to 0 so it must be set to 4.
@@ -58,7 +58,7 @@ benchmarks:
 
 - question: "Predict the error:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_generate_content_config_tools_error.py
     section: generate_content_config_tools_error
   options:
     A: 'ValueError: All tools must be set via LlmAgent.tools.'
@@ -74,7 +74,7 @@ benchmarks:
 
 - question: "Predict the error:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_response_schema_invalid_arg.py
     section: response_schema_invalid_arg
   options:
     A: 'ValueError: Use `output_schema` instead of `response_schema`.'
@@ -88,7 +88,7 @@ benchmarks:
 
 - question: "Does this code satisfy the spec: \"Ensure the agent strictly follows a specific output JSON format defined by `MySchema`\"?"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_output_schema_json_enforcement.py
     section: output_schema_json_enforcement
   options:
     A: No, structured output is only supported in `RunConfig`.
@@ -102,7 +102,7 @@ benchmarks:
 
 - question: "Predict the behavior:\nWhat happens when this agent runs multiple times in the same session?"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_stateless_agent_history.py
     section: stateless_agent_history
   options:
     A: It remembers previous turns but ignores tool outputs.
@@ -117,7 +117,7 @@ benchmarks:
 - question: "Predict the error when defining a loop agent:
 (Assuming `sub_agents` is optional or defaults to empty list, but logic requires them)."
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_loop_agent_empty_subagents.py
     section: loop_agent_empty_subagents
   options:
     A: 'TypeError: `sub_agents` is required.'
@@ -132,7 +132,7 @@ benchmarks:
 - question: 'Spec: "Use a tool that requires a `session_id` parameter."
 How does ADK handle `session_id` injection?'
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_tool_session_id_injection.py
     section: tool_session_id_injection
   options:
     A: It throws an error because `session_id` is not in the user prompt.
@@ -147,7 +147,7 @@ How does ADK handle `session_id` injection?'
 - question: "Predict the print output:
 (Assuming Pydantic model behavior)."
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_agent_name_mutability.py
     section: agent_name_mutability
   options:
     A: a, then ValidationError (immutable)
@@ -161,7 +161,7 @@ How does ADK handle `session_id` injection?'
 
 - question: 'Predict the error:'
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_agent_clone_invalid_field.py
     section: agent_clone_invalid_field
   options:
     A: No error, field is added.
@@ -175,7 +175,7 @@ How does ADK handle `session_id` injection?'
 
 - question: 'Predict the standard output of the following Python code:'
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_event_repr_output.py
     section: event_repr_output
   options:
     A: 'response: Hello'
@@ -189,7 +189,7 @@ How does ADK handle `session_id` injection?'
 
 - question: 'Predict the standard output of the following Python code:'
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_session_state_mutability.py
     section: session_state_mutability
   options:
     A: 'Error: Session state is immutable'
@@ -203,7 +203,7 @@ How does ADK handle `session_id` injection?'
 
 - question: "Predict the standard output of the following Python code:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_function_tool_async_run.py
     section: function_tool_async_run
   options:
     A: '{''result'': 8}'
@@ -217,7 +217,7 @@ How does ADK handle `session_id` injection?'
 
 - question: "Predict the standard output of the following Python code:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_llm_agent_name_validation.py
     section: llm_agent_name_validation
   options:
     A: Caught Error
@@ -231,7 +231,7 @@ How does ADK handle `session_id` injection?'
 
 - question: "Predict the standard output of the following Python code:"
   code_snippet_ref:
-    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/snippets.py
+    file: benchmarks/benchmark_definitions/predict_runtime_behavior_mc/cases/test_event_extra_fields_error.py
     section: event_extra_fields_error
   options:
     A: random_field

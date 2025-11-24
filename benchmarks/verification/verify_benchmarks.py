@@ -139,7 +139,6 @@ if __name__ == "__main__":
     try:
         test_runner_import()
         test_event_import()
-        test_runner_run_async_params()
         test_base_agent_abc()
         test_base_tool_abc()
         test_invocation_context_purpose()

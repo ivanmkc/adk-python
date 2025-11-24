@@ -1,0 +1,721 @@
+# Google ADK Python: Definitive API Reference & Developer Guide
+
+This document provides a comprehensive technical reference for the Google Agent Development Kit (ADK) Python framework. It covers the public API surface, class signatures, usage constraints, and best practices.
+
+---
+
+## 1. Core Architecture
+
+The ADK architecture is built around three pillars:
+1.  **Agents:** The definitional blueprints (identity, instructions, tools).
+2.  **Apps:** The container for agents, plugins, and global configuration.
+3.  **Runners:** The stateless execution engine that orchestrates the agent lifecycle.
+
+### 1.1. Agents (`google.adk.agents`)
+
+All agents inherit from `BaseAgent`.
+
+#### `BaseAgent`
+The abstract base class for all agents.
+*   **Constructor:** `BaseAgent(name: str, description: str = '', sub_agents: list[BaseAgent] = [], before_agent_callback: BeforeAgentCallback | None = None, after_agent_callback: AfterAgentCallback | None = None)`
+*   **Constraints:**
+    *   **Name:** Must be a valid Python identifier (alphanumeric + underscore). **Cannot** be "user" (reserved).
+    *   **Ownership:** An agent instance can only be added as a sub-agent to **one** parent. Attempting to add the same instance to multiple parents raises a `ValueError`. Use `agent.clone()` to create copies.
+*   **Methods:**
+    *   `run_async(parent_context: InvocationContext) -> AsyncGenerator[Event, None]`: The main execution entry point.
+    *   `find_agent(name: str) -> BaseAgent | None`: Recursively searches for a sub-agent by name.
+    *   `clone(update: dict | None = None) -> BaseAgent`: Creates a copy. **Cannot** update `parent_agent` or non-existent fields.
+
+#### `LlmAgent`
+The primary agent class for LLM-backed interactions.
+
+*   **Constructor:**
+    ```python
+    LlmAgent(
+        name: str,  # Required.
+        model: str | BaseLlm = '',  # Required. E.g., "gemini-2.5-flash".
+        instruction: str | InstructionProvider = '',  # Dynamic instructions.
+        static_instruction: ContentUnion | None = None,  # Fixed/Cached instructions.
+        description: str = '', # Critical for delegation (planner uses this).
+        tools: list[ToolUnion] = [],  # List of tools.
+        planner: BasePlanner | None = None,  # For 'thinking_config' or planning.
+        input_schema: Type[BaseModel] | None = None,  # Pydantic CLASS.
+        output_schema: Type[BaseModel] | None = None,  # Pydantic CLASS.
+        output_key: str | None = None, # Save final output to session.state[key].
+        include_contents: Literal['default', 'none'] = 'default', # 'none' = Stateless.
+        generate_content_config: GenerateContentConfig | None = None,  # LLM params.
+        before_model_callback: BeforeModelCallback | None = None,
+        # ... callbacks
+    )
+    ```
+*   **Critical Constraints:**
+    *   **Tools:** Raw Python functions can be passed, but `FunctionTool` wrappers are preferred.
+    *   **Schemas:** Always pass the class type (e.g., `MyModel`), never an instance.
+    *   **Config:** `system_instruction`, `tools`, and `thinking_config` (via `planner`) belong in the agent constructor, **NOT** inside `generate_content_config`.
+    *   **Statelessness:** Setting `include_contents='none'` prevents the agent from seeing conversation history (useful for stateless tasks).
+
+#### `SequentialAgent`
+Executes a list of sub-agents in strict order.
+
+*   **Constructor:** `SequentialAgent(name: str, sub_agents: list[BaseAgent], ...)`
+*   **Constraint:** Does **NOT** accept `tools`.
+*   **Behavior:** Duplicate sub-agent names are allowed at runtime, though uniqueness is best practice.
+
+#### `ParallelAgent`
+Executes multiple sub-agents concurrently.
+
+*   **Constructor:** `ParallelAgent(name: str, sub_agents: list[BaseAgent], ...)`
+*   **Constraint:** Does **NOT** accept `max_workers` (managed automatically).
+
+#### `LoopAgent`
+Repeats execution of sub-agents.
+
+*   **Constructor:** `LoopAgent(name: str, sub_agents: list[BaseAgent], max_iterations: int | None = None, ...)`
+*   **Constraint:** `max_iterations` defaults to `None` (infinite loop) if not specified.
+
+### 1.2. Application (`google.adk.apps.App`)
+
+*   **Constructor:**
+    ```python
+    App(
+        name: str,
+        root_agent: BaseAgent,
+        plugins: list[BasePlugin] = [],
+        # ... configs
+    )
+    ```
+*   **Validation:** `extra='forbid'`, so passing unknown arguments (like `agents` instead of `root_agent`) raises `ValidationError`.
+
+### 1.3. Runner (`google.adk.runners.Runner`)
+
+*   **Constructor:**
+    ```python
+    Runner(
+        app: App,  # Mutually exclusive with agent/app_name
+        # OR
+        agent: BaseAgent,
+        app_name: str,
+        # ... services
+    )
+    ```
+*   **Methods:**
+    *   `run_async(
+      self,
+      *,
+      user_id: str,
+      session_id: str,
+      invocation_id: Optional[str] = None,
+      new_message: Optional[types.Content] = None,
+      state_delta: Optional[dict[str, Any]] = None,
+      run_config: Optional[RunConfig] = None,
+  ) -> AsyncGenerator[Event, None]`
+    *   `run_live(
+      self,
+      *,
+      user_id: Optional[str] = None,
+      session_id: Optional[str] = None,
+      live_request_queue: LiveRequestQueue,
+      run_config: Optional[RunConfig] = None,
+      session: Optional[Session] = None,
+  ) -> AsyncGenerator[Event, None]`
+    *   `run_debug(
+      self,
+      user_messages: str | list[str],
+      *,
+      user_id: str = 'debug_user_id',
+      session_id: str = 'debug_session_id',
+      run_config: RunConfig | None = None,
+      quiet: bool = False,
+      verbose: bool = False,
+  ) -> list[Event]`
+
+#### `InMemoryRunner`
+*   **Constructor:** `InMemoryRunner(agent: BaseAgent | None = None, app: App | None = None, ...)`. Stores state in RAM (lost on exit).
+
+---
+
+## 2. Models (`google.adk.models`)
+
+*   **`BaseLlm`**: Abstract base.
+*   **`LLMRegistry`**: `register(llm_cls)`.
+*   **`Gemini`**: `google.adk.models.google_llm.Gemini`.
+*   **`Claude`**: `google.adk.models.anthropic_llm.Claude`.
+
+---
+
+## 3. Tools (`google.adk.tools`)
+
+*   **`FunctionTool`** (`google.adk.tools.function_tool`):
+    *   Constructor: `FunctionTool(func: Callable, ...)` (Param is `func`, not `fn`).
+*   **`GoogleSearchTool`**: Native grounding (modifies request, doesn't run python code).
+*   **`OpenAPIToolset`**: Generates tools from OpenAPI specs.
+#### `ToolContext` (`google.adk.tools.tool_context`)
+```python
+from typing import Any, Optional, TYPE_CHECKING
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.auth.auth_credential import AuthCredential
+from google.adk.auth.auth_tool import AuthConfig
+
+if TYPE_CHECKING:
+  from google.adk.agents.invocation_context import InvocationContext
+  from google.adk.events.event_actions import EventActions
+  from google.adk.memory.base_memory_service import SearchMemoryResponse
+
+class ToolContext(CallbackContext):
+  # Attributes are defined in __init__ with super().__init__ and then assigned.
+  # For brevity, only key attributes are listed here:
+  # invocation_context (inherited from CallbackContext)
+  function_call_id: Optional[str]
+  tool_confirmation: Optional[ToolConfirmation]
+  
+  @property
+  def actions(self) -> EventActions: ...
+
+  def request_credential(self, auth_config: AuthConfig) -> None: ...
+  def get_auth_response(self, auth_config: AuthConfig) -> AuthCredential: ...
+  def request_confirmation(self, *, hint: Optional[str] = None, payload: Optional[Any] = None) -> None: ...
+  async def search_memory(self, query: str) -> SearchMemoryResponse: ...
+  # Inherits load_artifact, save_artifact, get_artifact_version, list_artifacts from CallbackContext
+```
+
+---
+
+## 4. Services & Persistence
+
+### 4.1. Session Service (`google.adk.sessions`)
+Manages conversation state (`Session` objects).
+
+#### `GetSessionConfig` (`google.adk.sessions.base_session_service`)
+```python
+from typing import Optional
+from pydantic import BaseModel
+
+class GetSessionConfig(BaseModel):
+  num_recent_events: Optional[int] = None
+  after_timestamp: Optional[float] = None
+```
+
+#### `ListSessionsResponse` (`google.adk.sessions.base_session_service`)
+```python
+from pydantic import BaseModel, Field
+from google.adk.sessions.session import Session
+
+class ListSessionsResponse(BaseModel):
+  sessions: list[Session] = Field(default_factory=list)
+```
+
+#### `BaseSessionService` (`google.adk.sessions.base_session_service`)
+```python
+import abc
+from typing import Any, Optional
+from google.adk.events.event import Event
+from google.adk.sessions.session import Session
+
+class BaseSessionService(abc.ABC):
+  async def create_session(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      state: Optional[dict[str, Any]] = None,
+      session_id: Optional[str] = None,
+  ) -> Session: ...
+
+  async def get_session(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      session_id: str,
+      config: Optional[GetSessionConfig] = None,
+  ) -> Optional[Session]: ...
+
+  async def list_sessions(
+      self, *, app_name: str, user_id: Optional[str] = None
+  ) -> ListSessionsResponse: ...
+
+  async def delete_session(
+      self, *, app_name: str, user_id: str, session_id: str
+  ) -> None: ...
+
+  async def append_event(self, session: Session, event: Event) -> Event: ...
+```
+*   **`Session`**: `state` is a mutable dict.
+### 4.3. Artifact Service (`google.adk.artifacts`)
+Storage for files/blobs generated during execution.
+
+#### `ArtifactVersion` (`google.adk.artifacts.base_artifact_service`)
+```python
+from datetime import datetime
+from typing import Any, Optional
+from pydantic import alias_generators, BaseModel, ConfigDict, Field
+
+class ArtifactVersion(BaseModel):
+  model_config = ConfigDict(alias_generator=alias_generators.to_camel, populate_by_name=True)
+
+  version: int = Field(description="Monotonically increasing identifier for the artifact version.")
+  canonical_uri: str = Field(description="Canonical URI referencing the persisted artifact payload.")
+  custom_metadata: dict[str, Any] = Field(default_factory=dict)
+  create_time: float = Field(default_factory=lambda: datetime.now().timestamp())
+  mime_type: Optional[str] = Field(default=None)
+```
+
+#### `BaseArtifactService` (`google.adk.artifacts.base_artifact_service`)
+```python
+import abc
+from typing import Any, Optional
+from google.genai import types
+
+class BaseArtifactService(abc.ABC):
+  async def save_artifact(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      artifact: types.Part,
+      session_id: Optional[str] = None,
+      custom_metadata: Optional[dict[str, Any]] = None,
+  ) -> int: ...
+
+  async def load_artifact(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      session_id: Optional[str] = None,
+      version: Optional[int] = None,
+  ) -> Optional[types.Part]: ...
+
+  async def list_artifact_keys(
+      self, *, app_name: str, user_id: str, session_id: Optional[str] = None
+  ) -> list[str]: ...
+
+  async def delete_artifact(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      session_id: Optional[str] = None,
+  ) -> None: ...
+
+  async def list_versions(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      session_id: Optional[str] = None,
+  ) -> list[int]: ...
+
+  async def list_artifact_versions(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      session_id: Optional[str] = None,
+  ) -> list[ArtifactVersion]: ...
+
+  async def get_artifact_version(
+      self,
+      *,
+      app_name: str,
+      user_id: str,
+      filename: str,
+      session_id: Optional[str] = None,
+      version: Optional[int] = None,
+  ) -> Optional[ArtifactVersion]: ...
+```
+
+---
+
+## 5. Plugins (`google.adk.plugins`)
+
+*   **Callbacks Order:** `before_agent` -> Agent Execution -> `after_agent`.
+#### `BigQueryLoggerConfig` (`google.adk.plugins.bigquery_agent_analytics_plugin`)
+```python
+from typing import Any, Callable, List, Optional
+import dataclasses
+
+@dataclasses.dataclass
+class BigQueryLoggerConfig:
+  enabled: bool = True
+  event_allowlist: Optional[List[str]] = None
+  event_denylist: Optional[List[str]] = None
+  content_formatter: Optional[Callable[[Any], str]] = None
+  shutdown_timeout: float = 5.0
+  client_close_timeout: float = 2.0
+  max_content_length: int = 500
+```
+
+#### `BigQueryAgentAnalyticsPlugin` (`google.adk.plugins.bigquery_agent_analytics_plugin`)
+Logs agent analytic events to Google BigQuery.
+```python
+from typing import Any, Optional
+from google.adk.plugins.base_plugin import BasePlugin
+from google.adk.agents.invocation_context import InvocationContext
+from google.genai import types
+from google.adk.events.event import Event
+from google.adk.agents.base_agent import BaseAgent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
+
+class BigQueryAgentAnalyticsPlugin(BasePlugin):
+  def __init__(
+      self,
+      project_id: str,
+      dataset_id: str,
+      table_id: str = "agent_events",
+      config: Optional[BigQueryLoggerConfig] = None,
+      **kwargs,
+  ): ...
+
+  async def on_user_message_callback(...) -> None: ...
+  async def before_run_callback(...) -> None: ...
+  async def on_event_callback(...) -> None: ...
+  async def after_run_callback(...) -> None: ...
+  async def before_agent_callback(...) -> None: ...
+  async def after_agent_callback(...) -> None: ...
+  async def before_model_callback(...) -> None: ...
+  async def after_model_callback(...) -> None: ...
+  async def before_tool_callback(...) -> None: ...
+  async def after_tool_callback(...) -> None: ...
+  async def on_model_error_callback(...) -> None: ...
+  async def on_tool_error_callback(...) -> None: ...
+  async def close(self) -> None: ...
+```
+    #### `LoggingPlugin` (`google.adk.plugins.logging_plugin`)
+Logs events and interactions to the console for debugging.
+```python
+from typing import Any, Optional, TYPE_CHECKING
+from google.genai import types
+from google.adk.agents.base_agent import BaseAgent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.events.event import Event
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
+from google.adk.plugins.base_plugin import BasePlugin
+
+if TYPE_CHECKING:
+  from google.adk.agents.invocation_context import InvocationContext
+
+class LoggingPlugin(BasePlugin):
+  def __init__(self, name: str = "logging_plugin"): ...
+  async def on_user_message_callback(
+      self,
+      *,
+      invocation_context: InvocationContext,
+      user_message: types.Content,
+  ) -> Optional[types.Content]: ...
+  async def before_run_callback(
+      self, *, invocation_context: InvocationContext
+  ) -> Optional[types.Content]: ...
+  async def on_event_callback(
+      self, *, invocation_context: InvocationContext, event: Event
+  ) -> Optional[Event]: ...
+  async def after_run_callback(
+      self, *, invocation_context: InvocationContext
+  ) -> Optional[None]: ...
+  async def before_agent_callback(
+      self, *, agent: BaseAgent, callback_context: CallbackContext
+  ) -> Optional[types.Content]: ...
+  async def after_agent_callback(
+      self, *, agent: BaseAgent, callback_context: CallbackContext
+  ) -> Optional[types.Content]: ...
+  async def before_model_callback(
+      self, *, callback_context: CallbackContext, llm_request: LlmRequest
+  ) -> Optional[LlmResponse]: ...
+  async def after_model_callback(
+      self, *, callback_context: CallbackContext, llm_response: LlmResponse
+  ) -> Optional[LlmResponse]: ...
+  async def on_model_error_callback(
+      self,
+      *,
+      callback_context: CallbackContext,
+      llm_request: LlmRequest,
+      error: Exception,
+  ) -> Optional[LlmResponse]: ...
+  async def before_tool_callback(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+  ) -> Optional[dict]: ...
+  async def after_tool_callback(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+      result: dict,
+  ) -> Optional[dict]: ...
+  async def on_tool_error_callback(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+      error: Exception,
+  ) -> Optional[dict]: ...
+```
+    #### `GlobalInstructionPlugin` (`google.adk.plugins.global_instruction_plugin`)
+Injects global instructions into all LLM requests.
+```python
+from typing import Optional, TYPE_CHECKING, Union
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.adk.plugins.base_plugin import BasePlugin
+
+if TYPE_CHECKING:
+  from google.adk.agents.llm_agent import InstructionProvider
+
+class GlobalInstructionPlugin(BasePlugin):
+  def __init__(
+      self,
+      global_instruction: Union[str, InstructionProvider] = "",
+      name: str = "global_instruction",
+  ) -> None: ...
+  async def before_model_callback(
+      self, *, callback_context: CallbackContext, llm_request: LlmRequest
+  ) -> Optional[LlmResponse]: ...
+```
+    #### `SaveFilesAsArtifactsPlugin` (`google.adk.plugins.save_files_as_artifacts_plugin`)
+Automatically saves file inputs/outputs as artifacts.
+```python
+from typing import Optional, TYPE_CHECKING
+from google.genai import types
+from google.adk.plugins.base_plugin import BasePlugin
+
+if TYPE_CHECKING:
+  from google.adk.agents.invocation_context import InvocationContext
+
+class SaveFilesAsArtifactsPlugin(BasePlugin):
+  def __init__(self, name: str = 'save_files_as_artifacts_plugin'): ...
+  async def on_user_message_callback(
+      self,
+      *,
+      invocation_context: InvocationContext,
+      user_message: types.Content,
+  ) -> Optional[types.Content]: ...
+```
+    #### `TrackingScope` (`google.adk.plugins.reflect_retry_tool_plugin`)
+```python
+from enum import Enum
+
+class TrackingScope(Enum):
+  INVOCATION = "invocation"
+  GLOBAL = "global"
+```
+
+#### `ToolFailureResponse` (`google.adk.plugins.reflect_retry_tool_plugin`)
+```python
+from pydantic import BaseModel
+
+REFLECT_AND_RETRY_RESPONSE_TYPE = "ERROR_HANDLED_BY_REFLECT_AND_RETRY_PLUGIN"
+
+class ToolFailureResponse(BaseModel):
+  response_type: str = REFLECT_AND_RETRY_RESPONSE_TYPE
+  error_type: str = ""
+  error_details: str = ""
+  retry_count: int = 0
+  reflection_guidance: str = ""
+```
+
+#### `ReflectAndRetryToolPlugin` (`google.adk.plugins.reflect_retry_tool_plugin`)
+Automatically retries failed tool calls.
+```python
+from typing import Any, Optional
+from google.adk.plugins.base_plugin import BasePlugin
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
+
+class ReflectAndRetryToolPlugin(BasePlugin):
+  def __init__(
+      self,
+      name: str = "reflect_retry_tool_plugin",
+      max_retries: int = 3,
+      throw_exception_if_retry_exceeded: bool = True,
+      tracking_scope: TrackingScope = TrackingScope.INVOCATION,
+  ): ...
+  async def after_tool_callback(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+      result: Any,
+  ) -> Optional[dict[str, Any]]: ...
+  async def extract_error_from_result(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+      result: Any,
+  ) -> Optional[dict[str, Any]]: ...
+  async def on_tool_error_callback(
+      self,
+      *,
+      tool: BaseTool,
+      tool_args: dict[str, Any],
+      tool_context: ToolContext,
+      error: Exception,
+  ) -> Optional[dict[str, Any]]: ...
+```
+    #### `ContextFilterPlugin` (`google.adk.plugins.context_filter_plugin`)
+Manages context window by filtering conversation history.
+```python
+from typing import Callable, List, Optional
+from google.adk.plugins.base_plugin import BasePlugin
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.llm_request import LlmRequest
+from google.adk.models.llm_response import LlmResponse
+from google.adk.events.event import Event
+
+class ContextFilterPlugin(BasePlugin):
+  def __init__(
+      self,
+      num_invocations_to_keep: Optional[int] = None, # Number of last invocations to keep.
+      custom_filter: Optional[Callable[[List[Event]], List[Event]]] = None,
+      name: str = "context_filter_plugin",
+  ): ...
+  async def before_model_callback(
+      self, *, callback_context: CallbackContext, llm_request: LlmRequest
+  ) -> Optional[LlmResponse]: ...
+```
+
+
+---
+
+## 6. Configuration Objects
+
+#### `RunConfig` (`google.adk.agents.run_config`)
+Configuration for runtime behavior.
+```python
+from enum import Enum
+from typing import Any, Optional
+from google.genai import types
+from pydantic import BaseModel, ConfigDict, Field
+
+class StreamingMode(Enum):
+  NONE = None
+  SSE = 'sse'
+  BIDI = 'bidi'
+
+class RunConfig(BaseModel):
+  model_config = ConfigDict(extra='forbid')
+
+  speech_config: Optional[types.SpeechConfig] = None
+  response_modalities: Optional[list[str]] = None
+  save_input_blobs_as_artifacts: bool = Field(default=False, deprecated=True)
+  support_cfc: bool = False
+  streaming_mode: StreamingMode = StreamingMode.NONE
+  output_audio_transcription: Optional[types.AudioTranscriptionConfig] = Field(default_factory=types.AudioTranscriptionConfig)
+  input_audio_transcription: Optional[types.AudioTranscriptionConfig] = Field(default_factory=types.AudioTranscriptionConfig)
+  realtime_input_config: Optional[types.RealtimeInputConfig] = None
+  enable_affective_dialog: Optional[bool] = None
+  proactivity: Optional[types.ProactivityConfig] = None
+  session_resumption: Optional[types.SessionResumptionConfig] = None
+  context_window_compression: Optional[types.ContextWindowCompressionConfig] = None
+  save_live_blob: bool = False
+  save_live_audio: bool = Field(default=False, deprecated=True) # DEPRECATED, use save_live_blob
+  max_llm_calls: int = 500 # Validated to be < sys.maxsize; <= 0 means unbounded
+  custom_metadata: Optional[dict[str, Any]] = None
+```
+
+#### `GenerateContentConfig` (`google.genai.types`)
+Configures the *generation process* of the LLM.
+```python
+from pydantic import BaseModel
+from typing import Optional, list # types, Content, Tool, ThinkingConfig are from google.genai.types
+
+class GenerateContentConfig(BaseModel):
+    temperature: float | None = None
+    top_p: float | None = None
+    top_k: int | None = None
+    candidate_count: int | None = None
+    max_output_tokens: int | None = None
+    stop_sequences: list[str] | None = None
+    # The following fields are NOT directly configurable here in LlmAgent's generate_content_config:
+    # tools: list[Tool] | None = None # Configure via LlmAgent(tools=...)
+    # system_instruction: Content | None = None # Configure via LlmAgent(instruction=...) or (static_instruction=...)
+    # response_schema: BaseModel | None = None # Configure via LlmAgent(output_schema=...)
+    # thinking_config: types.ThinkingConfig | None = None # Configure via LlmAgent(planner=...)
+```
+#### `ContextCacheConfig` (`google.adk.agents.context_cache_config`)
+```python
+from pydantic import BaseModel, ConfigDict, Field
+
+class ContextCacheConfig(BaseModel):
+  model_config = ConfigDict(extra="forbid")
+
+  cache_intervals: int = Field(
+      default=10,
+      ge=1,
+      le=100,
+      description="Maximum number of invocations to reuse the same cache before refreshing it"
+  )
+
+  ttl_seconds: int = Field(
+      default=1800,  # 30 minutes
+      gt=0,
+      description="Time-to-live for cache in seconds",
+  )
+
+  min_tokens: int = Field(
+      default=0,
+      ge=0,
+      description=(
+          "Minimum estimated request tokens required to enable caching. This"
+          " compares against the estimated total tokens of the request (system"
+          " instruction + tools + contents). Context cache storage may have"
+          " cost. Set higher to avoid caching small requests where overhead may"
+          " exceed benefits."
+      ),
+  )
+```
+
+#### `EventsCompactionConfig` (`google.adk.apps.app`)
+```python
+from typing import Optional
+from pydantic import BaseModel, ConfigDict
+from google.adk.apps.base_events_summarizer import BaseEventsSummarizer
+
+class EventsCompactionConfig(BaseModel):
+  model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
+
+  summarizer: Optional[BaseEventsSummarizer] = None
+  compaction_interval: int # Number of new user-initiated invocations to trigger compaction.
+  overlap_size: int # Number of preceding invocations to include from last compacted range.
+```
+
+#### `ResumabilityConfig` (`google.adk.apps.app`)
+```python
+from pydantic import BaseModel
+
+class ResumabilityConfig(BaseModel):
+  is_resumable: bool = False # Whether the app supports agent resumption.
+```
+
+
+---
+
+## 7. Common Anti-Patterns
+
+1.  **Misplaced Config:** `tools`/`system_instruction`/`thinking_config` in `generate_content_config` (Error).
+2.  **Agent-as-Tool:** Passing `Agent` in `tools` list (Error). Use sub-agents.
+3.  **Instance Schemas:** Passing `input_schema=User()` (Error). Use class `User`.
+4.  **Orchestrator Tools:** `tools` in `SequentialAgent` (Ignored/Error).
+5.  **Name Validation:** Agent names with hyphens/spaces (Error).
+6.  **Shared Ownership:** Same agent instance in multiple parents (Error).
+7.  **Runner Init:** Providing both `app` and `agent` (Error).

@@ -19,6 +19,7 @@ import asyncio
 from pathlib import Path
 import sys
 import tempfile
+import textwrap
 from typing import Generic
 from typing import Optional
 from typing import TypeVar
@@ -73,34 +74,30 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
     """A benchmark runner that uses pytest to run the tests."""
 
     def _inject_code(self, content: str, code: str) -> str:
-        """Injects code between markers, respecting indentation."""
-        import textwrap
-
-        lines = content.splitlines()
-        new_lines = []
-        in_block = False
-
-        for line in lines:
-            if "# BEGIN: CODE" in line:
-                new_lines.append(line)
-                in_block = True
-
-                # Determine indentation from the marker line
-                indent = line[: line.find("# BEGIN: CODE")]
-
-                # Indent the code to match
-                if code:
-                    dedented_code = textwrap.dedent(code)
-                    indented_code = textwrap.indent(dedented_code, indent)
-                    new_lines.append(indented_code)
-
-            elif "# END: CODE" in line:
-                in_block = False
-                new_lines.append(line)
-            elif not in_block:
-                new_lines.append(line)
-
-        return "\n".join(new_lines)
+        """Injects code between the `BEGIN: CODE` and `END: CODE` markers."""
+        # This regex finds the content between the markers, preserving the markers
+        # themselves and capturing the indentation of the BEGIN marker.
+        pattern = re.compile(
+            r"(\s*)# BEGIN: CODE.*?\s*\n(.*?)\s*# END: CODE", re.DOTALL
+        )
+        
+        match = pattern.search(content)
+        if not match:
+            raise ValueError("Could not find '# BEGIN: CODE' and '# END: CODE' markers.")
+        
+        # The first group captures the indentation of the BEGIN line.
+        indentation = match.group(1)
+        
+        # Indent the new code to match the original block's indentation level.
+        indented_code = textwrap.indent(code, indentation)
+        
+        # Reconstruct the block with the new code.
+        replacement_block = f"{indentation}# BEGIN: CODE\n{indented_code}\n{indentation}# END: CODE"
+        
+        # Replace the original block with the new one.
+        new_content = pattern.sub(replacement_block, content, count=1)
+        
+        return new_content
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer

@@ -41,7 +41,7 @@ async def test_benchmarks():
     ]
     answer_generators = [GroundTruthAnswerGenerator(), TrivialAnswerGenerator()]
     results = await benchmark_orchestrator.run_benchmarks(
-        benchmark_suites, answer_generators
+        benchmark_suites, answer_generators, max_retries=0
     )
     raw_results_df = pd.DataFrame([r.model_dump() for r in results])
 

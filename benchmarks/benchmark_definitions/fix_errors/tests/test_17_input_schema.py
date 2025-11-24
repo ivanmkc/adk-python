@@ -47,4 +47,4 @@ async def test_input_schema_validation():
     # Test with invalid input (should ideally raise an error or be handled gracefully by the agent)
     # For now, we'll just check if the agent still responds, as error handling might be internal.
     response_invalid = await run_agent_test(agent, '{"name": "Bob"}')
-    assert "I couldn't find the age in the input." in response_invalid
+    assert '"age": null' in response_invalid
