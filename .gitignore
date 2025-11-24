@@ -115,3 +115,6 @@ CLAUDE.md
 .rooignore
 .bolt/
 .v0/
+
+# Benchmark Traces
+benchmarks/traces/

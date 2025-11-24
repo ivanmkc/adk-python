@@ -15,9 +15,12 @@
 from __future__ import annotations
 
 import abc
+from datetime import datetime
+import json
 from pathlib import Path
 import time
-from typing import Optional
+from typing import Any, Optional
+
 
 class BenchmarkLogger(abc.ABC):
     """Abstract base class for benchmark loggers."""
@@ -62,9 +65,7 @@ class ConsoleBenchmarkLogger(BenchmarkLogger):
     ) -> None:
         print(f"--- GENERATION FAILED for {benchmark_name} ---")
         print(f"Error: {error_message}")
-        print(f"Prompt:
-{prompt}
-")
+        print(f"Prompt:\n{prompt}\n")
 
     def log_test_result(
         self, 
@@ -91,7 +92,9 @@ class TraceMarkdownLogger(BenchmarkLogger):
     def __init__(self, output_file: Path | str = "trace.md"):
         self.output_file = Path(output_file)
         self.start_time = time.time()
-        self.output_file.write_text(f"# Benchmark Trace Log - {time.ctime(self.start_time)}\n\n")
+        self.output_file.write_text(
+            f"# Benchmark Trace Log - {time.ctime(self.start_time)}\n\n"
+        )
 
     def log_message(self, message: str) -> None:
         with open(self.output_file, "a", encoding="utf-8") as f:
@@ -126,5 +129,63 @@ class TraceMarkdownLogger(BenchmarkLogger):
         end_time = time.time()
         duration = end_time - self.start_time
         with open(self.output_file, "a", encoding="utf-8") as f:
-            f.write(f"\n---\n**Benchmark run finalized.** Total duration: {duration:.2f} seconds.\n")
+            f.write(
+                f"\n---\n**Benchmark run finalized.** Total duration: {duration:.2f} seconds.\n"
+            )
         print(f"Trace log written to {self.output_file}")
+
+
+class JsonTraceLogger(BenchmarkLogger):
+    """A benchmark logger that writes structured JSONL trace information to a unique file per run."""
+
+    def __init__(self, output_dir: Path | str = "benchmarks/traces"):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.output_file = self.output_dir / f"trace_{timestamp}.jsonl"
+        self.start_time = time.time()
+        self._log_event("run_start", {"timestamp": self.start_time})
+        print(f"JSON trace log will be written to {self.output_file}")
+
+    def _log_event(self, event_type: str, data: dict[str, Any]) -> None:
+        entry = {"event_type": event_type, "timestamp": time.time(), "data": data}
+        with open(self.output_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    def log_message(self, message: str) -> None:
+        self._log_event("message", {"message": message})
+
+    def log_generation_failure(
+        self, benchmark_name: str, error_message: str, prompt: str
+    ) -> None:
+        self._log_event(
+            "generation_failure",
+            {
+                "benchmark_name": benchmark_name,
+                "error_message": error_message,
+                "prompt": prompt,
+            },
+        )
+
+    def log_test_result(
+        self, 
+        benchmark_name: str,
+        result: str,
+        validation_error: Optional[str],
+        temp_test_file: Optional[Path],
+    ) -> None:
+        self._log_event(
+            "test_result",
+            {
+                "benchmark_name": benchmark_name,
+                "result": result,
+                "validation_error": validation_error,
+                "temp_test_file": str(temp_test_file) if temp_test_file else None,
+            },
+        )
+
+    def finalize_run(self) -> None:
+        end_time = time.time()
+        duration = end_time - self.start_time
+        self._log_event("run_end", {"duration": duration})
+        print(f"JSON trace log written to {self.output_file}")
