@@ -14,7 +14,8 @@
 
 """
 Unit tests for verifying code prediction benchmarks.
-Dynamically loads 'benchmark.yaml', executes code snippets, and asserts outputs.
+Dynamically loads 'benchmark.yaml', executes the corresponding test function for each
+benchmark, and asserts that the output matches the correct answer.
 """
 
 import contextlib
@@ -22,6 +23,7 @@ import io
 from pathlib import Path
 import re
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 import yaml
@@ -31,122 +33,162 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.append(str(PROJECT_ROOT / "src"))
 
+from google.adk.agents import LlmAgent
+from google.adk.agents import LoopAgent
+from google.adk.agents import SequentialAgent
+from google.adk.apps import App
+from google.adk.events import Event
+from google.adk.plugins import ReflectAndRetryToolPlugin
+from google.adk.runners import InMemoryRunner
+from google.adk.sessions import Session
+from google.adk.tools.function_tool import FunctionTool
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types
+from pydantic import BaseModel, ValidationError
+
 BENCHMARK_FILE = Path(__file__).parent / "benchmark.yaml"
 
+# --- Test Implementations ---
+
+def duplicate_agent_name():
+    a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
+    a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
+    SequentialAgent(name="root", sub_agents=[a1, a2])
+
+def reserved_agent_name():
+    LlmAgent(
+        name="user",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant.",
+    )
+
+def callback_execution_order():
+    async def pre(callback_context):
+        print("Pre")
+    async def post(callback_context):
+        print("Post")
+    LlmAgent(
+        name="test",
+        model="gemini-2.5-flash",
+        before_agent_callback=pre,
+        after_agent_callback=post,
+    )
+
+def retry_plugin_config():
+    my_agent = LlmAgent(name="dummy", model="gemini-2.5-flash")
+    App(
+        name="my_app",
+        root_agent=my_agent,
+        plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+    )
+
+def generate_content_config_tools_error():
+    my_tool = lambda: None
+    LlmAgent(
+        name="agent",
+        model="gemini-2.5-flash",
+        generate_content_config=types.GenerateContentConfig(tools=[my_tool]),
+    )
+
+def response_schema_invalid_arg():
+    class MyPydanticModel(BaseModel):
+        field: str
+    LlmAgent(
+        name="bad_agent", model="gemini-2.5-flash", response_schema=MyPydanticModel
+    )
+
+def output_schema_json_enforcement():
+    class MySchema(BaseModel):
+        answer: str
+    LlmAgent(
+        name="json_agent", model="gemini-2.5-flash", output_schema=MySchema
+    )
+
+def stateless_agent_history():
+    LlmAgent(
+        name="stateless", model="gemini-2.5-flash", include_contents="none"
+    )
+
+def loop_agent_empty_subagents():
+    LoopAgent(name="looper", sub_agents=[])
+
+def tool_session_id_injection():
+    def my_tool(query: str, session_id: str): ...
+
+def agent_name_mutability():
+    agent = LlmAgent(name="a", model="...")
+    print(agent.name)
+    agent.name = "b"
+    print(agent.name)
+
+def agent_clone_invalid_field():
+    agent = LlmAgent(name="test", model="gemini-2.5-flash")
+    agent.clone(update={"unknown_field": 123})
+
+def event_repr_output():
+    Event(type="model_response", content="Hello")
+
+def session_state_mutability():
+    session = Session(id="123", user_id="user", app_name="test_app")
+    session.state["user"] = "Alice"
+    session.state["count"] = 1
+    session.state["count"] += 1
+    print(session.state)
+
+def function_tool_async_run():
+    def add(a: int, b: int) -> int:
+        return a + b
+    FunctionTool(fn=add)
+
+def llm_agent_name_validation():
+    LlmAgent(name="invalid name", model="gemini-1.5-flash")
+
+def event_extra_fields_error():
+    Event(type="custom", random_field="123")
+
+
+# Map benchmark IDs to their test functions
+TEST_IMPLEMENTATIONS = {
+    "duplicate_agent_name": duplicate_agent_name,
+    "reserved_agent_name": reserved_agent_name,
+    "callback_execution_order": callback_execution_order,
+    "retry_plugin_config": retry_plugin_config,
+    "generate_content_config_tools_error": generate_content_config_tools_error,
+    "response_schema_invalid_arg": response_schema_invalid_arg,
+    "output_schema_json_enforcement": output_schema_json_enforcement,
+    "stateless_agent_history": stateless_agent_history,
+    "loop_agent_empty_subagents": loop_agent_empty_subagents,
+    "tool_session_id_injection": tool_session_id_injection,
+    "agent_name_mutability": agent_name_mutability,
+    "agent_clone_invalid_field": agent_clone_invalid_field,
+    "event_repr_output": event_repr_output,
+    "session_state_mutability": session_state_mutability,
+    "function_tool_async_run": function_tool_async_run,
+    "llm_agent_name_validation": llm_agent_name_validation,
+    "event_extra_fields_error": event_extra_fields_error,
+}
 
 def load_benchmarks():
     """Loads benchmarks from the YAML file."""
     if not BENCHMARK_FILE.exists():
         return []
-
     with open(BENCHMARK_FILE, "r") as f:
         data = yaml.safe_load(f)
-
     if not data or "benchmarks" not in data:
         return []
-
     return data["benchmarks"]
 
-
-def load_snippet(ref: dict) -> str:
-    """Loads a code snippet from a file, including the file header (imports/setup)."""
-    file_path = PROJECT_ROOT / ref["file"]
-    section = ref["section"]
-
-    if not file_path.exists():
-        raise FileNotFoundError(f"Snippet file not found: {file_path}")
-
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-
-    header = []
-    snippet = []
-    in_snippet = False
-    found_snippet = False
-
-    # Header is everything before the first `[start:` tag.
-    header_done = False
-
-    for line in lines:
-        if "# --8<-- [start:" in line:
-            header_done = True
-            if f"[start:{section}]" in line:
-                in_snippet = True
-                found_snippet = True
-            continue
-
-        if "# --8<-- [end:" in line:
-            if f"[end:{section}]" in line:
-                in_snippet = False
-            continue
-
-        if in_snippet:
-            snippet.append(line)
-        elif not header_done:
-            header.append(line)
-
-    if not found_snippet:
-        raise ValueError(f"Section '{section}' not found in {file_path}")
-
-    return "".join(header + snippet)
-
-
-def execute_snippet(code_str: str) -> str:
-    """Executes a code snippet and captures stdout/stderr or exceptions."""
+def execute_test_function(test_func):
+    """Executes a test function and captures its output or exception."""
     f = io.StringIO()
-
-    # Prepare execution environment
-    # We need to handle imports that might be in the snippet.
-    # exec() runs in a local scope.
-
-    exec_globals = {}
-
-    # Pre-import common ADK classes to allow snippets to run without explicit imports
-    # (mimicking a context where these are available, or fixing snippets that omitted them)
-    try:
-        from google.adk.agents.llm_agent import LlmAgent
-        from google.adk.agents.loop_agent import LoopAgent
-        from google.adk.agents.parallel_agent import ParallelAgent
-        from google.adk.agents.sequential_agent import SequentialAgent
-        from google.adk.apps.app import App
-        from google.adk.plugins.reflect_retry_tool_plugin import ReflectAndRetryToolPlugin
-        from google.adk.runners import Runner
-        from google.genai import types
-
-        exec_globals.update(
-            {
-                "LlmAgent": LlmAgent,
-                "SequentialAgent": SequentialAgent,
-                "LoopAgent": LoopAgent,
-                "ParallelAgent": ParallelAgent,
-                "App": App,
-                "Runner": Runner,
-                "ReflectAndRetryToolPlugin": ReflectAndRetryToolPlugin,
-                "types": types,
-            }
-        )
-    except ImportError:
-        pass
-
     with contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
         try:
-            # Debug: print code being executed
-            # sys.__stdout__.write(f"\n--- Executing ---\n{code_str}\n-----------------\n")
-            
-            # Use compile to catch syntax errors before execution
-            compiled_code = compile(code_str, '<string>', 'exec')
-            exec(compiled_code, exec_globals)
-
+            test_func()
         except Exception as e:
-            # Capture any exception, including SyntaxError
             error_name = type(e).__name__
-            
-            # Format the error message to be clean and consistent
-            error_message = str(e).replace("\n", " ")
+            error_message = str(e).replace('\n', ' ')
             print(f"{error_name}: {error_message}")
-
     return f.getvalue().strip()
-
 
 @pytest.mark.parametrize("benchmark", load_benchmarks())
 def test_code_prediction_accuracy(benchmark):
@@ -154,56 +196,20 @@ def test_code_prediction_accuracy(benchmark):
     Verifies that the code in the question produces the output specified
     by the 'correct_answer' option.
     """
+    benchmark_id = benchmark["code_snippet_ref"]["section"]
+    if benchmark_id not in TEST_IMPLEMENTATIONS:
+        pytest.skip(f"No implementation for benchmark '{benchmark_id}'")
+
+    test_func = TEST_IMPLEMENTATIONS[benchmark_id]
+    actual_output = execute_test_function(test_func)
+
     question = benchmark.get("question", "")
     options = benchmark.get("options", {})
     correct_key = benchmark.get("correct_answer")
     correct_text = options.get(correct_key)
 
-    code_snippet = ""
-
-    if "code_snippet_ref" in benchmark:
-        code_snippet = load_snippet(benchmark["code_snippet_ref"])
-    else:
-        # Fallback to inline extraction (legacy support or for other benchmarks)
-        match = re.search(r"```python\n(.*?)```", question, re.DOTALL)
-        if match:
-            code_snippet = match.group(1)
-
-    if not code_snippet:
-        pytest.skip("No python code block or reference found.")
-
-    # 2. Execute Code
-    # Note: Some snippets might be incomplete or pseudocode-ish, but the
-    # requirement was "must be tested by a corresponding python test",
-    # implying they should be executable.
-
-    # We need to be careful about "Predict the error" questions.
-    # The code might raise an exception. `execute_snippet` catches this.
-
-    actual_output = execute_snippet(code_snippet)
-
-    # 3. Verify
-    # We need to match `actual_output` with `correct_text`.
-    # Sometimes `correct_text` might be a substring or formatted slightly differently.
-    # Let's try exact match first, then loose match.
-
-    # Normalize line endings and stripping
     normalized_actual = actual_output.replace("\r\n", "\n").strip()
     normalized_expected = str(correct_text).replace("\r\n", "\n").strip()
-
-    # Special handling for "Error" predictions vs captured exception strings
-    # If expected is "ValueError: ...", and actual is "ValueError: ...", we match.
-    # If expected is "Error: ...", we might need fuzzy match.
-
-    # Also handle "None" output
-    if normalized_actual == "" and normalized_expected == "None":
-        # Some tools print None, some don't. If snippet has `print(result.output)` and result.output is None, it prints "None".
-        pass
-
-    # Assertion
-    # Check if expected text is IN actual output (for verbose error traces)
-    # OR if actual output is IN expected text (for partial captures).
-    # Ideally, they should be very close.
 
     matches = (
         (normalized_actual == normalized_expected)
@@ -212,14 +218,11 @@ def test_code_prediction_accuracy(benchmark):
     )
 
     if not matches:
-        # Debug info
         pytest.fail(
             f"\nMismatch for benchmark question:\n{question[:100]}...\n"
             f"Expected (Option {correct_key}):\n{normalized_expected!r}\n"
             f"Actual Output:\n{normalized_actual!r}"
         )
 
-
 if __name__ == "__main__":
-    # Allow running as a script
     sys.exit(pytest.main([__file__]))

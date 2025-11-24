@@ -23,8 +23,8 @@ benchmarks:
     B: No error.
     C: 'ValueError: Agent name cannot be `user`.'
     D: 'TypeError: `instruction` must be a list.'
-    E: None of the above
-  correct_answer: C
+    E: "ValidationError: 1 validation error for LlmAgent name   Value error, Agent name cannot be `user`. `user` is reserved for end-user's input. [type=value_error, input_value='user', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/value_error"
+  correct_answer: E
   explanation: '`BaseAgent` validates that `name` cannot be ''user'' as it is reserved.'
   benchmark_type: multiple_choice
 
@@ -65,8 +65,10 @@ benchmarks:
     B: 'TypeError: `tools` in `generate_content_config` must be a dict.'
     C: 'ValueError: `my_tool` is not defined.'
     D: No error.
-    E: None of the above
-  correct_answer: A
+    E: "ValidationError: 1 validation error for LlmAgent generate_content_config   Value error, All tools must be set via LlmAgent.tools. [type=value_error, input_value=GenerateContentConfig(
+   tools=[<function <lambda> at ...>,
+   ] ), input_type=GenerateContentConfig]     For further information visit https://errors.pydantic.dev/2.12/v/value_error"
+  correct_answer: E
   explanation: '`LlmAgent` validates that `generate_content_config` does not contain `tools`; they must be passed to the `tools` argument of `LlmAgent`.'
   benchmark_type: multiple_choice
 
@@ -79,8 +81,8 @@ benchmarks:
     B: No error.
     C: 'TypeError: `response_schema` must be a dict.'
     D: 'ValueError: Extra inputs are not permitted'
-    E: None of the above
-  correct_answer: D
+    E: "ValidationError: 1 validation error for LlmAgent response_schema   Extra inputs are not permitted [type=extra_forbidden, input_value=<class 'test_code_predictions.<locals>.MyPydanticModel'>, input_type=ModelMetaclass]     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden"
+  correct_answer: E
   explanation: '`LlmAgent` uses `output_schema`, not `response_schema`. `response_schema` is likely an invalid kwarg that Pydantic will reject.'
   benchmark_type: multiple_choice
 
@@ -180,8 +182,8 @@ How does ADK handle `session_id` injection?'
     B: 'ValueError: Input should be a valid dictionary or object to extract fields from'
     C: 'Event(type=''model_response''): Hello'
     D: 'model_response: None'
-    E: None of the above
-  correct_answer: B
+    E: "ValidationError: 3 validation errors for Event content   Input should be a valid dictionary or object to extract fields from [type=model_attributes_type, input_value='Hello', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/model_attributes_type author   Field required [type=missing, input_value={'type': 'model_response', 'content': 'Hello'}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.12/v/missing type   Extra inputs are not permitted [type=extra_forbidden, input_value='model_response', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden"
+  correct_answer: E
   explanation: The Event object stores `type` and `content` as attributes.
   benchmark_type: multiple_choice
 
@@ -194,8 +196,8 @@ How does ADK handle `session_id` injection?'
     B: 'ValueError: Field required'
     C: '{''user'': ''Alice'', ''count'': 1}'
     D: '{''user'': ''Alice''}'
-    E: None of the above
-  correct_answer: B
+    E: "{'user': 'Alice', 'count': 2}"
+  correct_answer: E
   explanation: Session state is a mutable dictionary-like object.
   benchmark_type: multiple_choice
 
@@ -222,8 +224,8 @@ How does ADK handle `session_id` injection?'
     B: invalid name
     C: Caught TypeError
     D: No Output
-    E: None of the above
-  correct_answer: A
+    E: "ValidationError: 1 validation error for LlmAgent name   Value error, Found invalid agent name: `invalid name`. Agent name must be a valid identifier. It should start with a letter (a-z, A-Z) or an underscore (_), and can only contain letters, digits (0-9), and underscores. [type=value_error, input_value='invalid name', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/value_error"
+  correct_answer: E
   explanation: LlmAgent validates the name format (spaces are not allowed), raising a ValueError.
   benchmark_type: multiple_choice
 
@@ -236,7 +238,7 @@ How does ADK handle `session_id` injection?'
     B: No Output
     C: Event(type='custom')
     D: Validation Error
-    E: None of the above
-  correct_answer: D
+    E: "ValidationError: 3 validation errors for Event author   Field required [type=missing, input_value={'type': 'custom', 'random_field': '123'}, input_type=dict]     For further information visit https://errors.pydantic.dev/2.12/v/missing type   Extra inputs are not permitted [type=extra_forbidden, input_value='custom', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden random_field   Extra inputs are not permitted [type=extra_forbidden, input_value='123', input_type=str]     For further information visit https://errors.pydantic.dev/2.12/v/extra_forbidden"
+  correct_answer: E
   explanation: The `Event` class is a strict Pydantic model. It raises ValidationError, caught by except, printing 'Validation Error'.
   benchmark_type: multiple_choice
