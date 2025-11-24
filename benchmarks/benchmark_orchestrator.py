@@ -35,7 +35,7 @@ from benchmarks.data_models import (
     BenchmarkRunResult,
     FixErrorBenchmarkCase,
 )
-from benchmarks.logger import BenchmarkLogger, ConsoleBenchmarkLogger, TraceMarkdownLogger, JsonTraceLogger # Added JsonTraceLogger
+from benchmarks.logger import BenchmarkLogger, ConsoleBenchmarkLogger, TraceMarkdownLogger
 from benchmarks.validation_utils import ValidationError
 import time
 from typing import Union, Optional, List
@@ -125,16 +125,12 @@ async def run_benchmarks(
     min_wait: float = 4.0,
     max_wait: float = 60.0,
     logger: Optional[BenchmarkLogger] = None,
-    trace_output_dir: Optional[Path] = None, # NEW PARAMETER
 ) -> List[BenchmarkRunResult]:
     """
     Runs all benchmark suites against all answer generators in parallel and returns raw results.
     """
     if logger is None:
-        if trace_output_dir:
-            logger = JsonTraceLogger(output_dir=trace_output_dir)
-        else:
-            logger = ConsoleBenchmarkLogger()
+        logger = ConsoleBenchmarkLogger()
         
     benchmark_logger = logger
 

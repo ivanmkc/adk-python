@@ -8,7 +8,7 @@ from benchmarks.data_models import BenchmarkRunResult
 from benchmarks.answer_generators.gemini_answer_generator import (
     GeminiAnswerGenerator,
 )
-from benchmarks.logger import JsonTraceLogger # NEW IMPORT
+from benchmarks.logger import ConsoleBenchmarkLogger, JsonTraceLogger # NEW IMPORT
 
 
 async def main() -> None:
@@ -55,13 +55,14 @@ async def main() -> None:
     logger = None
     if args.trace_output_dir:
         logger = JsonTraceLogger(output_dir=args.trace_output_dir)
+    else:
+        logger = ConsoleBenchmarkLogger()
 
     results: list[BenchmarkRunResult] = await run_benchmarks(
         benchmark_suites=[args.benchmark_suite],
         answer_generators=answer_generators,
         max_concurrency=args.max_concurrency,
         logger=logger,
-        trace_output_dir=args.trace_output_dir
     )
 
     results_dict = [result.model_dump() for result in results]
