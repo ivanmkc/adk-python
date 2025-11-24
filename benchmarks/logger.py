@@ -24,18 +24,33 @@ from typing import Optional
 
 
 class BenchmarkLogger(abc.ABC):
-    """Abstract base class for benchmark loggers."""
+    """Abstract base class for benchmark loggers.
+
+    This class defines the interface for different types of benchmark logging.
+    Concrete implementations should inherit from this class and provide
+    specific logging mechanisms (e.g., console output, file output, JSON traces).
+    """
 
     @abc.abstractmethod
     def log_message(self, message: str) -> None:
-        """Logs a general message."""
+        """Logs a general informational message related to the benchmark run.
+
+        Args:
+            message: The message string to log.
+        """
         pass
 
     @abc.abstractmethod
     def log_generation_failure(
         self, benchmark_name: str, error_message: str, prompt: str
     ) -> None:
-        """Logs a failure during answer generation."""
+        """Logs details when the answer generation process for a benchmark fails.
+
+        Args:
+            benchmark_name: The name of the benchmark for which generation failed.
+            error_message: A description of the error that occurred.
+            prompt: The prompt that was used for the failed generation attempt.
+        """
         pass
 
     @abc.abstractmethod
@@ -46,12 +61,22 @@ class BenchmarkLogger(abc.ABC):
         validation_error: Optional[str],
         temp_test_file: Optional[Path],
     ) -> None:
-        """Logs the result of a test execution."""
+        """Logs the outcome of executing a test against a generated answer.
+
+        Args:
+            benchmark_name: The name of the benchmark whose test was executed.
+            result: The outcome of the test, typically 'pass' or 'fail'.
+            validation_error: An optional error message if validation failed.
+            temp_test_file: An optional path to a temporary file used for the test.
+        """
         pass
 
     @abc.abstractmethod
     def finalize_run(self) -> None:
-        """Called at the end of a benchmark run to perform any final logging/cleanup."""
+        """Performs any final actions required at the completion of a benchmark run.
+
+        This can include writing summary information, closing files, or flushing buffers.
+        """
         pass
 
 

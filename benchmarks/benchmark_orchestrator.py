@@ -91,12 +91,13 @@ async def _run_single_benchmark(
             case, generated_answer
         )
 
-        logger.log_test_result(
-            benchmark_name=case.get_identifier(),
-            result=result,
-            validation_error=validation_error,
-            temp_test_file=Path(temp_file_path) if temp_file_path else None,
-        )
+        if logger:
+            logger.log_test_result(
+                benchmark_name=case.get_identifier(),
+                result=result,
+                validation_error=validation_error,
+                temp_test_file=Path(temp_file_path) if temp_file_path else None,
+            )
 
     return BenchmarkRunResult(
         suite=str(Path(suite_file).absolute()),
