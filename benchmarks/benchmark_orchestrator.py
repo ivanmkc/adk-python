@@ -14,31 +14,23 @@
 
 """A test rig to validate the benchmarks against the codebase."""
 
-import argparse
 import asyncio
-import sys
 from pathlib import Path
 
-import pandas as pd
 import yaml
 
 from benchmarks.answer_generators import (
     AnswerGenerator,
-    GroundTruthAnswerGenerator,
-    TrivialAnswerGenerator,
 )
 from benchmarks.benchmark_runner import ApiUnderstandingRunner, PytestBenchmarkRunner
 from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
     BaseBenchmarkCase,
     BenchmarkFile,
     BenchmarkRunResult,
-    FixErrorBenchmarkCase,
 )
-from benchmarks.logger import BenchmarkLogger, ConsoleBenchmarkLogger, TraceMarkdownLogger
-from benchmarks.validation_utils import ValidationError
+from benchmarks.logger import BenchmarkLogger
 import time
-from typing import Union, Optional, List
+from typing import Optional, List
 import tenacity
 from tqdm.asyncio import tqdm
 
@@ -128,12 +120,7 @@ async def run_benchmarks(
 ) -> List[BenchmarkRunResult]:
     """
     Runs all benchmark suites against all answer generators in parallel and returns raw results.
-    """
-    if logger is None:
-        logger = ConsoleBenchmarkLogger()
-        
-    benchmark_logger = logger
-
+    """ 
     semaphore = asyncio.Semaphore(max_concurrency)
     tasks = []
 
@@ -152,7 +139,7 @@ async def run_benchmarks(
                         case,
                         generator,
                         semaphore,
-                        benchmark_logger,
+                        logger,
                         max_retries,
                         min_wait,
                         max_wait,
@@ -164,5 +151,5 @@ async def run_benchmarks(
     )
     results = [await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks))]
 
-    benchmark_logger.finalize_run()
+    logger.finalize_run()
     return results

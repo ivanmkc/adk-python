@@ -99,7 +99,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
         if "required" in json_schema and "benchmark_type" in json_schema["required"]:
             json_schema["required"].remove("benchmark_type")
 
-        print(f"--- PROMPT SENT TO GEMINI ---\n{prompt}\n------------------------------")
+    
 
         response = await self.client.models.generate_content(
             model=self.model_name,
@@ -109,8 +109,6 @@ class GeminiAnswerGenerator(AnswerGenerator):
                 "response_json_schema": json_schema,
             },
         )
-        
-        print(f"--- RAW RESPONSE FROM GEMINI ---\n{response.text}\n---------------------------------")
         
         output = response_schema.model_validate_json(response.text)
 
