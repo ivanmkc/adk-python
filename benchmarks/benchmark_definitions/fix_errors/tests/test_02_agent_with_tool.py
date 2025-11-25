@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """02: An LlmAgent with a simple function tool."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-from google.adk.tools.function_tool import FunctionTool
 import pytest
-
 from benchmarks.test_helpers import basic_tool
 from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
+from google.adk.tools.function_tool import FunctionTool
 
 # BEGIN: CODE
 root_agent = LlmAgent(

@@ -20,8 +20,9 @@ from pydantic import BaseModel
 def code_under_test():
     class MySchema(BaseModel):
         answer: str
+    kwargs = {"output_schema": MySchema}
     agent = LlmAgent(
-        name="json_agent", model="gemini-2.5-flash", output_schema=MySchema
+        name="json_agent", model="gemini-2.5-flash", **kwargs
     )
     return agent, MySchema
 # --8<-- [end:output_schema_json_enforcement]

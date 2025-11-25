@@ -6,8 +6,7 @@ import sys
 
 import pytest
 
-# Manually set up path to src so we can import adk
-sys.path.append("src")
+
 
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.invocation_context import InvocationContext

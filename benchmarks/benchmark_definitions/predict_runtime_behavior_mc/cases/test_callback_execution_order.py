@@ -18,20 +18,19 @@ from google.adk.agents import LlmAgent
 
 # --8<-- [start:callback_execution_order]
 def code_under_test():
-    async def pre(callback_context):
+    async def cb1(agent, input):
         print("Pre")
 
-    async def post(callback_context):
+    async def cb2(agent, input, response):
         print("Post")
 
     agent = LlmAgent(
-        name="test",
+        name="callback_agent",
         model="gemini-2.5-flash",
-        before_agent_callback=pre,
-        after_agent_callback=post,
+        before_agent_callback=cb1,
+        after_agent_callback=cb2,
     )
-    return agent, pre, post
-# --8<-- [end:callback_execution_order]
+    return agent, cb1, cb2
 
 
 @pytest.mark.asyncio
@@ -39,8 +38,6 @@ async def test_callback_execution_order():
     """
     Validates callback execution order.
     """
-    # Expected behavior: The `before_agent_callback` runs before the agent
-    # execution, and the `after_agent_callback` runs after.
     
     agent, pre, post = code_under_test()
     

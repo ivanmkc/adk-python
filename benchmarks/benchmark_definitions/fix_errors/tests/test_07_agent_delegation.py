@@ -12,15 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """07: A root agent delegating a task to a sub-agent."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-
-from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
 
 # BEGIN: CODE
 specialist_agent = LlmAgent(

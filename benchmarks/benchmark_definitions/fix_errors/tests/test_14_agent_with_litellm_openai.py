@@ -13,14 +13,10 @@
 # limitations under the License.
 
 """14: An LlmAgent using an OpenAI model via LiteLlm."""
-
 from __future__ import annotations
 
 import os
-
-from google.adk.agents import LlmAgent
 import pytest
-
 from benchmarks.test_helpers import run_agent_test
 
 # Skip this test if the OPENAI_API_KEY is not set.
@@ -28,15 +24,18 @@ pytestmark = pytest.mark.skipif(
     not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
 )
 
-# BEGIN: CODE
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
+# BEGIN: CODE
 root_agent = LlmAgent(
-    model=LiteLlm(model="openai/gpt-3.5-turo"),
+    model=LiteLlm(model="openai/gpt-3.5-turbo"),
     name="openai_agent",
     instruction="You are a helpful assistant.",
 )
 # END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

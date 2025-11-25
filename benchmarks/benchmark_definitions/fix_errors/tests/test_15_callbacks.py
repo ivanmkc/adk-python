@@ -13,16 +13,15 @@
 # limitations under the License.
 
 """15: An LlmAgent with an after_model_callback."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-
-from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
 
 callback_was_called = False
 
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
 
 def my_callback(**kwargs):
     """A simple callback that sets a flag."""
@@ -39,6 +38,7 @@ root_agent = LlmAgent(
     after_model_callback=my_callback,
 )
 # END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:

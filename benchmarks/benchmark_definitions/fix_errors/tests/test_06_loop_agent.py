@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """06: A LoopAgent that runs a sub-agent a fixed number of times."""
-
 from __future__ import annotations
 
-from google.adk.agents import LoopAgent
-
-from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent, LoopAgent
 
 # BEGIN: CODE
-looper_agent = create_basic_llm_agent(
+looper_agent = LlmAgent(
     name="looper_agent",
+    model=MODEL_NAME,
     instruction="This is a loop.",
 )
 

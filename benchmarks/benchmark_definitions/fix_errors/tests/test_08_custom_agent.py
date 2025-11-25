@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """08: A simple custom agent with conditional logic."""
-
 from __future__ import annotations
 
 from typing import AsyncGenerator
+from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
 
-from google.adk.agents import BaseAgent
-from google.adk.agents import LlmAgent
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import BaseAgent, LlmAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 
-from benchmarks.test_helpers import create_basic_llm_agent
-from benchmarks.test_helpers import run_agent_test
-
-# BEGIN: CODE
 class CustomConditionalAgent(BaseAgent):
     """A custom agent that runs one of two sub-agents based on session state."""
 
@@ -47,13 +43,18 @@ class CustomConditionalAgent(BaseAgent):
                 yield event
 
 
-agent_a = create_basic_llm_agent(
-    name="agent_a", instruction="Respond with only the text: Agent A was chosen."
+agent_a = LlmAgent(
+    name="agent_a",
+    model=MODEL_NAME,
+    instruction="Respond with only the text: Agent A was chosen."
 )
-agent_b = create_basic_llm_agent(
-    name="agent_b", instruction="Respond with only the text: Agent B was chosen."
+agent_b = LlmAgent(
+    name="agent_b",
+    model=MODEL_NAME,
+    instruction="Respond with only the text: Agent B was chosen."
 )
 
+# BEGIN: CODE
 root_agent = CustomConditionalAgent(
     name="custom_conditional_agent",
     agent_a=agent_a,

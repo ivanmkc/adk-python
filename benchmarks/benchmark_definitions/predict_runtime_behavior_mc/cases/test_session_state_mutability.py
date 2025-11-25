@@ -17,18 +17,17 @@ from google.adk.sessions import Session
 
 # --8<-- [start:session_state_mutability]
 def code_under_test():
-    session = Session(id="123", user_id="user", app_name="test_app")
-    session.state["user"] = "Alice"
-    session.state["count"] = 1
-    session.state["count"] += 1
+    from google.adk.sessions import Session
+    session = Session(id="test_id", user_id="u1", app_name="test_app")
+    session.state['my_key'] = 'initial_value'
+    assert session.state['my_key'] == 'initial_value'
+    session.state['my_key'] = 'updated_value'
     return session
-# --8<-- [end:session_state_mutability]
 
 
-def test_session_state_mutability():
+def test_session_properties(capsys):
     """
-    Validates session state mutability (Predict Error).
+    Validates session properties.
     """
-    # Expected behavior: The session state is mutable.
     session = code_under_test()
-    assert session.state == {"user": "Alice", "count": 2}
+    assert session.state['my_key'] == 'updated_value'

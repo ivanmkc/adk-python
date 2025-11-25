@@ -19,11 +19,11 @@ from pydantic import BaseModel, ValidationError
 
 # --8<-- [start:response_schema_invalid_arg]
 def code_under_test():
-    class MyPydanticModel(BaseModel):
-        field: str
-    LlmAgent(
-        name="bad_agent", model="gemini-2.5-flash", response_schema=MyPydanticModel
-    )
+    class MyPydanticModel:
+        pass
+
+    kwargs = {"response_schema": MyPydanticModel}
+    LlmAgent(name="agent", model="gemini-2.5-flash", **kwargs)
 # --8<-- [end:response_schema_invalid_arg]
 
 

@@ -1,44 +1,22 @@
-# Plan: Distinguish Between Crashes and Performance Failures
+# Plan: Refactor and Document the `fix_errors` Benchmark
 
-## Objective
+**Overall Goal:** Maintain and improve the `fix_errors` benchmark test suite by ensuring the LLM's view is clean, focused, and well-documented.
 
-Modify the benchmark suite to differentiate between two types of failures:
-1.  **`FAIL_CRASH`**: Hard errors where the generated code is invalid and cannot be executed (e.g., `NameError`, `ImportError`, `SyntaxError`).
-2.  **`FAIL_VALIDATION`**: Performance failures where the generated code runs but produces the wrong answer, failing a `pytest` assertion.
+**Completed Tasks:**
 
-This will provide more precise insights into the `GeminiAnswerGenerator`'s failure modes.
+*   Verified that the initial `fix_errors` benchmark tests function as expected.
+*   Removed all instances of intentional code obfuscation (e.g., `base64`, `"".join()`) from the test files for clarity.
+*   Identified and addressed multiple issues with the structure of the test cases, where test-running boilerplate was leaking into the LLM's context.
 
-## Step-by-step Plan
+**Current Task:**
 
-### 1. Update Data Model
+1.  **Systematic Refactoring of Test Files:** Go through every test file in `benchmarks/benchmark_definitions/fix_errors/tests/` and meticulously refactor them to adhere to the following strict standards:
+    *   The `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` markers must **only** enclose the code that is directly relevant to the agent's construction.
+    *   All test-running boilerplate—including `pytest` imports, imports from `benchmarks.test_helpers`, `__future__` imports, test functions (`async def test_...`), and helper functions (`run_test`, `assert_test`)—must be moved **outside** of the `LLM_CONTEXT` block.
+    *   Any necessary context for the LLM (e.g., Pydantic models, callback functions) will be kept inside the `LLM_CONTEXT` block but outside the `BEGIN: CODE`/`END: CODE` block.
 
--   **File:** `benchmarks/data_models.py`
--   **Action:**
-    -   Create a `BenchmarkResultType(str, Enum)` with three states: `PASS`, `FAIL_VALIDATION`, and `FAIL_CRASH`.
-    -   Add a new field, `result_type: BenchmarkResultType`, to the `BenchmarkRunResult` model to store this new, more granular classification.
+**Next Steps:**
 
-### 2. Enhance `PytestBenchmarkRunner` to Detect Crashes
-
--   **File:** `benchmarks/benchmark_runner.py`
--   **Action:**
-    -   In the `run_benchmark` method of `PytestBenchmarkRunner`, inspect the `returncode` of the `pytest` subprocess.
-    -   If `returncode == 0`, classify the result as `PASS`.
-    -   If `returncode == 1`, classify the result as `FAIL_VALIDATION`.
-    -   If `returncode > 1` or if specific error patterns (like `NameError`, `ImportError`, `ValidationError`) are found in `stderr`, classify the result as `FAIL_CRASH`.
-    -   Update the method's return signature to output the `BenchmarkResultType`.
-
-### 3. Update the Orchestrator to Handle New Result Type
-
--   **File:** `benchmarks/benchmark_orchestrator.py`
--   **Action:**
-    -   In the `_run_single_benchmark` function, update the call to `runner.run_benchmark` to receive the new `BenchmarkResultType`.
-    -   In the `except` block for answer generation, explicitly classify the failure as `FAIL_CRASH`.
-    -   When constructing the final `BenchmarkRunResult`, correctly populate the new `result_type` field.
-    -   Derive the value for the existing `result` field (0 or 1) from the `result_type` to maintain backward compatibility with summary calculations.
-
-### 4. Verify the Implementation
-
--   **File:** `benchmark_debug.py`
--   **Action:**
-    -   Modify the `analyze_logs` function to use the new `result_type` field for filtering. This will allow for separate analysis of crashes and validation failures.
-    -   Run the script and verify that the errors previously observed (like `NameError`, `ImportError`) are now correctly categorized as `FAIL_CRASH`, while assertion failures are categorized as `FAIL_VALIDATION`.
+1.  **Update Documentation:** After the refactoring is complete, update the `benchmarks/benchmark_definitions/fix_errors/README.md` file to formally document these new, stricter standards for creating `fix_error` test cases. This will ensure future contributions are consistent.
+2.  **Final Verification:** Regenerate the `llm_view.txt` file one last time using the `extract_llm_view.py` script to create a final, clean output for verification.
+3.  **Cleanup:** Remove the `extract_llm_view.py` script and `llm_view.txt` file, as they are temporary artifacts for this refactoring task.

@@ -25,10 +25,7 @@ from pathlib import Path
 import sys
 import pytest
 
-# Ensure src is in path to import adk
-project_root = Path(__file__).resolve().parents[3]
-if str(project_root / "src") not in sys.path:
-    sys.path.append(str(project_root / "src"))
+
 
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.invocation_context import InvocationContext

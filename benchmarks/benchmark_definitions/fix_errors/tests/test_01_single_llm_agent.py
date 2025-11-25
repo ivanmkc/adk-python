@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """01: A minimal LlmAgent."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-
-from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
 
 # BEGIN: CODE
 root_agent = LlmAgent(
@@ -49,3 +49,4 @@ async def test_single_llm_agent():
     """Tests that a single agent can respond to a simple greeting."""
     response = await run_test()
     assert_test(response)
+

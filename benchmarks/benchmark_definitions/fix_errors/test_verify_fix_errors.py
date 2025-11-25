@@ -45,13 +45,7 @@ def test_verify_fix_errors():
             )
             continue
 
-        # Resolve path relative to project root (since paths in YAML are relative to project root)
-        # or strictly check file existence.
-        # The script is in benchmarks/benchmark_definitions/fix_errors/verify.py
-        # The path in YAML is like benchmarks/benchmark_definitions/fix_errors/tests/test_01...
-        # Project root is 3 levels up.
-        project_root = base_dir.parents[2]
-        full_path = project_root / test_file_path_str
+        full_path = Path(test_file_path_str)
 
         if not full_path.exists():
             print(f"Error: Test file not found: {full_path}")

@@ -12,48 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """11: A direct implementation test for InMemoryRunner."""
-
 from __future__ import annotations
 
+from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
 from google.adk.agents import LlmAgent
-from google.adk.apps import App
-from google.adk.runners import InMemoryRunner
-from google.genai import types
 
-from benchmarks.test_helpers import MODEL_NAME
-
+# BEGIN: CODE
+root_agent = LlmAgent(
+    name="runnable_agent",
+    model=MODEL_NAME,
+    instruction="You are a runnable agent.",
+)
+# END: CODE
+# LLM_CONTEXT_END
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    # BEGIN: CODE
-    agent = LlmAgent(
-        name="runnable_agent",
-        model=MODEL_NAME,
-        instruction="You are a runnable agent.",
-    )
-    # END: CODE
-    app = App(name="runner_test_app", root_agent=agent)
-    runner = InMemoryRunner(app=app)
-    session = await runner.session_service.create_session(
-        app_name=app.name, user_id="test-user"
-    )
-
-    final_response = ""
-    async for event in runner.run_async(
-        user_id=session.user_id,
-        session_id=session.id,
-        new_message=types.Content(
-            role="user", parts=[types.Part(text="Hello, runner.")]
-        ),
-    ):
-        if event.is_final_response() and event.content and event.content.parts:
-            final_response = event.content.parts[0].text
-    return final_response
-
-
-# LLM_CONTEXT_END
+    return await run_agent_test(root_agent, "Hello, runner.")
 
 
 def assert_test(response: str):

@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """10: An agent that writes to and reads from session.state."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-from google.adk.agents import SequentialAgent
-
-from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent, SequentialAgent
 
 # BEGIN: CODE
 writer_agent = LlmAgent(
     name="writer_agent",
     model=MODEL_NAME,
-    instruction="The secret word is 'xyz'. Respond with only that word.",
+    instruction="Your sole task is to output the string 'xyz'. Do not add any other text.",
     output_key="secret_word",
 )
 
@@ -35,8 +33,7 @@ reader_agent = LlmAgent(
     name="reader_agent",
     model=MODEL_NAME,
     instruction=(
-        "The secret word is in the session state with the key '{secret_word}'."
-        " Repeat the word back to the user."
+        "The secret word is {secret_word}. Your task is to simply repeat that secret word."
     ),
 )
 

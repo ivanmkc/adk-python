@@ -21,10 +21,7 @@ from pathlib import Path
 import sys
 import pytest
 
-# Ensure src is in path
-project_root = Path(__file__).resolve().parents[3]
-if str(project_root / "src") not in sys.path:
-    sys.path.append(str(project_root / "src"))
+
 
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.agents.parallel_agent import ParallelAgent

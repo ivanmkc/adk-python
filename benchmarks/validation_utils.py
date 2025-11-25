@@ -162,17 +162,12 @@ def load_snippet(ref: Any) -> str:
     with open(file_path, "r") as f:
         lines = f.readlines()
 
-    header = []
     snippet = []
     in_snippet = False
     found_snippet = False
 
-    # Header is everything before the first `[start:` tag.
-    header_done = False
-
     for line in lines:
         if "# --8<-- [start:" in line:
-            header_done = True
             if f"[start:{section}]" in line:
                 in_snippet = True
                 found_snippet = True
@@ -185,12 +180,10 @@ def load_snippet(ref: Any) -> str:
 
         if in_snippet:
             snippet.append(line)
-        elif not header_done:
-            header.append(line)
 
     if not found_snippet:
         raise ValueError(f"Section '{section}' not found in {file_path}")
 
     import textwrap
 
-    return "".join(header + [textwrap.dedent("".join(snippet))])
+    return textwrap.dedent("".join(snippet))

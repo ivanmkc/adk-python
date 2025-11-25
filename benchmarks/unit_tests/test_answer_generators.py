@@ -117,7 +117,7 @@ async def test_gemini_answer_generator_multiple_choice_with_snippet():
     snippet_file = project_root / "dummy_snippet.py"
     with open(snippet_file, "w") as f:
         f.write(
-            "# Header\n# --8<-- [start:test_section]\nprint('Hello')\n# --8<-- [end:test_section]\n"
+            "# --8<-- [start:test_section]\n# Header\nprint('Hello')\n# --8<-- [end:test_section]\n"
         )
 
     try:

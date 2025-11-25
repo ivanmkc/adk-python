@@ -12,23 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
 """04: A SequentialAgent orchestrating two simple agents."""
-
 from __future__ import annotations
 
-from google.adk.agents import SequentialAgent
 import pytest
 
-from benchmarks.test_helpers import create_basic_llm_agent
 from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent, SequentialAgent
 
 # BEGIN: CODE
-agent_one = create_basic_llm_agent(
-    name="agent_one", instruction="This is the first agent. Respond with 'one'."
+agent_one = LlmAgent(
+    name="agent_one",
+    model=MODEL_NAME,
+    instruction="This is the first agent. Respond with 'one'."
 )
-agent_two = create_basic_llm_agent(
-    name="agent_two", instruction="This is the second agent. Respond with 'two'."
+agent_two = LlmAgent(
+    name="agent_two",
+    model=MODEL_NAME,
+    instruction="This is the second agent. Respond with 'two'."
 )
 
 root_agent = SequentialAgent(

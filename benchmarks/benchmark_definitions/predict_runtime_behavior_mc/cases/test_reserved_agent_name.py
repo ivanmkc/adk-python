@@ -19,10 +19,11 @@ from pydantic import ValidationError
 
 # --8<-- [start:reserved_agent_name]
 def code_under_test():
+    kwargs = {"name": "user"}
     LlmAgent(
-        name="user",
         model="gemini-2.5-flash",
         instruction="You are a helpful assistant.",
+        **kwargs
     )
 # --8<-- [end:reserved_agent_name]
 

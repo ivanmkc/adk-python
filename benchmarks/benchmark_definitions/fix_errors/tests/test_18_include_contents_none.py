@@ -13,28 +13,30 @@
 # limitations under the License.
 
 """Build integrity test for LlmAgent with include_contents='none'."""
-
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
 import pytest
 
 from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
+
+# BEGIN: CODE
+agent = LlmAgent(
+    name="stateless_agent",
+    model=MODEL_NAME,
+    instruction="Your name is StatelessBot. You are a stateless agent and do not retain information from previous turns.",
+    include_contents="none",
+)
+# END: CODE
+# LLM_CONTEXT_END
+
 
 @pytest.mark.asyncio
 async def test_include_contents_none_stateless_agent():
     """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
-    # BEGIN: CODE
-    agent = LlmAgent(
-        name="stateless_agent",
-        model=MODEL_NAME,
-        instruction="Your name is StatelessBot. You are a stateless agent and do not retain information from previous turns.",
-        include_contents="none",
-    )
-    # END: CODE
-
     # First turn: Agent should introduce itself
     response1 = await run_agent_test(agent, "What is your name?")
     assert "StatelessBot" in response1

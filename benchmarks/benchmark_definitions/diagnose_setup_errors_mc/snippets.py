@@ -53,9 +53,9 @@ ThinkingConfig = object  # Dummy
 
 
 # --8<-- [start:missing_model_arg]
-def snippet_missing_model_arg():
+def snippet_agent_creation_issue_1(**kwargs):
     root_agent = LlmAgent(
-        name="my_agent", instruction="You are a helpful assistant."
+        name="my_agent", instruction="You are a helpful assistant.", **kwargs
     )
 # --8<-- [end:missing_model_arg]
 
@@ -63,7 +63,7 @@ def test_missing_model_arg():
     """Snippet: missing model argument in LlmAgent."""
     # Expect: ValidationError because 'model' field is required for LlmAgent.
     with pytest.raises(ValidationError):
-        snippet_missing_model_arg()
+        snippet_agent_creation_issue_1()
 
 
 # --8<-- [start:raw_function_tool]
@@ -84,7 +84,8 @@ def test_raw_function_tool():
 def snippet_sequential_agent_tools():
     agent_one = LlmAgent(name="one", model="gemini-2.5-flash")
     agent_two = LlmAgent(name="two", model="gemini-2.5-flash")
-    root_agent = SequentialAgent(name="sequence", tools=[agent_one, agent_two])
+    kwargs = {"tools": [agent_one, agent_two]}
+    root_agent = SequentialAgent(name="sequence", **kwargs)
 # --8<-- [end:sequential_agent_tools]
 
 def test_sequential_agent_tools():
@@ -95,8 +96,11 @@ def test_sequential_agent_tools():
 
 # --8<-- [start:code_executor_in_tools]
 def snippet_code_executor_in_tools():
+    from google.adk.tools import BuiltInCodeExecutor as Executor
+    tool_instance = Executor()
+    kwargs = {"tools": [tool_instance]}
     root_agent = LlmAgent(
-        name="coder", model="gemini-2.5-flash", tools=[BuiltInCodeExecutor()]
+        name="coder", model="gemini-2.5-flash", **kwargs
     )
 # --8<-- [end:code_executor_in_tools]
 
@@ -126,7 +130,7 @@ def test_delegation_in_tools():
 def snippet_invalid_multi_agent_class():
     agent_a = LlmAgent(name="a", model="gemini-2.5-flash")
     agent_b = LlmAgent(name="b", model="gemini-2.5-flash")
-    root_agent = MultiAgent(name="parallel_run", agents=[agent_a, agent_b])
+    root_agent = MultiAgent(name="my_group", agents=[agent_a, agent_b])
 # --8<-- [end:invalid_multi_agent_class]
 
 def test_invalid_multi_agent_class():
@@ -141,8 +145,10 @@ def snippet_input_schema_instance():
         name: str
         age: int
 
+    my_obj = UserInfo()
+    kwargs = {"input_schema": my_obj}
     root_agent = LlmAgent(
-        name="form_filler", model="gemini-2.5-flash", input_schema=UserInfo()
+        name="form_filler", model="gemini-2.5-flash", **kwargs
     )
 # --8<-- [end:input_schema_instance]
 
@@ -158,7 +164,7 @@ def snippet_output_schema_params():
         name="json_agent",
         model="gemini-2.5-flash",
         output_format="json",
-        schema=MyPydanticModel,
+        format_spec=MyPydanticModel,
     )
 # --8<-- [end:output_schema_params]
 
@@ -169,14 +175,14 @@ def test_output_schema_params():
 
 
 # --8<-- [start:invalid_agent_name_hyphen]
-def snippet_invalid_agent_name_hyphen():
+def snippet_agent_name_check_1():
     agent = LlmAgent(name="my-agent", model="gemini-1.5-pro")
 # --8<-- [end:invalid_agent_name_hyphen]
 
 def test_invalid_agent_name_hyphen():
     """Snippet: agent name with hyphen."""
     with pytest.raises(ValueError):
-        snippet_invalid_agent_name_hyphen()
+        snippet_agent_name_check_1()
 
 
 # --8<-- [start:gen_config_sys_instr]
@@ -241,7 +247,7 @@ def test_runner_app_and_agent():
 
 
 # --8<-- [start:runner_no_app_no_name]
-def snippet_runner_no_app_no_name():
+def snippet_runner_init_check_1():
     my_agent = LlmAgent(name="agent", model="gemini-2.5-flash")
     runner = Runner(agent=my_agent)
 # --8<-- [end:runner_no_app_no_name]
@@ -249,19 +255,20 @@ def snippet_runner_no_app_no_name():
 def test_runner_no_app_no_name():
     """Snippet: initializing Runner with agent but no app_name."""
     with pytest.raises(ValueError):
-        snippet_runner_no_app_no_name()
+        snippet_runner_init_check_1()
 
 
 # --8<-- [start:invalid_app_name]
-def snippet_invalid_app_name():
+def snippet_app_case_16():
     agent = LlmAgent(name="agent", model="gemini-2.5-flash")
-    app = App(name="my app", root_agent=agent)
+    kwargs = {"name": "my app"}
+    app = App(root_agent=agent, **kwargs)
 # --8<-- [end:invalid_app_name]
 
 def test_invalid_app_name():
     """Snippet: invalid app name with spaces."""
     with pytest.raises(ValueError):
-        snippet_invalid_app_name()
+        snippet_app_case_16()
 
 
 # --8<-- [start:clone_parent_agent]
@@ -329,14 +336,15 @@ def test_gen_config_thinking():
 
 
 # --8<-- [start:run_config_max_calls_overflow]
-def snippet_run_config_max_calls_overflow():
-    config = RunConfig(max_llm_calls=sys.maxsize)
+def snippet_run_config_check_limit():
+    val = -1
+    config = RunConfig(max_llm_calls=val)
 # --8<-- [end:run_config_max_calls_overflow]
 
 def test_run_config_max_calls_overflow():
     """Snippet: max_llm_calls overflow."""
     with pytest.raises(ValueError):
-        snippet_run_config_max_calls_overflow()
+        snippet_run_config_check_limit()
 
 
 # --8<-- [start:loop_agent_missing_max_iter]

@@ -16,11 +16,9 @@ from google.adk.agents import LlmAgent
 
 
 # --8<-- [start:agent_name_mutability]
-def code_under_test(capsys=None):
-    agent = LlmAgent(name="a", model="...")
-    print(agent.name)
-    agent.name = "b"
-    print(agent.name)
+def code_under_test():
+    agent = LlmAgent(name="a", model="gemini-2.5-flash")
+    return agent
 # --8<-- [end:agent_name_mutability]
 
 
@@ -29,7 +27,8 @@ def test_agent_name_mutability(capsys):
     Validates agent name mutability.
     """
     # Expected behavior: The agent's name is mutable and can be changed after
-    # initialization. The output should be "a" then "b".
-    code_under_test()
-    captured = capsys.readouterr()
-    assert "a\nb\n" in captured.out
+    # initialization.
+    agent = code_under_test()
+    assert agent.name == "a"
+    agent.name = "b"
+    assert agent.name == "b"

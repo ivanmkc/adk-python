@@ -14,7 +14,7 @@
 
 from google.adk.agents import LlmAgent
 from google.adk.apps import App
-from google.adk.plugins import ReflectAndRetryToolPlugin
+from google.adk.plugins import ReflectAndRetryToolPlugin as MyPlugin
 
 
 # --8<-- [start:retry_plugin_config]
@@ -23,7 +23,7 @@ def code_under_test():
     app = App(
         name="my_app",
         root_agent=my_agent,
-        plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+        plugins=[MyPlugin()],
     )
     return app
 # --8<-- [end:retry_plugin_config]

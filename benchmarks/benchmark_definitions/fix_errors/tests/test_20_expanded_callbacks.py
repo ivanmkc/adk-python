@@ -18,11 +18,9 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.models.llm_response import LlmResponse
 from google.adk.runners import InMemoryRunner
-from google.adk.tools.function_tool import FunctionTool
 from google.genai import types
 import pytest
 
@@ -31,6 +29,26 @@ from benchmarks.test_helpers import MODEL_NAME
 
 async def _mock_tool_func(query: str) -> str:
     return f"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}"
+
+
+# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
+from google.adk.tools.function_tool import FunctionTool
+
+# BEGIN: CODE
+# The callbacks need to be defined here since they are directly referenced by the agent.
+# We will use placeholders for them and define the actual functions in the test.
+
+root_agent = LlmAgent(
+    name="callback_agent",
+    model=MODEL_NAME,
+    instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
+    tools=[FunctionTool(func=_mock_tool_func)],
+    before_tool_callback=None,  # Placeholder, will be set in the test
+    after_tool_callback=None,  # Placeholder, will be set in the test
+)
+# END: CODE
+# LLM_CONTEXT_END
 
 
 @pytest.mark.asyncio
@@ -47,18 +65,15 @@ async def test_before_and_after_tool_callbacks():
         after_called.append(True)
         return None  # Do not modify tool response
 
-    test_tool = FunctionTool(func=_mock_tool_func)
-
-    # BEGIN: CODE
-    agent = LlmAgent(
+    # Re-instantiate the agent here to apply the actual callback functions
+    agent_for_test = LlmAgent(
         name="callback_agent",
         model=MODEL_NAME,
         instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
-        tools=[test_tool],
+        tools=[FunctionTool(func=_mock_tool_func)],
         before_tool_callback=before_callback_func,
         after_tool_callback=after_callback_func,
     )
-    # END: CODE
 
     # Manually run the agent logic without run_agent_test to have full control over mocking
     with patch(
@@ -104,7 +119,7 @@ async def test_before_and_after_tool_callbacks():
         )
         mock_generate.side_effect = lambda *args, **kwargs: next(response_iter)
 
-        app = App(name=f"test_app_{agent.name}", root_agent=agent)
+        app = App(name=f"test_app_{agent_for_test.name}", root_agent=agent_for_test)
         runner = InMemoryRunner(app=app)
 
         session = await runner.session_service.create_session(

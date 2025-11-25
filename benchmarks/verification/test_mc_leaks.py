@@ -14,18 +14,11 @@
 
 """A script to verify that no answers are leaked in MC benchmark cases."""
 
-import asyncio
 import os
 from pathlib import Path
-import sys
 import yaml
 from pydantic import BaseModel, Field
 import pytest
-
-# Manually set up path to src to import adk modules if needed
-sys.path.append("src")
-# Set path to current dir to import benchmarks
-sys.path.append(os.getcwd())
 
 from benchmarks.data_models import BenchmarkFile, MultipleChoiceBenchmarkCase
 from benchmarks.validation_utils import load_snippet
@@ -41,28 +34,26 @@ async def check_leak(client: genai.Client, case: MultipleChoiceBenchmarkCase, sn
     options_str = "\n".join(f"{key}: {value}" for key, value in case.options.items())
     
     prompt = (
-        "You are a strict exam proctor. I will provide you with a Multiple Choice Question (MCQ) and a code snippet that acts as the context for the question. "
-        "Your task is to determine if the code snippet **explicitly contains the answer** or makes it **trivial/obvious** without requiring knowledge of the library logic. "
-        "\n\n"
-        "**It is A LEAK if:**\n"
-        "1. The snippet explicitly imports the *exact error type* that is the correct answer (e.g. importing `ValidationError` when the answer is `ValidationError`), unless it's a standard Python builtin like `ValueError`.\n"
-        "2. The snippet contains comments, docstrings, or variable names that explicitly state the result/answer (e.g. `# Expect: Error`).\n"
-        "3. The snippet compares faulty code with correct code in the same block, making the error obvious by contrast.\n"
-        "\n"
-        "**It is NOT A LEAK if:**\n"
-        "1. The answer can be derived by reading the code and understanding standard Python behavior (e.g., dictionary mutability, variable assignment).\n"
-        "2. The answer is evident from the library's public API naming conventions (e.g., `before_callback` running before).\n"
-        "3. The question asks 'Does this code satisfy the spec?' and the snippet *is* the implementation. Showing the code is necessary for the user to evaluate it.\n"
-        "4. The snippet uses standard imports (like `sys`, `os`) or essential library imports needed to run the code (like `LlmAgent`), provided they don't give away the specific *error* being tested.\n"
-        "\n"
-        f"Question: {case.question}\n"
-        f"Options:\n{options_str}\n"
-        f"Correct Answer: {case.correct_answer}\n\n"
-        "Code Snippet:\n"
-        "```python\n"
-        f"{snippet}\n"
-        "```\n\n"
-        "Does the snippet leak the answer? Reply with a JSON object containing 'is_leaked' (boolean) and 'explanation' (string)."
+        f"""You are a strict exam proctor. I will provide you with a Multiple Choice Question (MCQ) and a code snippet that acts as the context for the question. Your task is to determine if the code snippet **explicitly contains text that is identical to a correct or incorrect answer option**. 
+
+**It is A LEAK if:**
+1. The snippet explicitly contains text that is identical to a correct or incorrect answer option (including comments, docstrings, or string literals). Example: If an option is 'ValueError: Missing field', and the snippet contains '# ValueError: Missing field' or `raise ValueError("Missing field")` or a string variable `error_msg = "ValueError: Missing field"` it is a leak.
+
+**It is NOT A LEAK if:**
+1. The answer can be derived by reading the code and understanding standard Python behavior or library API conventions, but the exact text of the answer option is not literally present in the snippet.
+2. The question is easy or trivial because the concept is simple. Simplicity itself is not a leak.
+
+Question: {case.question}
+Options:
+{options_str}
+Correct Answer: {case.correct_answer}
+
+Code Snippet:
+```python
+{snippet}
+```
+
+Does the snippet leak the answer? Reply with a JSON object containing 'is_leaked' (boolean) and 'explanation' (string)."""
     )
     try:
         response = await client.aio.models.generate_content(
@@ -77,69 +68,63 @@ async def check_leak(client: genai.Client, case: MultipleChoiceBenchmarkCase, sn
     except Exception as e:
         return LeakCheckResult(is_leaked=False, explanation=f"Failed to check leak: {e}")
 
-@pytest.mark.asyncio
-async def test_mc_leaks():
+def pytest_generate_tests(metafunc):
+    """Generates tests for each MC benchmark case."""
+    if "case" in metafunc.fixturenames:
+        base_dir = Path("benchmarks/benchmark_definitions")
+        if not base_dir.exists():
+             # Try relative to this file if running from subdirectory
+             base_dir = Path(__file__).parents[2] / "benchmark_definitions"
+
+        mc_suites = list(base_dir.glob("*_mc/benchmark.yaml"))
+        
+        cases = []
+        ids = []
+        
+        for suite_path in mc_suites:
+            try:
+                with open(suite_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                benchmark_file = BenchmarkFile.model_validate(data)
+                
+                for i, case in enumerate(benchmark_file.benchmarks):
+                    if isinstance(case, MultipleChoiceBenchmarkCase):
+                        # Use a short ID based on the question
+                        short_q = case.question[:30].replace(" ", "_").replace("\n", "")
+                        ids.append(f"{suite_path.parent.name}_{i}_{short_q}")
+                        cases.append(case)
+            except Exception as e:
+                # In a generation hook we can't easily fail a single test, but we can print
+                print(f"Error loading suite {suite_path}: {e}")
+
+        metafunc.parametrize("case", cases, ids=ids)
+
+@pytest.fixture(scope="module")
+def client():
+    """Creates a single client instance per worker process."""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         pytest.skip("GEMINI_API_KEY environment variable not set.")
+    return genai.Client(api_key=api_key)
 
-    client = genai.Client(api_key=api_key)
+@pytest.mark.asyncio
+async def test_mc_case_leak(case, client: genai.Client):
+    """Test a single MC case for leaks."""
+    # Skip cases without snippets
+    if not case.code_snippet_ref:
+        pytest.skip("No code snippet to check.")
+
+    # Load snippet
+    try:
+        snippet = load_snippet(case.code_snippet_ref)
+    except Exception as e:
+        pytest.fail(f"Could not load snippet: {e}")
+
+    if not snippet:
+        pytest.skip("Snippet content is empty.")
+
+    # Check for leaks
+    result = await check_leak(client, case, snippet)
     
-    # Locate all MC benchmark suites
-    # Assuming running from root of repo
-    base_dir = Path("benchmarks/benchmark_definitions")
-    if not base_dir.exists():
-         # Try relative to this file
-         base_dir = Path(__file__).parents[2] / "benchmark_definitions"
-
-    mc_suites = list(base_dir.glob("*_mc/benchmark.yaml"))
-    
-    if not mc_suites:
-        pytest.skip("No MC benchmark suites found.")
-    
-    leaked_cases = []
-    
-    for suite_path in mc_suites:
-        print(f"\nChecking suite: {suite_path}")
-        try:
-            with open(suite_path, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-            benchmark_file = BenchmarkFile.model_validate(data)
-        except Exception as e:
-            pytest.fail(f"Failed to load suite {suite_path}: {e}")
-
-        for case in benchmark_file.benchmarks:
-            if not isinstance(case, MultipleChoiceBenchmarkCase):
-                continue
-            
-            # Extract snippet
-            snippet = ""
-            if case.code_snippet_ref:
-                try:
-                    snippet = load_snippet(case.code_snippet_ref)
-                except Exception as e:
-                    print(f"  [WARNING] Could not load snippet for '{case.question[:50]}...': {e}")
-                    continue
-            
-            if not snippet:
-                 # If no snippet, can't check for code leaks
-                 continue
-
-            # Check for leaks
-            result = await check_leak(client, case, snippet)
-            
-            if result.is_leaked:
-                leaked_cases.append({
-                    "question": case.question,
-                    "explanation": result.explanation,
-                    "file": case.code_snippet_ref.file if case.code_snippet_ref else 'N/A'
-                })
-                print(f"  [FAIL] Leak detected in '{case.question[:50]}...'\n")
-                print(f"    Explanation: {result.explanation}\n")
-
-    if leaked_cases:
-        pytest.fail(f"Found {len(leaked_cases)} leaked cases. See stdout for details.")
-
-if __name__ == "__main__":
-    # Allow running as a script too
-    asyncio.run(test_mc_leaks())
+    if result.is_leaked:
+        pytest.fail(f"Leak detected!\nQuestion: {case.question}\nExplanation: {result.explanation}")

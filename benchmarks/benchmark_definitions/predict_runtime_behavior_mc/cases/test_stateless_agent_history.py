@@ -17,8 +17,10 @@ from google.adk.agents import LlmAgent
 
 # --8<-- [start:stateless_agent_history]
 def code_under_test():
+    # Obfuscated "none"
+    val = chr(110) + chr(111) + chr(110) + chr(101)
     agent = LlmAgent(
-        name="stateless", model="gemini-2.5-flash", include_contents="none"
+        name="my_agent", model="gemini-2.5-flash", include_contents=val
     )
     return agent
 # --8<-- [end:stateless_agent_history]

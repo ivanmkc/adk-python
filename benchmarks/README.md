@@ -64,6 +64,10 @@ To run all the benchmark tests directly, you can use the following command from 
 ```bash
 python -m pytest ./benchmarks/
 ```
+To run tests in parallel, which can significantly speed up execution, use the following command:
+```bash
+python -m pytest -n auto ./benchmarks/
+```
 
 ### Verification Tools
 

@@ -13,14 +13,14 @@
 # limitations under the License.
 
 """13: An LlmAgent with a BuiltInCodeExecutor."""
-
 from __future__ import annotations
 
+from benchmarks.test_helpers import run_agent_test
+from benchmarks.test_helpers import MODEL_NAME
+
+# LLM_CONTEXT_BEGIN
 from google.adk.agents import LlmAgent
 from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
-
-from benchmarks.test_helpers import MODEL_NAME
-from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
 root_agent = LlmAgent(
@@ -30,6 +30,7 @@ root_agent = LlmAgent(
     code_executor=BuiltInCodeExecutor(),
 )
 # END: CODE
+# LLM_CONTEXT_END
 
 
 async def run_test() -> str:
