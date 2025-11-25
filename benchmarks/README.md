@@ -114,16 +114,18 @@ async def main():
 
     # Calculate summary from raw results
     summary_df = (
-        raw_results_df.groupby("answer_generator")
-        .agg(
-            passed=("result", "sum"),
-            total=("result", "count"),
-            mean_latency=("latency", "mean"),
-            p50_latency=("latency", lambda x: x.quantile(0.5)),
-            p90_latency=("latency", lambda x: x.quantile(0.9)),
-        )
+        raw_results_df.groupby(["answer_generator", "result_type"])
+        .size()
+        .unstack(fill_value=0)
     )
-    summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
+    
+    # Calculate pass rate if 'pass' column exists
+    if "pass" in summary_df.columns:
+        summary_df["total"] = summary_df.sum(axis=1)
+        summary_df["pass_rate"] = summary_df["pass"] / summary_df["total"]
+    else:
+        summary_df["total"] = summary_df.sum(axis=1)
+        summary_df["pass_rate"] = 0.0
 
     print("\n--- Evaluation Summary ---")
     print(summary_df)
@@ -140,6 +142,14 @@ Finally, run the script from your terminal:
 ```bash
 python run_my_evaluation.py
 ```
+
+## Result Types
+
+The framework distinguishes between different types of results to provide deeper insights into generator performance:
+
+*   **`PASS`**: The generated code ran successfully and passed all assertions/validations.
+*   **`FAIL_VALIDATION`**: The generated code ran successfully but failed the assertions (e.g., produced the wrong answer). This indicates a logic error in the generated solution.
+*   **`FAIL_CRASH`**: The generated code could not be executed or crashed during execution (e.g., `SyntaxError`, `ImportError`, `NameError`). This indicates that the generated code is syntactically invalid or references non-existent symbols.
 
 ## Extending the Framework
 
@@ -255,3 +265,28 @@ async def run_test() -> str:
 def assert_test(response: str):
     ...
 ```
+
+### Multiple Choice (MC) Benchmarks
+
+For multiple-choice benchmarks (e.g., `predict_runtime_behavior_mc`), strict context isolation is critical to prevent "leaking" the answer to the model. The `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` markers must strictly wrap **only** the code snippet being tested.
+
+**Example of an MC case:**
+
+```python
+# test_case_01.py
+
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+   # Code that demonstrates the behavior in question
+   agent = LlmAgent(name="test")
+   agent.name = "new_name"
+# LLM_CONTEXT_END
+
+def test_agent_name_mutability():
+    """
+    Validates that agent name is mutable.
+    """
+    # ... Assertion logic (HIDDEN FROM LLM) ...
+```
+
+The framework extracts only the content between the markers to form the prompt, ensuring the model predicts the behavior based solely on the code, without seeing the test's assertions or comments that might reveal the answer.

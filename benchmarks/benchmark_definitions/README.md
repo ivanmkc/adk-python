@@ -4,11 +4,25 @@ This directory contains the YAML files that define the benchmark suites for the 
 
 ## Structure
 
-- **`api_understanding_benchmarks.yaml`**: This suite contains benchmarks that test an AI's understanding of the ADK's public API. Each case consists of a question about the API, the expected code snippet as an answer, and metadata for validation.
+- **`api_understanding/`**: Contains benchmarks that test an AI's understanding of the ADK's public API. Each case consists of a question about the API, the expected code snippet as an answer, and metadata for validation.
 
-- **`fix_error_benchmarks.yaml`**: This suite contains benchmarks that evaluate an AI's ability to fix broken code snippets. Each case points to a test file in the `fix_error` directory that is intentionally broken.
+- **`fix_errors/`**: Contains benchmarks that evaluate an AI's ability to fix broken code snippets. Each case points to a test file in the `fix_error` directory that is intentionally broken.
 
-- **`fix_error/`**: This subdirectory contains the template files for the `fix_error` benchmark cases. Each file has a placeholder (`# BEGIN: CODE...# END: CODE`) where the AI-generated code will be injected.
+- **`diagnose_setup_errors_mc/`**: Multiple-choice benchmarks focusing on diagnosing setup and configuration errors.
+
+- **`configure_adk_features_mc/`**: Multiple-choice benchmarks testing the configuration of various ADK features.
+
+- **`predict_runtime_behavior_mc/`**: Multiple-choice benchmarks where the model must predict the runtime behavior of a given code snippet.
+
+## Multiple Choice (MC) Context Isolation
+
+For all MC benchmarks (ending in `_mc`), strict context isolation is enforced. Test files in these directories must use `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` markers to wrap **only** the code snippet relevant to the question.
+
+**Crucially:**
+*   **Do not** include the test function, assertions, or explanatory comments inside the markers.
+*   **Do** wrap the code snippet in a helper function (e.g., `code_under_test`) if necessary to make it a standalone block.
+
+This ensures that the model answers based on its understanding of the code and the ADK, without being "fed" the answer from the test's validation logic.
 
 ## Usage
 
