@@ -2,189 +2,248 @@ benchmarks:
   - name: '01: A minimal LlmAgent.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_01_single_llm_agent.py
-    description: "Create a minimal LlmAgent named 'root_agent'."
+    description: Create a minimal LlmAgent named 'root_agent'.
     requirements:
-      - "The agent should respond to the greeting 'Hello' with a response containing 'Hello'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_01_single_llm_agent.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '02: An LlmAgent with a simple function tool.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
-    description: "Create a minimal LlmAgent named 'root_agent' that can use the `basic_tool`."
+    description: Create a minimal LlmAgent named 'root_agent' that can use the `basic_tool`.
     requirements:
-      - "When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'."
-      - "The agent's final response must contain the word 'test'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'.
+      - The agent's final response must contain the word 'test'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '03: An LlmAgent that uses output_schema to enforce JSON output.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_03_agent_with_output_schema.py
-    description: "Create a minimal LlmAgent named 'root_agent' that uses an `output_schema` to produce a JSON output."
+    description: Create a minimal LlmAgent named 'root_agent' that uses an `output_schema` to produce a JSON output.
     requirements:
-      - "The agent's output must be a valid JSON string."
-      - "The JSON output must contain the keys 'field_one' and 'field_two'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The agent's output must be a valid JSON string.
+      - The JSON output must contain the keys 'field_one' and 'field_two'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_03_agent_with_output_schema.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '04: A SequentialAgent orchestrating two simple agents.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_04_sequential_agent.py
-    description: "Create a `SequentialAgent` named 'root_agent' that runs two sub-agents in order."
+    description: Create a `SequentialAgent` named 'root_agent' that runs two sub-agents in order.
     requirements:
-      - "The final response should come from the second agent, containing the word 'two'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The final response should come from the second agent, containing the word 'two'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_04_sequential_agent.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '05: A ParallelAgent running two agents concurrently.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_05_parallel_agent.py
-    description: "Create a `ParallelAgent` named 'root_agent' that runs two sub-agents concurrently."
+    description: Create a `ParallelAgent` named 'root_agent' that runs two sub-agents concurrently.
     requirements:
-      - "The final response should contain the word 'parallel'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The final response should contain the word 'parallel'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_05_parallel_agent.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '06: A LoopAgent that runs a sub-agent a fixed number of times.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_06_loop_agent.py
-    description: "Create a `LoopAgent` named 'root_agent' that runs a sub-agent a fixed number of times."
+    description: Create a `LoopAgent` named 'root_agent' that runs a sub-agent a fixed number of times.
     requirements:
-      - "The final response should contain the word 'loop'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The final response should contain the word 'loop'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_06_loop_agent.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '07: A root agent delegating a task to a sub-agent.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_07_agent_delegation.py
-    description: "Create a root `LlmAgent` that delegates a task to a sub-agent."
+    description: Create a root `LlmAgent` that delegates a task to a sub-agent.
     requirements:
-      - "The root agent should have a sub-agent named 'specialist_agent'."
-      - "When the root agent is asked for a specialist, it should delegate the task to the 'specialist_agent'."
-      - "The final response should contain the phrase 'specialist ok'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The root agent should have a sub-agent named 'specialist_agent'.
+      - When the root agent is asked for a specialist, it should delegate the task to the 'specialist_agent'.
+      - The final response should contain the phrase 'specialist ok'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_07_agent_delegation.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '08: A simple custom agent with conditional logic.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_08_custom_agent.py
-    description: "Create a custom agent that inherits from `BaseAgent` and implements conditional logic. The agent, named 'root_agent', should have two sub-agents, 'agent_a' and 'agent_b'. Based on a boolean `run_agent_a` in the session state, it should run one of the two sub-agents."
+    description: Create a custom agent that inherits from `BaseAgent` and implements conditional logic. The agent, named 'root_agent', should have two sub-agents, 'agent_a' and 'agent_b'. Based on a boolean `run_agent_a` in the session state, it should run one of the two sub-agents.
     requirements:
-      - "If `run_agent_a` is true, the final response should contain 'Agent A'."
-      - "If `run_agent_a` is false, the final response should contain 'Agent B'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - If `run_agent_a` is true, the final response should contain 'Agent A'.
+      - If `run_agent_a` is false, the final response should contain 'Agent B'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_08_custom_agent.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '10: An agent that writes to and reads from session.state.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_10_agent_with_state_management.py
-    description: "Create a `SequentialAgent` named 'root_agent' with two sub-agents. The first sub-agent, 'writer', should write a value to the session state. The second sub-agent, 'reader', should read that value from the session state and include it in its response."
+    description: Create a `SequentialAgent` named 'root_agent' with two sub-agents. The first sub-agent, 'writer', should write a value to the session state. The second sub-agent, 'reader', should read that value from the session state and include it in its response.
     requirements:
-      - "The 'writer' agent should write the value 'xyz' to a key named 'my_value' in the session state."
-      - "The 'reader' agent should read the value from 'my_value' and the final response must contain 'xyz'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The 'writer' agent should write the value 'xyz' to a key named 'my_value' in the session state.
+      - The 'reader' agent should read the value from 'my_value' and the final response must contain 'xyz'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_10_agent_with_state_management.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
+      code: "|\n        from google.adk.agents import LlmAgent, SequentialAgent\n\n        MODEL_NAME = \"gemini-2.5-flash\"\n\n        writer_agent = LlmAgent(\n            name=\"writer_agent\",\n            model=MODEL_NAME,\n            instruction=\"Respond with only the text 'xyz'.\",\n            output_key=\"secret_word\",\n        )\n\n        reader_agent = LlmAgent(\n            name=\"reader_agent\",\n            model=MODEL_NAME,\n            instruction=\"Your only task is to output the content of '{secret_word}'. Do not add any other text.\",\n        )\n\n        root_agent = SequentialAgent(\n            name=\"state_management_coordinator\",\n            sub_agents=[writer_agent, reader_agent],\n        )"
   - name: '11: A direct implementation test for InMemoryRunner.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_11_in_memory_runner_direct.py
-    description: "Create a simple `LlmAgent` named 'agent' that can respond to a greeting."
+    description: Create a simple `LlmAgent` named 'agent' that can respond to a greeting.
     requirements:
-      - "The agent should be able to respond to 'Hello, runner.' with a response containing 'Hello'."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent should be able to respond to 'Hello, runner.' with a response containing 'Hello'.
+      - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_11_in_memory_runner_direct.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '12: An App instance that includes a basic plugin.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_12_app_with_plugin.py
-    description: "Create an `App` instance named 'app' that includes a basic plugin. The app should have a root agent that can respond to a greeting."
+    description: Create an `App` instance named 'app' that includes a basic plugin. The app should have a root agent that can respond to a greeting.
     requirements:
-      - "The app must define a plugin that inherits from `BasePlugin`."
-      - "The final response should contain the word 'Hello'."
-      - "The final solution must be assigned to a variable named `app`."
+      - The app must define a plugin that inherits from `BasePlugin`.
+      - The final response should contain the word 'Hello'.
+      - The final solution must be assigned to a variable named `app`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_12_app_with_plugin.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '13: An LlmAgent with a BuiltInCodeExecutor.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_13_code_executor.py
-    description: "Create an `LlmAgent` named 'root_agent' that uses a `BuiltInCodeExecutor` to perform calculations."
+    description: Create an `LlmAgent` named 'root_agent' that uses a `BuiltInCodeExecutor` to perform calculations.
     requirements:
-      - "The agent should be able to calculate 2 + 2."
-      - "The final response should contain the number 4."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The agent should be able to calculate 2 + 2.
+      - The final response should contain the number 4.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_13_code_executor.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '14: An LlmAgent using an OpenAI model via LiteLlm.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_14_agent_with_litellm_openai.py
-    description: "Create an `LlmAgent` named 'root_agent' that uses an OpenAI model via `LiteLlm`."
+    description: Create an `LlmAgent` named 'root_agent' that uses an OpenAI model via `LiteLlm`.
     requirements:
-      - "The agent should be able to respond to a greeting."
-      - "The final response should contain the word 'Hello'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The agent should be able to respond to a greeting.
+      - The final response should contain the word 'Hello'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_14_agent_with_litellm_openai.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '15: An LlmAgent with an after_model_callback.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_15_callbacks.py
-    description: "Create an `LlmAgent` named 'root_agent' with an `after_model_callback`."
+    description: Create an `LlmAgent` named 'root_agent' with an `after_model_callback`.
     requirements:
-      - "The agent should use the `my_callback` function as its `after_model_callback`."
-      - "The agent should respond to a greeting with a response containing 'Hello'."
-      - "The final solution must be assigned to a variable named `root_agent`."
+      - The agent should use the `my_callback` function as its `after_model_callback`.
+      - The agent should respond to a greeting with a response containing 'Hello'.
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_15_callbacks.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '16: Build integrity test for LlmAgent with generate_content_config.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_16_generate_content_config.py
-    description: "Create an `LlmAgent` named 'agent' that uses `generate_content_config` to set the temperature to 0. The agent's instruction should make it always respond with 'Hello world!'."
+    description: Create an `LlmAgent` named 'agent' that uses `generate_content_config` to set the temperature to 0. The agent's instruction should make it always respond with 'Hello world!'.
     requirements:
-      - "The agent should be initialized with a `generate_content_config` that sets `temperature` to 0."
-      - "The agent should respond to 'Say hello.' with a response containing 'Hello world!'."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent should be initialized with a `generate_content_config` that sets `temperature` to 0.
+      - The agent should respond to 'Say hello.' with a response containing 'Hello world!'.
+      - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_16_generate_content_config.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '17: Build integrity test for LlmAgent with input_schema.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_17_input_schema.py
-    description: "Create an `LlmAgent` named 'agent' that uses `input_schema` to handle structured input."
+    description: Create an `LlmAgent` named 'agent' that uses `input_schema` to handle structured input.
     requirements:
-      - "The agent should be initialized with an `input_schema` of `UserInfo`."
-      - "The agent should be able to process a JSON string conforming to the `UserInfo` schema."
-      - "The agent's response should include the user's name and age from the input."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent should be initialized with an `input_schema` of `UserInfo`.
+      - The agent should be able to process a JSON string conforming to the `UserInfo` schema.
+      - The agent's response should include the user's name and age from the input.
+      - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_17_input_schema.py
-  - name: "18: Build integrity test for LlmAgent with include_contents='none'."
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
+  - name: '18: Build integrity test for LlmAgent with include_contents=''none''.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_18_include_contents_none.py
-    description: "Create an `LlmAgent` named 'agent' with `include_contents` set to `'none'` to make it stateless."
+    description: Create an `LlmAgent` named 'agent' with `include_contents` set to `'none'` to make it stateless.
     requirements:
-      - "The agent's name should be 'StatelessBot'."
-      - "The agent should be initialized with `include_contents='none'`."
-      - "The agent's instruction should explain that it is a stateless bot."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent's name should be 'StatelessBot'.
+      - The agent should be initialized with `include_contents='none'`.
+      - The agent's instruction should explain that it is a stateless bot.
+      - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_18_include_contents_none.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '19: Build integrity test for LlmAgent with artifacts.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_19_artifacts.py
-    description: "Create an `LlmAgent` named 'agent' that can access data from an artifact."
+    description: Create an `LlmAgent` named 'agent' that can access data from an artifact.
     requirements:
-      - "The agent's instruction should reference an artifact named 'my_data'."
-      - "The agent should directly state the content of the 'my_data' artifact in its response."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent's instruction should reference an artifact named 'my_data'.
+      - The agent should directly state the content of the 'my_data' artifact in its response.
+      - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_19_artifacts.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
   - name: '20: Build integrity test for LlmAgent with expanded callbacks.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_20_expanded_callbacks.py
-    description: "Create an `LlmAgent` named 'agent' with `before_tool_callback` and `after_tool_callback`."
+    description: Create an `LlmAgent` named 'root_agent' with `before_tool_callback` and `after_tool_callback`.
     requirements:
-      - "The agent should use `my_before_tool_callback` as its `before_tool_callback`."
-      - "The agent should use `my_after_tool_callback` as its `after_tool_callback`."
-      - "The final response should contain 'UNIQUE_TOOL_OUTPUT_FOR_TEST: hello'."
-      - "The final solution must be assigned to a variable named `agent`."
+      - The agent should use `before_callback_func` as its `before_tool_callback`.
+      - The agent should use `after_callback_func` as its `after_tool_callback`.
+      - 'The final response should contain ''UNIQUE_TOOL_OUTPUT_FOR_TEST: hello''.'
+      - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_20_expanded_callbacks.py
+    answer:
+      rationale: Ground truth answer.
+      benchmark_type: fix_error
+      code: "|\n        from google.adk.agents import LlmAgent\n        from google.adk.tools.function_tool import FunctionTool\n\n        MODEL_NAME = \"gemini-2.5-flash\"\n\n        async def _mock_tool_func(query: str) -> str:\n            return f\"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}\"\n\n        before_called = []\n        after_called = []\n\n        async def before_callback_func(tool, args, tool_context):\n            before_called.append(True)\n            return None\n\n        async def after_callback_func(tool, args, tool_context, tool_response):\n            after_called.append(True)\n            return None\n\n        test_tool = FunctionTool(func=_mock_tool_func)\n\n        root_agent = LlmAgent(\n            name=\"callback_agent\",\n            model=MODEL_NAME,\n            instruction=\"Use the test_tool to respond to the user. Return the tool's output verbatim.\",\n            tools=[test_tool],\n            before_tool_callback=before_callback_func,\n            after_tool_callback=after_callback_func,\n        )"

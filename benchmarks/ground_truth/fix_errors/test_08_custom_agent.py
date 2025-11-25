@@ -18,12 +18,11 @@ from __future__ import annotations
 
 from typing import AsyncGenerator
 
-from google.adk.agents import BaseAgent
-from google.adk.agents import LlmAgent
+from google.adk.agents import BaseAgent, LlmAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 
-from benchmarks.test_helpers import create_basic_llm_agent
+from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 
@@ -47,11 +46,15 @@ class CustomConditionalAgent(BaseAgent):
                 yield event
 
 
-agent_a = create_basic_llm_agent(
-    name="agent_a", instruction="Respond with only the text: Agent A was chosen."
+agent_a = LlmAgent(
+    name="agent_a",
+    model=MODEL_NAME,
+    instruction="Respond with only the text: Agent A was chosen."
 )
-agent_b = create_basic_llm_agent(
-    name="agent_b", instruction="Respond with only the text: Agent B was chosen."
+agent_b = LlmAgent(
+    name="agent_b",
+    model=MODEL_NAME,
+    instruction="Respond with only the text: Agent B was chosen."
 )
 
 root_agent = CustomConditionalAgent(

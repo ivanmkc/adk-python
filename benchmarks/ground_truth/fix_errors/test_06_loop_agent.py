@@ -16,16 +16,17 @@
 
 from __future__ import annotations
 
-from google.adk.agents import LoopAgent
+from google.adk.agents import LlmAgent, LoopAgent
 from google.adk.agents.llm_agent import InstructionProvider
 from google.adk.sessions import Session
 
-from benchmarks.test_helpers import create_basic_llm_agent
+from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
-looper_agent = create_basic_llm_agent(
+looper_agent = LlmAgent(
     name="looper_agent",
+    model=MODEL_NAME,
     instruction="This is a loop.",
 )
 

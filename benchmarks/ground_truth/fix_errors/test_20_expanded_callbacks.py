@@ -18,48 +18,51 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.models.llm_response import LlmResponse
 from google.adk.runners import InMemoryRunner
-from google.adk.tools.function_tool import FunctionTool
 from google.genai import types
 import pytest
 
 from benchmarks.test_helpers import MODEL_NAME
 
 
+# BEGIN: CODE
+from google.adk.agents import LlmAgent
+from google.adk.tools.function_tool import FunctionTool
+
+MODEL_NAME = "gemini-2.5-flash"
+
 async def _mock_tool_func(query: str) -> str:
     return f"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}"
+
+before_called = []
+after_called = []
+
+async def before_callback_func(tool, args, tool_context):
+    before_called.append(True)
+    return None  # Do not modify tool args
+
+async def after_callback_func(tool, args, tool_context, tool_response):
+    after_called.append(True)
+    return None  # Do not modify tool response
+
+test_tool = FunctionTool(func=_mock_tool_func)
+
+root_agent = LlmAgent(
+    name="callback_agent",
+    model=MODEL_NAME,
+    instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
+    tools=[test_tool],
+    before_tool_callback=before_callback_func,
+    after_tool_callback=after_callback_func,
+)
+# END: CODE
 
 
 @pytest.mark.asyncio
 async def test_before_and_after_tool_callbacks():
     """Tests that before_tool_callback and after_tool_callback are invoked."""
-    before_called = []
-    after_called = []
-
-    async def before_callback_func(tool, args, tool_context):
-        before_called.append(True)
-        return None  # Do not modify tool args
-
-    async def after_callback_func(tool, args, tool_context, tool_response):
-        after_called.append(True)
-        return None  # Do not modify tool response
-
-    test_tool = FunctionTool(func=_mock_tool_func)
-
-    # BEGIN: CODE
-    agent = LlmAgent(
-        name="callback_agent",
-        model=MODEL_NAME,
-        instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
-        tools=[test_tool],
-        before_tool_callback=before_callback_func,
-        after_tool_callback=after_callback_func,
-    )
-    # END: CODE
-
     # Manually run the agent logic without run_agent_test to have full control over mocking
     with patch(
         "google.adk.models.google_llm.Gemini.generate_content_async"
@@ -104,7 +107,7 @@ async def test_before_and_after_tool_callbacks():
         )
         mock_generate.side_effect = lambda *args, **kwargs: next(response_iter)
 
-        app = App(name=f"test_app_{agent.name}", root_agent=agent)
+        app = App(name=f"test_app_{root_agent.name}", root_agent=root_agent)
         runner = InMemoryRunner(app=app)
 
         session = await runner.session_service.create_session(

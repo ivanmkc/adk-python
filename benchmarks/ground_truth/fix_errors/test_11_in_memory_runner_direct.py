@@ -28,13 +28,13 @@ from benchmarks.test_helpers import run_agent_test
 async def run_test() -> str:
     """Runs the agent and returns the response."""
     # BEGIN: CODE
-    agent = LlmAgent(
+    root_agent = LlmAgent(
         name="runnable_agent",
         model=MODEL_NAME,
         instruction="You are a runnable agent.",
     )
     # END: CODE
-    return await run_agent_test(agent, "Hello, runner.")
+    return await run_agent_test(root_agent, "Hello, runner.")
 
 
 def assert_test(response: str):

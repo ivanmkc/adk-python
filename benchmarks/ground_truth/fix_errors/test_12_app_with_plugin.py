@@ -16,10 +16,11 @@
 
 from __future__ import annotations
 
+from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.plugins import BasePlugin
 
-from benchmarks.test_helpers import create_basic_llm_agent
+from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 
@@ -35,8 +36,10 @@ class SimplePlugin(BasePlugin):
         print("SimplePlugin: after_agent_callback")
 
 
-root_agent = create_basic_llm_agent(
-    name="app_agent", instruction="You are an agent within an App."
+root_agent = LlmAgent(
+    name="app_agent",
+    model=MODEL_NAME,
+    instruction="You are an agent within an App."
 )
 
 app = App(

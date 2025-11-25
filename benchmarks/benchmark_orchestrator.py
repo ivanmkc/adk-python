@@ -123,9 +123,9 @@ async def run_benchmarks(
     benchmark_suites: List[str],
     answer_generators: List[AnswerGenerator],
     max_concurrency: int = 50,
-    max_retries: int = 7,
+    max_retries: int = 2,
     min_wait: float = 4.0,
-    max_wait: float = 60.0,
+    max_wait: float = 20.0,
     logger: Optional[BenchmarkLogger] = None,
 ) -> List[BenchmarkRunResult]:
     """

@@ -16,27 +16,23 @@
 
 from __future__ import annotations
 
-from google.adk.agents import LlmAgent
-from google.adk.agents import SequentialAgent
-
-from benchmarks.test_helpers import MODEL_NAME
 from benchmarks.test_helpers import run_agent_test
 
 # BEGIN: CODE
+from google.adk.agents import LlmAgent, SequentialAgent
+MODEL_NAME = "gemini-2.5-flash"
+
 writer_agent = LlmAgent(
     name="writer_agent",
     model=MODEL_NAME,
-    instruction="The secret word is 'xyz'. Respond with only that word.",
+    instruction="Respond with only the text 'xyz'.",
     output_key="secret_word",
 )
 
 reader_agent = LlmAgent(
     name="reader_agent",
     model=MODEL_NAME,
-    instruction=(
-        "The secret word is in the session state with the key '{secret_word}'."
-        " Repeat the word back to the user."
-    ),
+    instruction="Your only task is to output the content of '{secret_word}'. Do not add any other text.",
 )
 
 root_agent = SequentialAgent(
