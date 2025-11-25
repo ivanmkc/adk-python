@@ -14,14 +14,16 @@
 
 from google.adk.sessions import Session
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:session_state_mutability]
 def code_under_test():
     session = Session(id="123", user_id="user", app_name="test_app")
     session.state["user"] = "Alice"
     session.state["count"] = 1
     session.state["count"] += 1
     return session
-# LLM_CONTEXT_END
+# --8<-- [end:session_state_mutability]
+
 
 def test_session_state_mutability():
     """

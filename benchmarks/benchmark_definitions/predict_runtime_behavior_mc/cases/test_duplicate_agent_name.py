@@ -14,13 +14,15 @@
 
 from google.adk.agents import LlmAgent, SequentialAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:duplicate_agent_name]
 def code_under_test():
     a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
     a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
     root = SequentialAgent(name="root", sub_agents=[a1, a2])
     return root
-# LLM_CONTEXT_END
+# --8<-- [end:duplicate_agent_name]
+
 
 def test_duplicate_agent_name():
     """

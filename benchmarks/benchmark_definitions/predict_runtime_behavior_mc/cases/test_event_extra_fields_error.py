@@ -16,10 +16,12 @@ import pytest
 from google.adk.events import Event
 from pydantic import ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:event_extra_fields_error]
 def code_under_test():
     Event(type="custom", random_field="123")
-# LLM_CONTEXT_END
+# --8<-- [end:event_extra_fields_error]
+
 
 def test_event_extra_fields_error():
     """

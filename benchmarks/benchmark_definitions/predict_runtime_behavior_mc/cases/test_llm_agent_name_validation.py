@@ -16,10 +16,12 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:llm_agent_name_validation]
 def code_under_test():
     LlmAgent(name="invalid name", model="gemini-1.5-flash")
-# LLM_CONTEXT_END
+# --8<-- [end:llm_agent_name_validation]
+
 
 def test_llm_agent_name_validation():
     """

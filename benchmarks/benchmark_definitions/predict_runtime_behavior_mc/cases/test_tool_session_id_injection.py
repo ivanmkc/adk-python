@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:tool_session_id_injection]
 def code_under_test():
     def my_tool(query: str, session_id: str): ...
     return my_tool
-# LLM_CONTEXT_END
+# --8<-- [end:tool_session_id_injection]
+
 
 def test_tool_session_id_injection():
     """

@@ -16,14 +16,16 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import BaseModel, ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:response_schema_invalid_arg]
 def code_under_test():
     class MyPydanticModel(BaseModel):
         field: str
     LlmAgent(
         name="bad_agent", model="gemini-2.5-flash", response_schema=MyPydanticModel
     )
-# LLM_CONTEXT_END
+# --8<-- [end:response_schema_invalid_arg]
+
 
 def test_response_schema_invalid_arg():
     """

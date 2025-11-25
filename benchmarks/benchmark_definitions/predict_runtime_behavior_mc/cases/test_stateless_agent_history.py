@@ -14,13 +14,15 @@
 
 from google.adk.agents import LlmAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:stateless_agent_history]
 def code_under_test():
     agent = LlmAgent(
         name="stateless", model="gemini-2.5-flash", include_contents="none"
     )
     return agent
-# LLM_CONTEXT_END
+# --8<-- [end:stateless_agent_history]
+
 
 def test_stateless_agent_history():
     """

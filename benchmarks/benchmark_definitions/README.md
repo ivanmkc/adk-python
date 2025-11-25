@@ -16,10 +16,11 @@ This directory contains the YAML files that define the benchmark suites for the 
 
 ## Multiple Choice (MC) Context Isolation
 
-For all MC benchmarks (ending in `_mc`), strict context isolation is enforced. Test files in these directories must use `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` markers to wrap **only** the code snippet relevant to the question.
+For all MC benchmarks (ending in `_mc`), strict context isolation is enforced. Test files in these directories must use **snippet tags (`# --8<-- [start:...]` and `# --8<-- [end:...]`)** to wrap **only** the code snippet relevant to the question.
 
 **Crucially:**
-*   **Do not** include the test function, assertions, or explanatory comments inside the markers.
+*   **Do not** use `# LLM_CONTEXT_BEGIN` or `# LLM_CONTEXT_END` in MC benchmark files; these are specific to `fix_errors` benchmarks.
+*   **Do not** include the test function, assertions, or explanatory comments inside the snippet tags.
 *   **Do** wrap the code snippet in a helper function (e.g., `code_under_test`) if necessary to make it a standalone block.
 
 This ensures that the model answers based on its understanding of the code and the ADK, without being "fed" the answer from the test's validation logic.

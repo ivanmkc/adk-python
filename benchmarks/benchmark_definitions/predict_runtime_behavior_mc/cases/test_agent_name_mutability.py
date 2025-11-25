@@ -14,13 +14,15 @@
 
 from google.adk.agents import LlmAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:agent_name_mutability]
 def code_under_test(capsys=None):
     agent = LlmAgent(name="a", model="...")
     print(agent.name)
     agent.name = "b"
     print(agent.name)
-# LLM_CONTEXT_END
+# --8<-- [end:agent_name_mutability]
+
 
 def test_agent_name_mutability(capsys):
     """

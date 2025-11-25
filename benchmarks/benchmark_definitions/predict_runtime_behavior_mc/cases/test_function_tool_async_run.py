@@ -15,12 +15,14 @@
 import pytest
 from google.adk.tools.function_tool import FunctionTool
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:function_tool_async_run]
 def code_under_test():
     def add(a: int, b: int) -> int:
         return a + b
     FunctionTool(fn=add)
-# LLM_CONTEXT_END
+# --8<-- [end:function_tool_async_run]
+
 
 def test_function_tool_async_run():
     """

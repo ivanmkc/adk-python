@@ -16,14 +16,16 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:reserved_agent_name]
 def code_under_test():
     LlmAgent(
         name="user",
         model="gemini-2.5-flash",
         instruction="You are a helpful assistant.",
     )
-# LLM_CONTEXT_END
+# --8<-- [end:reserved_agent_name]
+
 
 def test_reserved_agent_name():
     """

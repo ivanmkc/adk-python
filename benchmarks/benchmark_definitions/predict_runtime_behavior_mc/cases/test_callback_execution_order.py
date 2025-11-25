@@ -15,7 +15,8 @@
 import pytest
 from google.adk.agents import LlmAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:callback_execution_order]
 def code_under_test():
     async def pre(callback_context):
         print("Pre")
@@ -30,7 +31,8 @@ def code_under_test():
         after_agent_callback=post,
     )
     return agent, pre, post
-# LLM_CONTEXT_END
+# --8<-- [end:callback_execution_order]
+
 
 @pytest.mark.asyncio
 async def test_callback_execution_order():

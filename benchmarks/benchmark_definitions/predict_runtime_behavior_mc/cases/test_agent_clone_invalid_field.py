@@ -15,11 +15,13 @@
 import pytest
 from google.adk.agents import LlmAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:agent_clone_invalid_field]
 def code_under_test():
     agent = LlmAgent(name="test", model="gemini-2.5-flash")
     agent.clone(update={"unknown_field": 123})
-# LLM_CONTEXT_END
+# --8<-- [end:agent_clone_invalid_field]
+
 
 def test_agent_clone_invalid_field():
     """

@@ -16,10 +16,12 @@ import pytest
 from google.adk.events import Event
 from pydantic import ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:event_repr_output]
 def code_under_test():
     Event(type="model_response", content="Hello")
-# LLM_CONTEXT_END
+# --8<-- [end:event_repr_output]
+
 
 def test_event_repr_output():
     """

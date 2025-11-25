@@ -17,7 +17,8 @@ from google.adk.agents import LlmAgent
 from google.genai import types
 from pydantic import ValidationError
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:generate_content_config_tools_error]
 def code_under_test():
     my_tool = lambda: None
     LlmAgent(
@@ -25,7 +26,8 @@ def code_under_test():
         model="gemini-2.5-flash",
         generate_content_config=types.GenerateContentConfig(tools=[my_tool]),
     )
-# LLM_CONTEXT_END
+# --8<-- [end:generate_content_config_tools_error]
+
 
 def test_generate_content_config_tools_error():
     """

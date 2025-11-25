@@ -15,7 +15,8 @@
 from google.adk.agents import LlmAgent
 from pydantic import BaseModel
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:output_schema_json_enforcement]
 def code_under_test():
     class MySchema(BaseModel):
         answer: str
@@ -23,7 +24,8 @@ def code_under_test():
         name="json_agent", model="gemini-2.5-flash", output_schema=MySchema
     )
     return agent, MySchema
-# LLM_CONTEXT_END
+# --8<-- [end:output_schema_json_enforcement]
+
 
 def test_output_schema_json_enforcement():
     """

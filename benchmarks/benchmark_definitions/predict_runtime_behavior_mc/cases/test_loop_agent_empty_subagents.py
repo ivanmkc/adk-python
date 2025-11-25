@@ -14,11 +14,13 @@
 
 from google.adk.agents import LoopAgent
 
-# LLM_CONTEXT_BEGIN
+
+# --8<-- [start:loop_agent_empty_subagents]
 def code_under_test():
     agent = LoopAgent(name="looper", sub_agents=[])
     return agent
-# LLM_CONTEXT_END
+# --8<-- [end:loop_agent_empty_subagents]
+
 
 def test_loop_agent_empty_subagents():
     """
