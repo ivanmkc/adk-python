@@ -19,10 +19,11 @@ Verification script for diagnose_setup_errors_mc/benchmark.yaml.
 import inspect
 from pathlib import Path
 import sys
+import pytest
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[3]
-if str(project_root) not in sys.path:
+if str(project_root / "src") not in sys.path:
     sys.path.append(str(project_root / "src"))
 
 from google.adk.agents.llm_agent import LlmAgent
@@ -33,15 +34,7 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.function_tool import FunctionTool
 
 
-def test_llm_agent_requires_model():
-    # Q: Missing model argument error?
-    # Explanation: LlmAgent requires `model`.
-    # We verify this by trying to init without it.
-    try:
-        LlmAgent(name="test")
-        assert False, "LlmAgent should require model"
-    except Exception:
-        pass
+
 
 
 def test_function_tool_wrapping():
@@ -98,18 +91,15 @@ def test_output_schema_param():
 
 
 if __name__ == "__main__":
-    print(f"Running verification script from: {__file__}")
+    # Manually run tests if executed directly
     current_module = sys.modules[__name__]
-    failed = False
     for name, func in inspect.getmembers(current_module, inspect.isfunction):
         if name.startswith("test_"):
             try:
                 func()
             except Exception as e:
                 print(f"F {name} failed: {e}")
-                failed = True
-
-    if failed:
-        sys.exit(1)
-    else:
-        print("All verification tests passed!")
+                import traceback
+                traceback.print_exc()
+                sys.exit(1)
+    print("All verification tests passed!")

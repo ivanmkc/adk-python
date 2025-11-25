@@ -18,19 +18,17 @@ This script verifies that all test files referenced in the benchmark YAML actual
 """
 
 from pathlib import Path
-import sys
-
+import pytest
 import yaml
 
 
-def verify_fix_errors():
+def test_verify_fix_errors():
     # Define paths
     base_dir = Path(__file__).parent
     yaml_path = base_dir / "benchmark.yaml"
 
     if not yaml_path.exists():
-        print(f"Error: {yaml_path} does not exist.")
-        sys.exit(1)
+        pytest.fail(f"Error: {yaml_path} does not exist.")
 
     with open(yaml_path, "r") as f:
         data = yaml.safe_load(f)
@@ -72,11 +70,11 @@ def verify_fix_errors():
                 missing_files.append(full_path.name)
 
     if missing_files:
-        print(f"\nFAILED: {len(missing_files)} issues found.")
-        sys.exit(1)
+        pytest.fail(f"FAILED: {len(missing_files)} issues found. See stdout.")
     else:
         print("\nAll fix_error benchmark files verified successfully.")
 
 
 if __name__ == "__main__":
-    verify_fix_errors()
+    # Allow running as a script manually if needed
+    test_verify_fix_errors()

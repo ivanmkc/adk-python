@@ -17,10 +17,10 @@
 import asyncio
 import os
 from pathlib import Path
-import re
 import sys
 import yaml
 from pydantic import BaseModel, Field
+import pytest
 
 # Manually set up path to src to import adk modules if needed
 sys.path.append("src")
@@ -77,22 +77,27 @@ async def check_leak(client: genai.Client, case: MultipleChoiceBenchmarkCase, sn
     except Exception as e:
         return LeakCheckResult(is_leaked=False, explanation=f"Failed to check leak: {e}")
 
-async def main():
+@pytest.mark.asyncio
+async def test_mc_leaks():
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        print("Error: GEMINI_API_KEY environment variable not set.")
-        sys.exit(1)
+        pytest.skip("GEMINI_API_KEY environment variable not set.")
 
     client = genai.Client(api_key=api_key)
     
     # Locate all MC benchmark suites
+    # Assuming running from root of repo
     base_dir = Path("benchmarks/benchmark_definitions")
+    if not base_dir.exists():
+         # Try relative to this file
+         base_dir = Path(__file__).parents[2] / "benchmark_definitions"
+
     mc_suites = list(base_dir.glob("*_mc/benchmark.yaml"))
     
-    print(f"Found {len(mc_suites)} MC benchmark suites.")
+    if not mc_suites:
+        pytest.skip("No MC benchmark suites found.")
     
-    total_cases = 0
-    leaked_cases = 0
+    leaked_cases = []
     
     for suite_path in mc_suites:
         print(f"\nChecking suite: {suite_path}")
@@ -101,14 +106,11 @@ async def main():
                 data = yaml.safe_load(f)
             benchmark_file = BenchmarkFile.model_validate(data)
         except Exception as e:
-            print(f"Failed to load suite {suite_path}: {e}")
-            continue
+            pytest.fail(f"Failed to load suite {suite_path}: {e}")
 
         for case in benchmark_file.benchmarks:
             if not isinstance(case, MultipleChoiceBenchmarkCase):
                 continue
-            
-            total_cases += 1
             
             # Extract snippet
             snippet = ""
@@ -127,22 +129,17 @@ async def main():
             result = await check_leak(client, case, snippet)
             
             if result.is_leaked:
-                leaked_cases += 1
+                leaked_cases.append({
+                    "question": case.question,
+                    "explanation": result.explanation,
+                    "file": case.code_snippet_ref.file if case.code_snippet_ref else 'N/A'
+                })
                 print(f"  [FAIL] Leak detected in '{case.question[:50]}...'\n")
                 print(f"    Explanation: {result.explanation}\n")
-                print(f"    File: {case.code_snippet_ref.file if case.code_snippet_ref else 'N/A'}\n")
-            else:
-                # print(f"  [PASS] '{case.question[:50]}...'\n")
-                pass
 
-    print("\n" + "="*40)
-    print(f"Total MC cases checked: {total_cases}\n")
-    print(f"Leaked cases found: {leaked_cases}\n")
-    
-    if leaked_cases > 0:
-        sys.exit(1)
-    else:
-        print("No leaks detected!")
+    if leaked_cases:
+        pytest.fail(f"Found {len(leaked_cases)} leaked cases. See stdout for details.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Allow running as a script too
+    asyncio.run(test_mc_leaks())

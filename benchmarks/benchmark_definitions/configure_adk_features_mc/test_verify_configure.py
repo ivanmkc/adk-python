@@ -23,10 +23,11 @@ import importlib
 import inspect
 from pathlib import Path
 import sys
+import pytest
 
 # Ensure src is in path to import adk
 project_root = Path(__file__).resolve().parents[3]
-if str(project_root) not in sys.path:
+if str(project_root / "src") not in sys.path:
     sys.path.append(str(project_root / "src"))
 
 from google.adk.agents.base_agent import BaseAgent
@@ -63,7 +64,7 @@ def test_q1_runner_import():
     try:
         import google.adk.factory
 
-        assert False, "google.adk.factory should not exist"
+        pytest.fail("google.adk.factory should not exist")
     except ImportError:
         pass
 
@@ -109,7 +110,7 @@ def test_q4_app_init():
     try:
         dummy_agent = BaseAgent(name="dummy", sub_agents=[])
         App(name="test", root_agent=dummy_agent, application="something")
-        assert False, "App(application=...) should have failed"
+        pytest.fail("App(application=...) should have failed")
     except ValidationError as e:
         assert "application" in str(e) or "Extra inputs" in str(e)
 
@@ -235,9 +236,7 @@ def test_q30_retry_plugin():
     try:
         from google.adk.plugins.reflect_retry_tool_plugin import ReflectRetryToolPlugin
 
-        assert (
-            False
-        ), "ReflectRetryToolPlugin should not exist (or is not the correct answer)"
+        pytest.fail("ReflectRetryToolPlugin should not exist (or is not the correct answer)")
     except ImportError:
         pass
 
@@ -329,9 +328,8 @@ def test_q42_intermediate_data():
 
 if __name__ == "__main__":
     print(f"Running verification script from: {__file__}")
-    # Manually run all test functions
+    # Manually run all test functions if executed directly
     current_module = sys.modules[__name__]
-    failed = False
     for name, func in inspect.getmembers(current_module, inspect.isfunction):
         if name.startswith("test_"):
             try:
@@ -340,11 +338,6 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"F {name} failed: {e}")
                 import traceback
-
                 traceback.print_exc()
-                failed = True
-
-    if failed:
-        sys.exit(1)
-    else:
-        print("All verification tests passed!")
+                sys.exit(1)
+    print("All verification tests passed!")

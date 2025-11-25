@@ -19,10 +19,11 @@ Verification script for api_understanding/benchmark.yaml.
 import inspect
 from pathlib import Path
 import sys
+import pytest
 
 # Ensure src is in path
 project_root = Path(__file__).resolve().parents[3]
-if str(project_root) not in sys.path:
+if str(project_root / "src") not in sys.path:
     sys.path.append(str(project_root / "src"))
 
 # Imports based on the "file" field in the benchmark YAML
@@ -187,10 +188,6 @@ def test_google_search_tool():
     assert GoogleSearchTool
     # Verify it inherits from BaseTool
     assert issubclass(GoogleSearchTool, BaseTool)
-    # Verify logic: check run_async implementation or lack thereof if that's the point
-    # The Q says "without Python run_async implementation".
-    # BaseTool has abstract run_async. GoogleSearchTool might override it or not.
-    # If it relies on built-in, it might raise NotImplemented or be a pass.
 
 
 def test_parallel_agent():
@@ -219,9 +216,8 @@ def test_base_tool():
 
 
 if __name__ == "__main__":
-    print(f"Running verification script from: {__file__}")
+    # Manually run tests if executed directly
     current_module = sys.modules[__name__]
-    failed = False
     for name, func in inspect.getmembers(current_module, inspect.isfunction):
         if name.startswith("test_"):
             try:
@@ -229,11 +225,6 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"F {name} failed: {e}")
                 import traceback
-
                 traceback.print_exc()
-                failed = True
-
-    if failed:
-        sys.exit(1)
-    else:
-        print("All verification tests passed!")
+                sys.exit(1)
+    print("All verification tests passed!")
