@@ -16,20 +16,21 @@ from google.adk.agents import LlmAgent
 from google.adk.apps import App
 from google.adk.plugins import ReflectAndRetryToolPlugin
 
-def test_retry_plugin_config():
-    """
-    Validates ReflectAndRetryToolPlugin initialization.
-    """
+# LLM_CONTEXT_BEGIN
+def code_under_test():
     my_agent = LlmAgent(name="dummy", model="gemini-2.5-flash")
-    # Expected behavior: The App is created with the ReflectAndRetryToolPlugin.
     app = App(
         name="my_app",
         root_agent=my_agent,
         plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
     )
+    return app
+# LLM_CONTEXT_END
+
+def test_retry_plugin_config():
+    """
+    Validates ReflectAndRetryToolPlugin initialization.
+    """
+    # Expected behavior: The App is created with the ReflectAndRetryToolPlugin.
+    app = code_under_test()
     assert len(app.plugins) == 1
-    
-    # Assert incorrect options:
-    # Option A: `max_retries` defaults to 3, not 0.
-    # Option B: `ReflectAndRetryToolPlugin` is a valid plugin.
-    # Option D: Retries are configured via plugins, not `RunConfig`.

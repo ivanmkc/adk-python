@@ -14,16 +14,17 @@
 
 from google.adk.agents import LoopAgent
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    agent = LoopAgent(name="looper", sub_agents=[])
+    return agent
+# LLM_CONTEXT_END
+
 def test_loop_agent_empty_subagents():
     """
     Validates LoopAgent with empty sub_agents.
     """
     # Expected behavior: The LoopAgent is created successfully with an empty
     # `sub_agents` list.
-    agent = LoopAgent(name="looper", sub_agents=[])
+    agent = code_under_test()
     assert len(agent.sub_agents) == 0
-
-    # Assert incorrect options:
-    # Option A: No TypeError is raised.
-    # Option B: No ValueError is raised for max_iterations.
-    # Option D: No ValueError is raised for empty sub-agents.

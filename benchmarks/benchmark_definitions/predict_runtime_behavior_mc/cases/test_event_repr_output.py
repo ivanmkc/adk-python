@@ -16,6 +16,11 @@ import pytest
 from google.adk.events import Event
 from pydantic import ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    Event(type="model_response", content="Hello")
+# LLM_CONTEXT_END
+
 def test_event_repr_output():
     """
     Validates Event object creation failure (Predict Error).
@@ -23,7 +28,4 @@ def test_event_repr_output():
     # Expected behavior: A ValidationError is raised because `type` is not a
     # valid field for `Event`.
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        Event(type="model_response", content="Hello")
-
-    # Assert incorrect options:
-    # Option A, B, C, D: A ValidationError is raised, so these are incorrect.
+        code_under_test()

@@ -14,24 +14,23 @@
 
 from google.adk.agents import LlmAgent, SequentialAgent
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
+    a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
+    root = SequentialAgent(name="root", sub_agents=[a1, a2])
+    return root
+# LLM_CONTEXT_END
+
 def test_duplicate_agent_name():
     """
     Validates behavior when creating a SequentialAgent with duplicate sub-agent names.
     """
     # Expected behavior: No error is raised when a SequentialAgent is created
     # with sub-agents that have duplicate names.
-    a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
-    a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
-    root = SequentialAgent(name="root", sub_agents=[a1, a2])
+    
+    root = code_under_test()
     assert len(root.sub_agents) == 2
 
-    # Assert incorrect options:
-    # Option B: 'TypeError' is not raised.
-    # The code does not raise a TypeError, so this option is incorrect.
-    
-    # Option C: Agent names are not automatically renamed.
     assert root.sub_agents[0].name == "worker"
     assert root.sub_agents[1].name == "worker"
-
-    # Option D: 'ValueError' is not raised for duplicate names.
-    # The code does not raise a ValueError, so this option is incorrect.

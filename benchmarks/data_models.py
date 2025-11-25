@@ -42,6 +42,14 @@ class BenchmarkType(str, enum.Enum):
     MULTIPLE_CHOICE = "multiple_choice"
 
 
+class BenchmarkResultType(str, enum.Enum):
+    """The type of result for a benchmark run."""
+
+    PASS = "pass"
+    FAIL_VALIDATION = "fail_validation"
+    FAIL_CRASH = "fail_crash"
+
+
 class CodeSnippetRef(pydantic.BaseModel):
     """Reference to a code snippet in a file."""
 
@@ -325,6 +333,9 @@ class BenchmarkRunResult(pydantic.BaseModel):
     suite: str
     benchmark_name: str
     answer_generator: str
+    result_type: BenchmarkResultType = Field(
+        ..., description="The detailed classification of the result."
+    )
     result: int = Field(
         ..., description="The result of the benchmark run: 1 for pass, 0 for fail."
     )

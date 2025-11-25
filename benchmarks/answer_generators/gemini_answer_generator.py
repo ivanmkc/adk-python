@@ -130,7 +130,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
                     break
 
             if start_index == -1 or end_index == -1:
-                raise ValueError()
+                return ""
 
             return "".join(lines[start_index:end_index])
         except ValueError as e:

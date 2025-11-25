@@ -15,16 +15,18 @@
 import pytest
 from google.adk.tools.function_tool import FunctionTool
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    def add(a: int, b: int) -> int:
+        return a + b
+    FunctionTool(fn=add)
+# LLM_CONTEXT_END
+
 def test_function_tool_async_run():
     """
     Validates FunctionTool initialization error.
     """
-    def add(a: int, b: int) -> int:
-        return a + b
     # Expected behavior: A TypeError is raised because `fn` is an unexpected
     # keyword argument.
     with pytest.raises(TypeError, match="unexpected keyword argument 'fn'"):
-        FunctionTool(fn=add)
-
-    # Assert incorrect options:
-    # Option A, B, D: A TypeError is raised, so these are incorrect.
+        code_under_test()

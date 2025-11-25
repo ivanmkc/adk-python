@@ -16,24 +16,19 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    LlmAgent(
+        name="user",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant.",
+    )
+# LLM_CONTEXT_END
+
 def test_reserved_agent_name():
     """
     Validates that using reserved names (like 'user') raises a ValueError.
     """
     # Expected behavior: A ValidationError is raised because 'user' is a reserved name.
     with pytest.raises(ValidationError, match="Agent name cannot be `user`"):
-        LlmAgent(
-            name="user",
-            model="gemini-2.5-flash",
-            instruction="You are a helpful assistant.",
-        )
-
-    # Assert incorrect options:
-    # Option A: A ValueError is raised for the model name.
-    # This is incorrect; the model name is valid.
-    
-    # Option B: No error is raised.
-    # This is incorrect; a ValidationError is raised.
-
-    # Option D: 'TypeError' is not raised for the instruction.
-    # The instruction is a valid string, so no TypeError is raised.
+        code_under_test()

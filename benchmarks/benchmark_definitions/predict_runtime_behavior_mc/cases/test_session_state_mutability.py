@@ -12,22 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 from google.adk.sessions import Session
-from pydantic import ValidationError
+
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    session = Session(id="123", user_id="user", app_name="test_app")
+    session.state["user"] = "Alice"
+    session.state["count"] = 1
+    session.state["count"] += 1
+    return session
+# LLM_CONTEXT_END
 
 def test_session_state_mutability():
     """
     Validates session state mutability (Predict Error).
     """
     # Expected behavior: The session state is mutable.
-    session = Session(id="123", user_id="user", app_name="test_app")
-    session.state["user"] = "Alice"
-    session.state["count"] = 1
-    session.state["count"] += 1
+    session = code_under_test()
     assert session.state == {"user": "Alice", "count": 2}
-
-    # Assert incorrect options:
-    # Option A: No error is raised, the state is mutable.
-    # Option B: No ValueError is raised.
-    # Option C, D: The final count is 2.

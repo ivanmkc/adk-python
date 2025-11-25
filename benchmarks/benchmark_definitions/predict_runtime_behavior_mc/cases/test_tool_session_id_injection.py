@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    def my_tool(query: str, session_id: str): ...
+    return my_tool
+# LLM_CONTEXT_END
+
 def test_tool_session_id_injection():
     """
     Validates tool signature.
     """
     # Expected behavior: The function signature is inspected, and it is
     # confirmed that `session_id` is a parameter.
-    def my_tool(query: str, session_id: str): ...
+    my_tool = code_under_test()
     assert "session_id" in my_tool.__annotations__
-
-    # Assert incorrect options:
-    # Option A, B, C, D: These describe incorrect behaviors. ADK injects
-    # context via `ToolContext`.

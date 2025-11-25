@@ -14,17 +14,19 @@
 
 from google.adk.agents import LlmAgent
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    agent = LlmAgent(
+        name="stateless", model="gemini-2.5-flash", include_contents="none"
+    )
+    return agent
+# LLM_CONTEXT_END
+
 def test_stateless_agent_history():
     """
     Validates stateless agent init.
     """
     # Expected behavior: The LlmAgent is created successfully with
     # `include_contents` set to "none".
-    agent = LlmAgent(
-        name="stateless", model="gemini-2.5-flash", include_contents="none"
-    )
+    agent = code_under_test()
     assert agent.include_contents == "none"
-
-    # Assert incorrect options:
-    # Option A, B, D: These describe incorrect behaviors. The agent is
-    # created successfully and the behavior is described in C.

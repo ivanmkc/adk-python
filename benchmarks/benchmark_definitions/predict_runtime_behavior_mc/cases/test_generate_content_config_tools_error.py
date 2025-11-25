@@ -17,19 +17,21 @@ from google.adk.agents import LlmAgent
 from google.genai import types
 from pydantic import ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    my_tool = lambda: None
+    LlmAgent(
+        name="agent",
+        model="gemini-2.5-flash",
+        generate_content_config=types.GenerateContentConfig(tools=[my_tool]),
+    )
+# LLM_CONTEXT_END
+
 def test_generate_content_config_tools_error():
     """
     Validates that tools in generate_content_config raises ValidationError.
     """
-    my_tool = lambda: None
     # Expected behavior: A ValidationError is raised because `tools` is not a valid
     # field in `GenerateContentConfig`.
     with pytest.raises(ValidationError, match="All tools must be set via LlmAgent.tools"):
-        LlmAgent(
-            name="agent",
-            model="gemini-2.5-flash",
-            generate_content_config=types.GenerateContentConfig(tools=[my_tool]),
-        )
-
-    # Assert incorrect options:
-    # Option A, B, C, D: A ValidationError is raised, so these are incorrect.
+        code_under_test()

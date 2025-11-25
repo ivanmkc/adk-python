@@ -14,20 +14,20 @@
 
 from google.adk.agents import LlmAgent
 
+# LLM_CONTEXT_BEGIN
+def code_under_test(capsys=None):
+    agent = LlmAgent(name="a", model="...")
+    print(agent.name)
+    agent.name = "b"
+    print(agent.name)
+# LLM_CONTEXT_END
+
 def test_agent_name_mutability(capsys):
     """
     Validates agent name mutability.
     """
     # Expected behavior: The agent's name is mutable and can be changed after
     # initialization. The output should be "a" then "b".
-    agent = LlmAgent(name="a", model="...")
-    print(agent.name)
-    agent.name = "b"
-    print(agent.name)
+    code_under_test()
     captured = capsys.readouterr()
     assert "a\nb\n" in captured.out
-
-    # Assert incorrect options:
-    # Option A: No ValidationError is raised.
-    # Option B: The name is updated, not ignored.
-    # Option C: No error is raised, the name is not protected.

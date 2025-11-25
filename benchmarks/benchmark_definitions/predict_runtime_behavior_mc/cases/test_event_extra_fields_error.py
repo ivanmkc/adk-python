@@ -16,6 +16,11 @@ import pytest
 from google.adk.events import Event
 from pydantic import ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    Event(type="custom", random_field="123")
+# LLM_CONTEXT_END
+
 def test_event_extra_fields_error():
     """
     Validates that Event forbids extra fields (Predict Output).
@@ -23,10 +28,4 @@ def test_event_extra_fields_error():
     # Expected behavior: A ValidationError is raised because `type` and
     # `random_field` are not valid fields for `Event`.
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        Event(type="custom", random_field="123")
-
-    # Assert incorrect options:
-    # Option A, B, C: A ValidationError is raised, so these are incorrect.
-    # Option D: The error is a ValidationError, but the question asks for the
-    # standard output, which would be the full error message. The option D is
-    # too generic.
+        code_under_test()

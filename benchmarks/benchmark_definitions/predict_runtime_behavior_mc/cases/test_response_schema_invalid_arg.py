@@ -16,18 +16,20 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import BaseModel, ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    class MyPydanticModel(BaseModel):
+        field: str
+    LlmAgent(
+        name="bad_agent", model="gemini-2.5-flash", response_schema=MyPydanticModel
+    )
+# LLM_CONTEXT_END
+
 def test_response_schema_invalid_arg():
     """
     Validates that 'response_schema' is an invalid argument.
     """
-    class MyPydanticModel(BaseModel):
-        field: str
     # Expected behavior: A ValidationError is raised because `response_schema`
     # is not a valid argument for `LlmAgent`.
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        LlmAgent(
-            name="bad_agent", model="gemini-2.5-flash", response_schema=MyPydanticModel
-        )
-
-    # Assert incorrect options:
-    # Option A, B, C, D: A ValidationError is raised, so these are incorrect.
+        code_under_test()

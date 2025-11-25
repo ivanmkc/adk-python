@@ -16,6 +16,11 @@ import pytest
 from google.adk.agents import LlmAgent
 from pydantic import ValidationError
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    LlmAgent(name="invalid name", model="gemini-1.5-flash")
+# LLM_CONTEXT_END
+
 def test_llm_agent_name_validation():
     """
     Validates agent name regex constraints (Predict Output).
@@ -23,7 +28,4 @@ def test_llm_agent_name_validation():
     # Expected behavior: A ValidationError is raised because the agent name
     # contains a space.
     with pytest.raises(ValidationError, match="Found invalid agent name"):
-        LlmAgent(name="invalid name", model="gemini-1.5-flash")
-
-    # Assert incorrect options:
-    # Option A, B, C, D: A ValidationError is raised, so these are incorrect.
+        code_under_test()

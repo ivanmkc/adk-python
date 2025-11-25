@@ -15,20 +15,21 @@
 from google.adk.agents import LlmAgent
 from pydantic import BaseModel
 
+# LLM_CONTEXT_BEGIN
+def code_under_test():
+    class MySchema(BaseModel):
+        answer: str
+    agent = LlmAgent(
+        name="json_agent", model="gemini-2.5-flash", output_schema=MySchema
+    )
+    return agent, MySchema
+# LLM_CONTEXT_END
+
 def test_output_schema_json_enforcement():
     """
     Validates 'output_schema' acceptance.
     """
-    class MySchema(BaseModel):
-        answer: str
     # Expected behavior: The LlmAgent is created successfully with the
     # `output_schema` parameter.
-    agent = LlmAgent(
-        name="json_agent", model="gemini-2.5-flash", output_schema=MySchema
-    )
+    agent, MySchema = code_under_test()
     assert agent.output_schema == MySchema
-
-    # Assert incorrect options:
-    # Option A: structured output is supported in LlmAgent.
-    # Option B: `output_format='json'` is not required.
-    # Option C: MySchema does not need to be converted to a dict.

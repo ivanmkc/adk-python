@@ -28,6 +28,7 @@ import pytest
 
 from benchmarks.data_models import ApiUnderstandingBenchmarkCase
 from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import BenchmarkResultType
 from benchmarks.data_models import FixErrorBenchmarkCase
 from benchmarks.data_models import GeneratedAnswer
 from benchmarks.data_models import MultipleChoiceBenchmarkCase
@@ -43,7 +44,7 @@ class BenchmarkRunner(abc.ABC, Generic[BenchmarkCaseT]):
     @abc.abstractmethod
     async def run_benchmark(
         self, benchmark_case: BenchmarkCaseT, generated_answer: GeneratedAnswer
-    ) -> tuple[str, Optional[str], Optional[str]]:
+    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str]]:
         """Runs a benchmark and returns the result."""
         pass
 
@@ -55,16 +56,16 @@ class MultipleChoiceRunner(BenchmarkRunner[MultipleChoiceBenchmarkCase]):
         self,
         benchmark_case: MultipleChoiceBenchmarkCase,
         generated_answer: GeneratedAnswer,
-    ) -> tuple[str, Optional[str], Optional[str]]:
+    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str]]:
         """Checks if the answer matches the correct option."""
         answer = generated_answer.output.answer.strip().upper()
         correct = benchmark_case.correct_answer.strip().upper()
 
         if answer == correct:
-            return "pass", None, None
+            return BenchmarkResultType.PASS, None, None
         else:
             return (
-                "fail",
+                BenchmarkResultType.FAIL_VALIDATION,
                 f"Expected '{correct}', but got '{answer}'.\nQuestion: {benchmark_case.question}",
                 None,
             )
@@ -101,7 +102,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
-    ) -> tuple[str, str, str]:
+    ) -> tuple[BenchmarkResultType, str, str]:
         """Runs a benchmark using pytest and returns the result and logs."""
         code_to_test = generated_answer.output.code
         project_root = Path(__file__).parent.parent
@@ -136,7 +137,31 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             f"--- Pytest stdout ---\n{stdout.decode()}\n"
             f"--- Pytest stderr ---\n{stderr.decode()}"
         )
-        result = "pass" if proc.returncode == 0 else "fail"
+        
+        # Determine the result type
+        if proc.returncode == 0:
+            result = BenchmarkResultType.PASS
+        elif proc.returncode == 1:
+            # Check for specific crash patterns in the output
+            # If these are present, we consider it a crash (invalid code) rather than just a wrong answer.
+            output_str = stdout.decode() + stderr.decode()
+            crash_patterns = [
+                "NameError:",
+                "ImportError:",
+                "SyntaxError:",
+                "IndentationError:",
+                "ModuleNotFoundError:",
+                "TypeError:", # Often indicates a crash in the generated code logic
+                "AttributeError:",
+            ]
+            if any(pattern in output_str for pattern in crash_patterns):
+                result = BenchmarkResultType.FAIL_CRASH
+            else:
+                result = BenchmarkResultType.FAIL_VALIDATION
+        else:
+            # Return codes > 1 usually indicate usage errors or internal errors
+            result = BenchmarkResultType.FAIL_CRASH
+
         return result, logs, str(tmp_path)
 
 
@@ -159,7 +184,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
         self,
         benchmark_case: ApiUnderstandingBenchmarkCase,
         generated_answer: GeneratedAnswer,
-    ) -> tuple[str, str, None]:
+    ) -> tuple[BenchmarkResultType, str, None]:
         """Validates the generated answer and returns the result and logs."""
         all_errors = []
         output = generated_answer.output
@@ -180,7 +205,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
                     fully_qualified_class_name=generated_answer.output.fully_qualified_class_name,
                     expected_paths=ground_truth.fully_qualified_class_name,
                 )
-                return "pass", "Validation successful.", None
+                return BenchmarkResultType.PASS, "Validation successful.", None
 
             except validation_utils.ValidationError as e:
                 all_errors.append(
@@ -192,4 +217,4 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
             f"--- Validation Failed for: {benchmark_case.get_identifier()} ---\n"
             + "\n".join(all_errors)
         )
-        return "fail", logs, None
+        return BenchmarkResultType.FAIL_VALIDATION, logs, None

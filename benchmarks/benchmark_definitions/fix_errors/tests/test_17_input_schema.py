@@ -38,7 +38,7 @@ async def test_input_schema_validation():
     worker_agent = LlmAgent(
         name="worker",
         model=MODEL_NAME,
-        instruction="Acknowledge the user's name and age: {name}, {age}.",
+        instruction="Acknowledge the user's name and age.",
         input_schema=UserInfo,
     )
     agent = LlmAgent(

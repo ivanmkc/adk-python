@@ -29,6 +29,7 @@ from benchmarks.benchmark_runner import ApiUnderstandingRunner
 from benchmarks.benchmark_runner import PytestBenchmarkRunner
 from benchmarks.data_models import BaseBenchmarkCase
 from benchmarks.data_models import BenchmarkFile
+from benchmarks.data_models import BenchmarkResultType
 from benchmarks.data_models import BenchmarkRunResult
 from benchmarks.logger import BenchmarkLogger
 
@@ -72,13 +73,15 @@ async def _run_single_benchmark(
             if logger:
                 logger.log_generation_failure(
                     benchmark_name=case.get_identifier(),
-                    error_message=error_message
+                    error_message=error_message,
+                    prompt="",
                 )
                 
             return BenchmarkRunResult(
                 suite=str(Path(suite_file).absolute()),
                 benchmark_name=case.get_identifier(),
                 answer_generator=generator.name,
+                result_type=BenchmarkResultType.FAIL_CRASH,
                 result=0,
                 answer="",
                 validation_error=error_message,
@@ -104,7 +107,8 @@ async def _run_single_benchmark(
         suite=str(Path(suite_file).absolute()),
         benchmark_name=case.get_identifier(),
         answer_generator=generator.name,
-        result=1 if result == "pass" else 0,
+        result_type=result,
+        result=1 if result == BenchmarkResultType.PASS else 0,
         answer=str(generated_answer.output),
         rationale=(
             generated_answer.output.rationale if generated_answer.output else None
