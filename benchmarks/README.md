@@ -65,6 +65,32 @@ To run all the benchmark tests directly, you can use the following command from 
 python -m pytest ./benchmarks/
 ```
 
+### Verification Tools
+
+#### Multiple Choice Leak Checker (`check_mc_leaks.py`)
+
+This script is designed to proactively detect potential "answer leaks" in Multiple Choice (MC) benchmark cases. It uses an LLM to analyze the question, options, correct answer, and the provided code snippet to determine if the snippet or its surrounding context inadvertently reveals the answer, making the question trivial.
+
+**Purpose:**
+*   Ensures the integrity and fairness of MC benchmarks.
+*   Helps prevent scenarios where the LLM can "game" the system by inferring the answer without actual understanding.
+
+**How it Works:**
+1.  The script iterates through all MC benchmark suites (`*_mc/benchmark.yaml`).
+2.  For each MC case, it extracts the question, options, correct answer, and the associated code snippet (delimited by `# --8<-- [start:...]` and `# --8<-- [end:...]` tags).
+3.  An LLM is prompted to act as a "strict exam proctor" and evaluate if the snippet contains explicit hints, solution patterns, or contextual information that makes the correct answer obvious without requiring deep library knowledge.
+
+**To run the Leak Checker:**
+```bash
+# Ensure you have the GEMINI_API_KEY environment variable set.
+# Example: export GEMINI_API_KEY="YOUR_API_KEY"
+env/bin/python benchmarks/verification/check_mc_leaks.py
+```
+
+**Important Notes:**
+*   The LLM's assessment is based on a heuristic and may require human review.
+*   If leaks are detected, it's recommended to refine the benchmark's code snippet or question to ensure true knowledge testing.
+
 ### 2. Evaluating Candidate Answer Generators
 
 This is the primary purpose of the framework. The goal is to run one or more experimental `AnswerGenerator`s against the benchmark suites to gather performance metrics. This is not a simple pass/fail test but an experiment to produce a comparative analysis.
