@@ -228,12 +228,39 @@ class BenchmarkFile(pydantic.BaseModel):
     benchmarks: list[BenchmarkCase]
 
 
+class BenchmarkErrorType(str, enum.Enum):
+    """Categorization of errors encountered during benchmark execution."""
+    
+    # Model Failures (The model's output was incorrect or invalid)
+    MODEL_INCORRECT_ANSWER = "ModelIncorrectAnswer"
+    MODEL_ANSWER_DID_NOT_MATCH_TEMPLATE = "ModelAnswerDidNotMatchTemplate"
+    ASSERTION_ERROR = "AssertionError"
+    SYNTAX_ERROR = "SyntaxError"
+    NAME_ERROR = "NameError"
+    IMPORT_ERROR = "ImportError"
+    TYPE_ERROR = "TypeError"
+    VALUE_ERROR = "ValueError"
+    ATTRIBUTE_ERROR = "AttributeError"
+    INDENTATION_ERROR = "IndentationError"
+    MODULE_NOT_FOUND_ERROR = "ModuleNotFoundError"
+    
+    # Infrastructure/Environment Failures (The test harness or API failed)
+    CLIENT_ERROR = "ClientError"
+    SERVER_ERROR = "ServerError"
+    RESOURCE_EXHAUSTED = "ResourceExhausted"
+    TIMEOUT_ERROR = "TimeoutError"
+    CONNECTION_ERROR = "ConnectionError"
+    TEST_FAILURE = "TestFailure" # Generic pytest failure (could be either, usually infra if not assertion)
+    SYSTEM_EXIT = "SystemExit"
+    OTHER_ERROR = "OtherError"
+
+
 class BenchmarkResult(pydantic.BaseModel):
     """Represents the result of a benchmark run."""
 
     outcome: ExpectedOutcome
 
-    error_type: Optional[str] = None
+    error_type: Optional[BenchmarkErrorType] = None
 
     error_message: Optional[str] = None
 
@@ -333,7 +360,7 @@ class BenchmarkRunResult(pydantic.BaseModel):
     suite: str
     benchmark_name: str
     answer_generator: str
-    result_type: BenchmarkResultType = Field(
+    status: BenchmarkResultType = Field(
         ..., description="The detailed classification of the result."
     )
     result: int = Field(
@@ -342,5 +369,6 @@ class BenchmarkRunResult(pydantic.BaseModel):
     answer: str
     rationale: Optional[str] = None
     validation_error: Optional[str] = None
+    error_type: Optional[BenchmarkErrorType] = None
     temp_test_file: Optional[str] = None
     latency: float = 0.0

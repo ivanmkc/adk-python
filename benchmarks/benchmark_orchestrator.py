@@ -76,22 +76,33 @@ async def _run_single_benchmark(
                     error_message=error_message,
                     prompt="",
                 )
+            
+            from benchmarks.data_models import BenchmarkErrorType
+            # Try to map common generation errors
+            gen_error_type = BenchmarkErrorType.OTHER_ERROR
+            exc_name = type(e).__name__
+            # Simple mapping attempt
+            for member in BenchmarkErrorType:
+                if member.value == exc_name:
+                    gen_error_type = member
+                    break
                 
             return BenchmarkRunResult(
                 suite=str(Path(suite_file).absolute()),
                 benchmark_name=case.get_identifier(),
                 answer_generator=generator.name,
-                result_type=BenchmarkResultType.FAIL_CRASH,
+                status=BenchmarkResultType.FAIL_CRASH,
                 result=0,
                 answer="",
                 validation_error=error_message,
+                error_type=gen_error_type,
                 temp_test_file=None,
                 latency=time.time() - start_time,
             )
 
         latency = time.time() - start_time
 
-        result, validation_error, temp_file_path = await runner.run_benchmark(
+        result, validation_error, temp_file_path, error_type = await runner.run_benchmark(
             case, generated_answer
         )
 
@@ -107,13 +118,14 @@ async def _run_single_benchmark(
         suite=str(Path(suite_file).absolute()),
         benchmark_name=case.get_identifier(),
         answer_generator=generator.name,
-        result_type=result,
+        status=result,
         result=1 if result == BenchmarkResultType.PASS else 0,
         answer=str(generated_answer.output),
         rationale=(
             generated_answer.output.rationale if generated_answer.output else None
         ),
         validation_error=validation_error,
+        error_type=error_type,
         temp_test_file=temp_file_path,
         latency=latency,
     )

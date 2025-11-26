@@ -44,7 +44,7 @@ class BenchmarkRunner(abc.ABC, Generic[BenchmarkCaseT]):
     @abc.abstractmethod
     async def run_benchmark(
         self, benchmark_case: BenchmarkCaseT, generated_answer: GeneratedAnswer
-    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str]]:
+    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str], Optional[str]]:
         """Runs a benchmark and returns the result."""
         pass
 
@@ -56,18 +56,20 @@ class MultipleChoiceRunner(BenchmarkRunner[MultipleChoiceBenchmarkCase]):
         self,
         benchmark_case: MultipleChoiceBenchmarkCase,
         generated_answer: GeneratedAnswer,
-    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str]]:
+    ) -> tuple[BenchmarkResultType, Optional[str], Optional[str], Optional[str]]:
         """Checks if the answer matches the correct option."""
         answer = generated_answer.output.answer.strip().upper()
         correct = benchmark_case.correct_answer.strip().upper()
 
         if answer == correct:
-            return BenchmarkResultType.PASS, None, None
+            return BenchmarkResultType.PASS, None, None, None
         else:
+            from benchmarks.data_models import BenchmarkErrorType
             return (
                 BenchmarkResultType.FAIL_VALIDATION,
                 f"Expected '{correct}', but got '{answer}'.\nQuestion: {benchmark_case.question}",
                 None,
+                BenchmarkErrorType.MODEL_INCORRECT_ANSWER,
             )
 
 
@@ -102,7 +104,7 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
-    ) -> tuple[BenchmarkResultType, str, str]:
+    ) -> tuple[BenchmarkResultType, str, str, Optional[str]]:
         """Runs a benchmark using pytest and returns the result and logs."""
         code_to_test = generated_answer.output.code
         project_root = Path(__file__).parent.parent
@@ -132,37 +134,93 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await proc.communicate()
+        
+        output_str = stdout.decode() + stderr.decode()
 
         logs = (
             f"--- Pytest stdout ---\n{stdout.decode()}\n"
             f"--- Pytest stderr ---\n{stderr.decode()}"
         )
         
-        # Determine the result type
+        error_type = None
+        result = BenchmarkResultType.FAIL_CRASH # Default to crash if non-zero exit
+
         if proc.returncode == 0:
             result = BenchmarkResultType.PASS
         elif proc.returncode == 1:
-            # Check for specific crash patterns in the output
-            # If these are present, we consider it a crash (invalid code) rather than just a wrong answer.
-            output_str = stdout.decode() + stderr.decode()
-            crash_patterns = [
-                "NameError:",
-                "ImportError:",
-                "SyntaxError:",
-                "IndentationError:",
-                "ModuleNotFoundError:",
-                "TypeError:", # Often indicates a crash in the generated code logic
-                "AttributeError:",
-            ]
-            if any(pattern in output_str for pattern in crash_patterns):
+            # Standard Python exception pattern in pytest output: "E   ExceptionName: message"
+            # We look for the last occurrence of such pattern as it's usually the root cause.
+            exception_match = re.search(r"E\s+([a-zA-Z0-9_.]*Error):", output_str)
+            extracted_error_name = exception_match.group(1) if exception_match else None
+
+            if extracted_error_name:
+                # Map string to enum if possible
+                try:
+                    # Attempt to match extracted name to enum value
+                    # (e.g. "NameError" -> BenchmarkErrorType.NAME_ERROR)
+                    # Since enum values are strings like "NameError", we can check values.
+                    from benchmarks.data_models import BenchmarkErrorType
+                    # Normalize: if extracted is "google.genai.errors.ClientError", take "ClientError"
+                    simple_name = extracted_error_name.split(".")[-1]
+                    
+                    # Try to find matching enum member by value
+                    found_member = None
+                    for member in BenchmarkErrorType:
+                        if member.value == simple_name:
+                            found_member = member
+                            break
+                    
+                    if found_member:
+                        error_type = found_member
+                    else:
+                        # Fallback for unmapped exceptions (still crash/fail but typed as Other)
+                        error_type = BenchmarkErrorType.OTHER_ERROR
+                        
+                except Exception:
+                    error_type = BenchmarkErrorType.OTHER_ERROR
+            else:
+                # No explicit exception found
+                from benchmarks.data_models import BenchmarkErrorType
+                if "AssertionError" in output_str:
+                    error_type = BenchmarkErrorType.ASSERTION_ERROR
+                elif "FAILED" in output_str:
+                    error_type = BenchmarkErrorType.TEST_FAILURE
+                else:
+                    error_type = BenchmarkErrorType.OTHER_ERROR
+
+            # Determine if it's a crash or validation failure based on the classified type
+            from benchmarks.data_models import BenchmarkErrorType
+            
+            # Infrastructure/Crash types
+            crash_types = {
+                BenchmarkErrorType.CLIENT_ERROR,
+                BenchmarkErrorType.SERVER_ERROR,
+                BenchmarkErrorType.RESOURCE_EXHAUSTED,
+                BenchmarkErrorType.TIMEOUT_ERROR,
+                BenchmarkErrorType.CONNECTION_ERROR,
+                BenchmarkErrorType.SYSTEM_EXIT,
+                BenchmarkErrorType.SYNTAX_ERROR,
+                BenchmarkErrorType.INDENTATION_ERROR,
+                BenchmarkErrorType.IMPORT_ERROR,
+                BenchmarkErrorType.MODULE_NOT_FOUND_ERROR,
+                BenchmarkErrorType.NAME_ERROR, # Often user code crash
+                BenchmarkErrorType.TYPE_ERROR, # Often user code crash
+                BenchmarkErrorType.ATTRIBUTE_ERROR, # Often user code crash
+            }
+            
+            if error_type in crash_types:
                 result = BenchmarkResultType.FAIL_CRASH
             else:
+                # Assertion failures and generic test failures are validation issues
                 result = BenchmarkResultType.FAIL_VALIDATION
+
         else:
             # Return codes > 1 usually indicate usage errors or internal errors
+            from benchmarks.data_models import BenchmarkErrorType
             result = BenchmarkResultType.FAIL_CRASH
+            error_type = BenchmarkErrorType.SYSTEM_EXIT
 
-        return result, logs, str(tmp_path)
+        return result, logs, str(tmp_path), error_type
 
 
 import re
@@ -184,7 +242,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
         self,
         benchmark_case: ApiUnderstandingBenchmarkCase,
         generated_answer: GeneratedAnswer,
-    ) -> tuple[BenchmarkResultType, str, None]:
+    ) -> tuple[BenchmarkResultType, str, None, Optional[str]]:
         """Validates the generated answer and returns the result and logs."""
         all_errors = []
         output = generated_answer.output
@@ -205,7 +263,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
                     fully_qualified_class_name=generated_answer.output.fully_qualified_class_name,
                     expected_paths=ground_truth.fully_qualified_class_name,
                 )
-                return BenchmarkResultType.PASS, "Validation successful.", None
+                return BenchmarkResultType.PASS, "Validation successful.", None, None
 
             except validation_utils.ValidationError as e:
                 all_errors.append(
@@ -217,4 +275,7 @@ class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):
             f"--- Validation Failed for: {benchmark_case.get_identifier()} ---\n"
             + "\n".join(all_errors)
         )
-        return BenchmarkResultType.FAIL_VALIDATION, logs, None
+        # "ModelValidationError" indicates the generated code failed static or dynamic validation checks
+        # (e.g. mismatched template, wrong class path) despite being syntactically valid.
+        from benchmarks.data_models import BenchmarkErrorType
+        return BenchmarkResultType.FAIL_VALIDATION, logs, None, BenchmarkErrorType.MODEL_ANSWER_DID_NOT_MATCH_TEMPLATE

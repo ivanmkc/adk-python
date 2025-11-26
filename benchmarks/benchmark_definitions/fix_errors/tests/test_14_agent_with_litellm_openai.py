@@ -20,9 +20,9 @@ import pytest
 from benchmarks.test_helpers import run_agent_test
 
 # Skip this test if the OPENAI_API_KEY is not set.
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
-)
+# pytestmark = pytest.mark.skipif(
+#    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+# )
 
 # LLM_CONTEXT_BEGIN
 from google.adk.agents import LlmAgent
@@ -36,6 +36,11 @@ root_agent = LlmAgent(
 )
 # END: CODE
 # LLM_CONTEXT_END
+
+
+def test_root_agent_exists():
+    """Tests that the root_agent variable is defined."""
+    assert "root_agent" in globals(), "root_agent must be defined"
 
 
 async def run_test() -> str:

@@ -54,6 +54,8 @@ root_agent = LlmAgent(
 @pytest.mark.asyncio
 async def test_before_and_after_tool_callbacks():
     """Tests that before_tool_callback and after_tool_callback are invoked."""
+    assert "root_agent" in globals(), "root_agent must be defined"
+    
     before_called = []
     after_called = []
 
