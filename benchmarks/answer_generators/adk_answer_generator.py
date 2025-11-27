@@ -16,6 +16,7 @@
 
 import asyncio
 import json
+import uuid
 
 from google.adk.agents import Agent
 from google.adk.runners import InMemoryRunner
@@ -40,15 +41,16 @@ from benchmarks.validation_utils import TEMPLATES
 class AdkAnswerGenerator(AnswerGenerator):
     """An AnswerGenerator that uses an ADK Agent."""
 
-    def __init__(self, agent: Agent):
+    def __init__(self, agent: Agent, name: str | None = None):
         super().__init__()
         self.agent = agent
+        self._name = name or f"AdkAnswerGenerator({self.agent.name})"
         self.runner = InMemoryRunner(agent=self.agent)
 
     @property
     def name(self) -> str:
         """Returns a unique name for this generator instance."""
-        return f"AdkAnswerGenerator({self.agent.name})"
+        return self._name
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase
@@ -72,10 +74,11 @@ class AdkAnswerGenerator(AnswerGenerator):
 
     async def _run_agent_async(self, prompt: str) -> str:
         """Helper to run the agent and get the response."""
+        session_id = f"benchmark_session_{uuid.uuid4()}"
         session = await self.runner.session_service.create_session(
             app_name=self.runner.app_name,
             user_id="benchmark_user",
-            session_id="benchmark_session",
+            session_id=session_id,
         )
         final_response = ""
 
