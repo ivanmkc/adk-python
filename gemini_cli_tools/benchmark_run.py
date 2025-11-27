@@ -110,8 +110,7 @@ async def main():
             print(error_summary.to_string(index=False))
 
             # --- DETAILED DEBUG FOR GEMINI CLI FAILURES ---
-            print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---
-{bcolors.ENDC}")
+            print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---{bcolors.ENDC}")
             cli_failures = failed_df[failed_df["answer_generator"].str.contains("GeminiCliAnswerGenerator")]
             if not cli_failures.empty:
                 # Print just the first 3 failures to avoid overwhelming output
