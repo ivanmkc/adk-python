@@ -32,6 +32,7 @@ from google.genai import types
 
 from benchmarks.answer_generators import AdkAnswerGenerator
 from benchmarks.answer_generators import GeminiAnswerGenerator
+from benchmarks.answer_generators import GeminiCliAnswerGenerator
 from benchmarks.answer_generators import GroundTruthAnswerGenerator
 from benchmarks.answer_generators import TrivialAnswerGenerator
 from benchmarks.data_models import AnswerTemplate
@@ -107,6 +108,45 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
         assert generated_answer.output.code == "mocked class"
         assert generated_answer.output.fully_qualified_class_name == "mocked.module"
         mock_client.return_value.aio.models.generate_content.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_gemini_cli_answer_generator(
+    mock_api_case: ApiUnderstandingBenchmarkCase,
+):
+    """Tests the GeminiCliAnswerGenerator with mocked subprocess execution."""
+    mock_cli_output = {
+        "response": '```json\n{"code": "cli class", "fully_qualified_class_name": "cli.module", "rationale": "cli rationale"}\n```'
+    }
+    
+    import json
+    mock_stdout = json.dumps(mock_cli_output).encode("utf-8")
+    
+    with patch("asyncio.create_subprocess_exec") as mock_exec:
+        # Mock the process object
+        mock_proc = AsyncMock()
+        mock_proc.communicate.return_value = (mock_stdout, b"")
+        mock_proc.returncode = 0
+        mock_exec.return_value = mock_proc
+
+        generator = GeminiCliAnswerGenerator()
+        generated_answer = await generator.generate_answer(mock_api_case)
+
+        # Verify parsed output
+        assert generated_answer.output.code == "cli class"
+        assert generated_answer.output.fully_qualified_class_name == "cli.module"
+        
+        # Verify CLI invocation arguments
+        mock_exec.assert_called_once()
+        call_args = mock_exec.call_args[0]
+        assert call_args[0] == "gemini"  # Default cli_path
+        # Ensure prompt is positional (not using --prompt)
+        assert call_args[1] is not None  # Prompt string
+        assert "--prompt" not in call_args
+        assert "--output-format" in call_args
+        assert "json" in call_args
+        assert "--yolo" in call_args
+        assert "--sandbox" in call_args
 
 
 @pytest.mark.asyncio

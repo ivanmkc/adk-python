@@ -18,7 +18,7 @@ All suites pass structural verification (`verify_*.py`) and runtime execution (`
 3.  **Formatting:** Stripped embedded options (e.g., "A. ...") from question text to rely solely on the structured `options` dict.
 4.  **Compliance:** Enforced "None of the above" option availability in all questions.
 5.  **Bias Correction:** Randomized option order and correct answer keys (A-E) to prevent "Answer A" dominance.
-    - Added regression test `benchmarks/unit_tests/test_benchmark_distribution.py` to ensure no single option exceeds 40% frequency.
+    - Added regression test `benchmarks/tests/unit/test_benchmark_distribution.py` to ensure no single option exceeds 40% frequency.
 
 ## Recommendations for Future Improvements
 
