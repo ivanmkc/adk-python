@@ -17,6 +17,7 @@
 import pytest
 from pathlib import Path
 from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
+from benchmarks.answer_generators.adk_agents import create_default_adk_agent
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
     AnswerTemplate,
@@ -38,7 +39,8 @@ async def test_adk_generator_simple_api_understanding():
     We use a trivial question to ensure the test passes reliably if the integration works.
     """
     # Use flash model for speed and cost in tests
-    generator = AdkAnswerGenerator(model_name="gemini-2.5-flash")
+    agent = create_default_adk_agent(model_name="gemini-2.5-flash")
+    generator = AdkAnswerGenerator(agent=agent)
     
     # A trivial case where we explicitly tell the model what to output
     case = ApiUnderstandingBenchmarkCase(
@@ -87,7 +89,8 @@ async def test_adk_generator_multiple_choice():
     Tests the AdkAnswerGenerator with a MultipleChoiceBenchmarkCase.
     We use a trivial question to ensure the test passes reliably.
     """
-    generator = AdkAnswerGenerator(model_name="gemini-2.5-flash")
+    agent = create_default_adk_agent(model_name="gemini-2.5-flash")
+    generator = AdkAnswerGenerator(agent=agent)
     
     case = MultipleChoiceBenchmarkCase(
         question="The correct answer for this question is B. Select B.",
@@ -121,7 +124,8 @@ async def test_adk_generator_fix_error():
     Tests the AdkAnswerGenerator with the '01: A minimal LlmAgent' fix_error case.
     We provide the exact solution code in the requirements to ensure the test passes.
     """
-    generator = AdkAnswerGenerator(model_name="gemini-2.5-flash")
+    agent = create_default_adk_agent(model_name="gemini-2.5-flash")
+    generator = AdkAnswerGenerator(agent=agent)
     
     case = FixErrorBenchmarkCase(
         name='01: A minimal LlmAgent.',

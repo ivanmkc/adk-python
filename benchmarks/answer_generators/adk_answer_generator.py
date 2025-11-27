@@ -17,7 +17,7 @@
 import asyncio
 import json
 
-from google.adk.agents import LlmAgent
+from google.adk.agents import Agent
 from google.adk.runners import InMemoryRunner
 from google.adk.sessions import Session
 from google.genai import types
@@ -40,26 +40,15 @@ from benchmarks.validation_utils import TEMPLATES
 class AdkAnswerGenerator(AnswerGenerator):
     """An AnswerGenerator that uses an ADK Agent."""
 
-    def __init__(self, model_name: str = "gemini-2.5-pro"):
+    def __init__(self, agent: Agent):
         super().__init__()
-        self.model_name = model_name
-        self.agent = LlmAgent(
-            name="adk_test_agent",
-            model=self.model_name,
-            instruction=(
-                "You are a senior engineer specializing in the ADK Python framework. "
-                "Your task is to answer questions or fix code with expert precision. "
-                "Always respond with a JSON object conforming to the specified schema, "
-                "enclosed in a markdown code block (```json...```)."
-            ),
-            # Removed output_schema here to handle it dynamically based on benchmark_case
-        )
+        self.agent = agent
         self.runner = InMemoryRunner(agent=self.agent)
 
     @property
     def name(self) -> str:
         """Returns a unique name for this generator instance."""
-        return f"AdkAnswerGenerator({self.model_name})"
+        return f"AdkAnswerGenerator({self.agent.name})"
 
     async def generate_answer(
         self, benchmark_case: BaseBenchmarkCase
