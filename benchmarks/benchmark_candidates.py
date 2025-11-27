@@ -38,8 +38,8 @@ agent_pro = create_default_adk_agent(model_name=GEMINI_2_5_PRO)
 # List of standard candidate generators
 CANDIDATE_GENERATORS = [
     # ADK Agent-based generators (The primary targets for evaluation)
-    AdkAnswerGenerator(agent=agent_flash),
-    AdkAnswerGenerator(agent=agent_pro),
+    AdkAnswerGenerator(agent=agent_flash, name="adk_gemini_2_5_flash"),
+    AdkAnswerGenerator(agent=agent_pro, name="adk_gemini_2_5_pro"),
     
     # Direct Gemini SDK generators (Baselines)
     # Using permute to easily create variations with different models and contexts

@@ -15,6 +15,7 @@
 """Integration tests for GeminiCliAnswerGenerator without mocking."""
 
 import pytest
+import asyncio
 from pathlib import Path
 from benchmarks.answer_generators.gemini_cli_answer_generator import GeminiCliAnswerGenerator
 from benchmarks.data_models import (
@@ -158,3 +159,38 @@ async def test_gemini_cli_generator_fix_error():
         
     except Exception as e:
         pytest.fail(f"Gemini CLI generator fix_error integration test failed: {e}")
+
+@pytest.mark.asyncio
+async def test_gemini_cli_generator_concurrency():
+    """
+    Tests that the GeminiCliAnswerGenerator can handle concurrent requests.
+    This ensures the subprocess execution doesn't lock up or fail under load.
+    """
+    generator = GeminiCliAnswerGenerator(model_name="gemini-2.5-flash")
+    concurrency_level = 5
+    
+    case = ApiUnderstandingBenchmarkCase(
+        name="Concurrency Test",
+        description="Concurrency Test",
+        category="Core",
+        question="Return `class Trivial:`.",
+        rationale="Trivial.",
+        file=Path("src/google/adk/events/event.py"), 
+        template=AnswerTemplate.CLASS_DEFINITION,
+        answers=[
+            StringMatchAnswer(
+                answer="class Trivial:",
+                fully_qualified_class_name=["trivial.Trivial"],
+                answer_template="StringMatchAnswer"
+            )
+        ]
+    )
+
+    async def run_one():
+        try:
+            await generator.generate_answer(case)
+        except Exception as e:
+            pytest.fail(f"Concurrent run failed for {generator.name}: {e}")
+
+    tasks = [run_one() for _ in range(concurrency_level)]
+    await asyncio.gather(*tasks)

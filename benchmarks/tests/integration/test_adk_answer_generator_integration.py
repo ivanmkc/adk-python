@@ -15,6 +15,7 @@
 """Integration tests for AdkAnswerGenerator without mocking."""
 
 import pytest
+import asyncio
 from pathlib import Path
 from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
@@ -162,3 +163,41 @@ async def test_adk_generator_fix_error():
         
     except Exception as e:
         pytest.fail(f"ADK generator fix_error integration test failed: {e}")
+
+@pytest.mark.asyncio
+async def test_adk_generator_concurrency():
+    """
+    Tests that the AdkAnswerGenerator can handle concurrent requests without collision.
+    This ensures session IDs are unique per call.
+    """
+    agent = create_default_adk_agent(model_name="gemini-2.5-flash")
+    generator = AdkAnswerGenerator(agent=agent)
+    concurrency_level = 5
+    
+    # A trivial case that requires minimal processing
+    case = ApiUnderstandingBenchmarkCase(
+        name="Concurrency Test",
+        description="Concurrency Test",
+        category="Core",
+        question="Return `class Trivial:`.",
+        rationale="Trivial.",
+        file=Path("src/google/adk/events/event.py"), 
+        template=AnswerTemplate.CLASS_DEFINITION,
+        answers=[
+            StringMatchAnswer(
+                answer="class Trivial:",
+                fully_qualified_class_name=["trivial.Trivial"],
+                answer_template="StringMatchAnswer"
+            )
+        ]
+    )
+
+    async def run_one():
+        try:
+            await generator.generate_answer(case)
+        except Exception as e:
+            pytest.fail(f"Concurrent run failed for {generator.name}: {e}")
+
+    # Run concurrently
+    tasks = [run_one() for _ in range(concurrency_level)]
+    await asyncio.gather(*tasks)

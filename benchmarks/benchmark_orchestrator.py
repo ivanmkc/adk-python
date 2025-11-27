@@ -143,6 +143,15 @@ async def run_benchmarks(
     """
     Runs all benchmark suites against all answer generators in parallel and returns raw results.
     """
+    # Check for duplicate generator names to prevent result collisions
+    generator_names = [g.name for g in answer_generators]
+    if len(generator_names) != len(set(generator_names)):
+        duplicates = {name for name in generator_names if generator_names.count(name) > 1}
+        raise ValueError(
+            f"Duplicate answer generator names detected: {duplicates}. "
+            "Please ensure all generators have unique names."
+        )
+
     semaphore = asyncio.Semaphore(max_concurrency)
     tasks = []
 
