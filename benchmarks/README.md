@@ -123,6 +123,7 @@ from benchmarks.answer_generators import (
     GroundTruthAnswerGenerator,
     TrivialAnswerGenerator,
     GeminiAnswerGenerator,
+    AdkAnswerGenerator,
 )
 
 async def main():
@@ -133,7 +134,8 @@ async def main():
     answer_generators_to_test = [
         GroundTruthAnswerGenerator(),
         TrivialAnswerGenerator(),
-        GeminiAnswerGenerator(),
+        GeminiAnswerGenerator(model_name="gemini-2.5-pro"),
+        AdkAnswerGenerator(model_name="gemini-2.5-flash"),
     ]
 
     print("Executing benchmark evaluation...")
@@ -298,19 +300,21 @@ def assert_test(response: str):
 
 ### Multiple Choice (MC) Benchmarks
 
-For multiple-choice benchmarks (e.g., `predict_runtime_behavior_mc`), strict context isolation is critical to prevent "leaking" the answer to the model. The `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` markers must strictly wrap **only** the code snippet being tested.
+For multiple-choice benchmarks (e.g., `predict_runtime_behavior_mc`), strict context isolation is critical to prevent "leaking" the answer to the model. The snippet tags `# --8<-- [start:...]` and `# --8<-- [end:...]` must strictly wrap **only** the code snippet being tested.
 
 **Example of an MC case:**
 
 ```python
 # test_case_01.py
 
-# LLM_CONTEXT_BEGIN
+from google.adk.agents import LlmAgent
+
+# --8<-- [start:agent_name_mutability]
 def code_under_test():
    # Code that demonstrates the behavior in question
    agent = LlmAgent(name="test")
    agent.name = "new_name"
-# LLM_CONTEXT_END
+# --8<-- [end:agent_name_mutability]
 
 def test_agent_name_mutability():
     """

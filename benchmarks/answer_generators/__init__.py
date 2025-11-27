@@ -12,18 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""A package containing various answer generator implementations."""
+"""Answer generators for benchmarks."""
 
-from .adk_answer_generator import AdkAnswerGenerator
-from .base import AnswerGenerator
-from .gemini_answer_generator import GeminiAnswerGenerator
-from .ground_truth_answer_generator import GroundTruthAnswerGenerator
-from .trivial_answer_generator import TrivialAnswerGenerator
+from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
+from benchmarks.answer_generators.base import AnswerGenerator
+from benchmarks.answer_generators.gemini_answer_generator import GeminiAnswerGenerator
+from benchmarks.answer_generators.gemini_cli_answer_generator import GeminiCliAnswerGenerator
+from benchmarks.answer_generators.ground_truth_answer_generator import (
+    GroundTruthAnswerGenerator,
+)
+from benchmarks.answer_generators.trivial_answer_generator import TrivialAnswerGenerator
 
 __all__ = [
     "AdkAnswerGenerator",
     "AnswerGenerator",
     "GeminiAnswerGenerator",
+    "GeminiCliAnswerGenerator",
     "GroundTruthAnswerGenerator",
     "TrivialAnswerGenerator",
 ]
