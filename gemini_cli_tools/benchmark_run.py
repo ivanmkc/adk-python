@@ -11,6 +11,7 @@ from benchmarks.logger import JsonTraceLogger
 pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_rows', None)
 
+# %%
 # ANSI escape codes for colors
 class bcolors:
     HEADER = '\033[95m'
@@ -25,6 +26,7 @@ class bcolors:
 
 logger = JsonTraceLogger(output_dir="traces")
 
+# %%
 async def run_comparison() -> List[BenchmarkRunResult]:
     """Sets up and runs the benchmark comparison."""
     print("Configuring benchmark run...")
@@ -59,6 +61,7 @@ def extract_error_type(row) -> str:
         return str(et)
     return "OtherError"
 
+# %%
 async def main():
     # Execute the benchmarks
     results = await run_comparison()
