@@ -38,11 +38,11 @@ agent = LlmAgent(
 async def test_include_contents_none_stateless_agent():
     """Tests that LlmAgent with include_contents='none' acts as a stateless agent."""
     # First turn: Agent should introduce itself
-    response1 = await run_agent_test(agent, "What is your name?")
+    response1 = await run_agent_test(agent, "What is your name?", mock_llm_response="StatelessBot")
     assert "StatelessBot" in response1
 
     # Second turn: Agent should confirm its stateless nature and not recall the specific previous question.
-    response2 = await run_agent_test(agent, "Do you remember what I asked you before?")
+    response2 = await run_agent_test(agent, "Do you remember what I asked you before?", mock_llm_response="I am stateless. I do not remember.")
     assert "stateless" in response2.lower()
     assert "remember" in response2.lower()  # It should state that it doesn't remember
     assert (

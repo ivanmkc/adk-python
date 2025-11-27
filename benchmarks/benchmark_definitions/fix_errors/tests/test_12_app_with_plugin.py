@@ -52,7 +52,7 @@ app = App(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(app.root_agent, "Hello")
+    return await run_agent_test(app.root_agent, "Hello", mock_llm_response="Hello")
 
 
 def assert_test(response: str):

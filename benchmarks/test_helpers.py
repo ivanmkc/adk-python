@@ -59,19 +59,27 @@ async def run_agent_test(
     expect_response: bool = True,
 ) -> str:
     """Runs a test against a given agent and returns the final response."""
-    with patch("google.adk.models.google_llm.genai", create=True) as mock_genai:
+    # Patch the Client class where it is imported in the code or globally
+    with patch("google.genai.Client") as MockClient:
         if mock_llm_response:
-            mock_model_instance = mock_genai.GenerativeModel.return_value
-            mock_model_instance.generate_content_async = AsyncMock()
-            response = types.GenerateContentResponse()
-            response.candidates = [
-                types.Candidate(
-                    content=types.Content(
-                        parts=[types.Part(text=mock_llm_response)], role="model"
+            # Configure the mock client instance
+            mock_client_instance = MockClient.return_value
+            
+            # Create a mock response object matching the expected structure
+            mock_response = types.GenerateContentResponse(
+                candidates=[
+                    types.Candidate(
+                        content=types.Content(
+                            parts=[types.Part(text=mock_llm_response)], 
+                            role="model"
+                        )
                     )
-                )
-            ]
-            mock_model_instance.generate_content_async.return_value = response
+                ]
+            )
+            
+            # Mock the async generate_content method
+            # Note: We need to mock the chain .aio.models.generate_content
+            mock_client_instance.aio.models.generate_content = AsyncMock(return_value=mock_response)
 
         app = App(name=f"test_app_{agent.name}", root_agent=agent)
         runner = InMemoryRunner(app=app)

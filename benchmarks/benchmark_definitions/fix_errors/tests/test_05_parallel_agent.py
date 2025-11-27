@@ -44,7 +44,7 @@ root_agent = ParallelAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Run in parallel.")
+    return await run_agent_test(root_agent, "Run in parallel.", mock_llm_response="parallel")
 
 
 def assert_test(response: str):

@@ -39,7 +39,7 @@ async def test_artifact_usage_in_instruction():
     artifact_data = {"my_data": "important information"}
 
     response = await run_agent_test(
-        agent, "What is the data?", artifact_data=artifact_data
+        agent, "What is the data?", artifact_data=artifact_data, mock_llm_response="important information"
     )
     assert "important information" in response
 

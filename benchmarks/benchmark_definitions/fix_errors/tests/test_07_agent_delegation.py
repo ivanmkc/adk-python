@@ -44,7 +44,7 @@ root_agent = LlmAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "I need a specialist.")
+    return await run_agent_test(root_agent, "I need a specialist.", mock_llm_response="specialist ok")
 
 
 def assert_test(response: str):

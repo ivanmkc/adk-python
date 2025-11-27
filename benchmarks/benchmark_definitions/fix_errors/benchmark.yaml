@@ -5,12 +5,8 @@ benchmarks:
     description: Create a minimal LlmAgent named 'root_agent'.
     requirements:
       - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
+      - The agent MUST use the model 'gemini-2.5-flash' (passed as a string literal).
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/tests/test_01_single_llm_agent.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '02: An LlmAgent with a simple function tool.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
@@ -21,9 +17,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '03: An LlmAgent that uses output_schema to enforce JSON output.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_03_agent_with_output_schema.py
@@ -34,9 +27,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_03_agent_with_output_schema.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '04: A SequentialAgent orchestrating two simple agents.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_04_sequential_agent.py
@@ -46,9 +36,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_04_sequential_agent.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '05: A ParallelAgent running two agents concurrently.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_05_parallel_agent.py
@@ -58,9 +45,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_05_parallel_agent.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '06: A LoopAgent that runs a sub-agent a fixed number of times.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_06_loop_agent.py
@@ -70,9 +54,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_06_loop_agent.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '07: A root agent delegating a task to a sub-agent.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_07_agent_delegation.py
@@ -84,9 +65,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_07_agent_delegation.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '08: A simple custom agent with conditional logic.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_08_custom_agent.py
@@ -97,9 +75,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_08_custom_agent.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '10: An agent that writes to and reads from session.state.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_10_agent_with_state_management.py
@@ -110,28 +85,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_10_agent_with_state_management.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
-      code: "|\n        from google.adk.agents import LlmAgent, SequentialAgent\n\n        MODEL_NAME = \"gemini-2.5-flash\"
-
-        writer_agent = LlmAgent(
-            name=\"writer_agent\",
-            model=MODEL_NAME,
-            instruction=\"Respond with only the text 'xyz'.\",
-            output_key=\"secret_word\",
-        )
-
-        reader_agent = LlmAgent(
-            name=\"reader_agent\",
-            model=MODEL_NAME,
-            instruction=\"Your only task is to output the content of '{secret_word}'. Do not add any other text.\",
-        )
-
-        root_agent = SequentialAgent(
-            name=\"state_management_coordinator\",
-            sub_agents=[writer_agent, reader_agent],
-        )"
   - name: '11: A direct implementation test for InMemoryRunner.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_11_in_memory_runner_direct.py
@@ -141,9 +94,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_11_in_memory_runner_direct.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '12: An App instance that includes a basic plugin.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_12_app_with_plugin.py
@@ -154,9 +104,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `app`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_12_app_with_plugin.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '13: An LlmAgent with a BuiltInCodeExecutor.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_13_code_executor.py
@@ -167,9 +114,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_13_code_executor.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '14: An LlmAgent using an OpenAI model via LiteLlm.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_14_agent_with_litellm_openai.py
@@ -180,9 +124,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_14_agent_with_litellm_openai.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '15: An LlmAgent with an after_model_callback.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_15_callbacks.py
@@ -193,9 +134,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_15_callbacks.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '16: Build integrity test for LlmAgent with generate_content_config.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_16_generate_content_config.py
@@ -206,9 +144,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_16_generate_content_config.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '17: Build integrity test for LlmAgent with input_schema.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_17_input_schema.py
@@ -220,13 +155,10 @@ benchmarks:
       - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_17_input_schema.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
-  - name: '18: Build integrity test for LlmAgent with include_contents='''none'''.' 
+  - name: "18: Build integrity test for LlmAgent with include_contents='none'." 
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_18_include_contents_none.py
-    description: Create an `LlmAgent` named 'agent' with `include_contents` set to `'''none'''` to make it stateless.
+    description: "Create an `LlmAgent` named 'agent' with `include_contents` set to `'none'` to make it stateless."
     requirements:
       - The agent's name should be 'StatelessBot'.
       - The agent should be initialized with `include_contents='none'`.
@@ -234,9 +166,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_18_include_contents_none.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '19: Build integrity test for LlmAgent with artifacts.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_19_artifacts.py
@@ -247,9 +176,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_19_artifacts.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
   - name: '20: Build integrity test for LlmAgent with expanded callbacks.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_20_expanded_callbacks.py
@@ -261,32 +187,6 @@ benchmarks:
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_20_expanded_callbacks.py
-    answer:
-      rationale: Ground truth answer.
-      benchmark_type: fix_error
-      code: "|\n        from google.adk.agents import LlmAgent\n        from google.adk.tools.function_tool import FunctionTool\n\n        MODEL_NAME = \"gemini-2.5-flash\"
-
-        async def _mock_tool_func(query: str) -> str:\n            return f\"UNIQUE_TOOL_OUTPUT_FOR_TEST: {query}\"\nbefore_called = []
-after_called = []
-
-async def before_callback_func(tool, args, tool_context):
-    before_called.append(True)
-    return None
-
-async def after_callback_func(tool, args, tool_context, tool_response):
-    after_called.append(True)
-    return None
-
-test_tool = FunctionTool(func=_mock_tool_func)
-
-root_agent = LlmAgent(
-    name=\"callback_agent\",
-    model=MODEL_NAME,
-    instruction=\"Use the test_tool to respond to the user. Return the tool's output verbatim.\",
-    tools=[test_tool],
-    before_tool_callback=before_callback_func,
-    after_tool_callback=after_callback_func,
-)"
   - name: '21: A minimal LlmAgent with a syntax error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_21_syntax_error.py
@@ -297,10 +197,6 @@ root_agent = LlmAgent(
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_21_syntax_error.py
-    answer:
-      rationale: Ground truth answer.
-      # The LLM is expected to add the closing parenthesis.
-      code: "root_agent = LlmAgent(name='syntax_agent', model='gemini-2.5-flash', instruction='You are a helpful assistant.')"
   - name: '22: A minimal LlmAgent with a logic error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_22_logic_error.py
@@ -311,10 +207,6 @@ root_agent = LlmAgent(
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_22_logic_error.py
-    answer:
-      rationale: Ground truth answer.
-      # The LLM is expected to change the instruction.
-      code: "root_agent = LlmAgent(name=\'logic_agent\', model=\'gemini-2.5-flash\', instruction=\'You are a helpful assistant. Always respond with \"Hello World!\".\')"
   - name: '23: A minimal LlmAgent with a missing import.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_23_missing_import.py
@@ -325,10 +217,6 @@ root_agent = LlmAgent(
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_23_missing_import.py
-    answer:
-      rationale: Ground truth answer.
-      # The LLM is expected to add `from google.adk.agents import LlmAgent`.
-      code: "from google.adk.agents import LlmAgent\n\nroot_agent = LlmAgent(name=\'import_agent\', model=\'gemini-2.5-flash\', instruction=\'You are a helpful assistant.\')"
   - name: '24: A minimal LlmAgent with an incorrect API usage.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_24_incorrect_api_usage.py
@@ -339,10 +227,6 @@ root_agent = LlmAgent(
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_24_incorrect_api_usage.py
-    answer:
-      rationale: Ground truth answer.
-      # The LLM is expected to change 'instructions' to 'instruction'.
-      code: "root_agent = LlmAgent(name=\'api_agent\', model=\'gemini-2.5-flash\', instruction=\'You are a helpful assistant.\')"
   - name: '25: A SequentialAgent with an interaction error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_25_multi_agent_interaction_error.py
@@ -353,23 +237,3 @@ root_agent = LlmAgent(
       - The final solution must be assigned to a variable named `root_agent`.
     code_context:
       file: benchmarks/benchmark_definitions/fix_errors/tests/test_25_multi_agent_interaction_error.py
-    answer:
-      rationale: Ground truth answer.
-      # The LLM is expected to change `output_key` to 'correct_key' in writer_agent and update the instruction in reader_agent.
-      code: "MODEL_NAME = \"gemini-2.5-flash\"\n\nwriter_agent = LlmAgent(
-    name=\"writer_agent\",
-    model=MODEL_NAME,
-    instruction=\"Respond with only the text 'secret_message'.\",
-    output_key=\"correct_key\", # Corrected output key
-)
-
-reader_agent = LlmAgent(
-    name=\"reader_agent\",
-    model=MODEL_NAME,
-    instruction=\"Your only task is to output the content of '{correct_key}'. Do not add any other text.\",
-)
-
-root_agent = SequentialAgent(
-    name=\"multi_agent_coordinator\",
-    sub_agents=[writer_agent, reader_agent],
-)"

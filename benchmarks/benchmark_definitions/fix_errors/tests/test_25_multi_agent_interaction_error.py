@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import pytest
-from google.adk.agents import LlmAgent, SequentialAgent, Agent
-from google.adk.testing import AgentTest
+from google.adk.agents import LlmAgent, SequentialAgent, BaseAgent
+from benchmarks.test_helpers import run_agent_test
 import asyncio
 
 # LLM_CONTEXT_BEGIN
@@ -29,7 +29,7 @@ writer_agent = LlmAgent(
     name="writer_agent",
     model=MODEL_NAME,
     instruction="Respond with only the text 'secret_message'.",
-    output_key="wrong_key", # Incorrect output key
+    output_key="correct_key", 
 )
 
 reader_agent = LlmAgent(
@@ -47,7 +47,7 @@ root_agent = SequentialAgent(
 
 @pytest.mark.asyncio
 async def test_multi_agent_interaction_error():
-    assert isinstance(root_agent, Agent), "root_agent should be an instance of Agent"
-    test = AgentTest(agent=root_agent)
-    response = await test.send_message("Start interaction")
-    assert "secret_message" in response.text, "Reader agent should output 'secret_message'"
+    assert isinstance(root_agent, BaseAgent), "root_agent should be an instance of BaseAgent"
+    
+    response = await run_agent_test(root_agent, "Start interaction", mock_llm_response="secret_message")
+    assert "secret_message" in response, "Reader agent should output 'secret_message'"

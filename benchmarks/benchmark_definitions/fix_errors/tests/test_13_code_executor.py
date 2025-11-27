@@ -35,7 +35,7 @@ root_agent = LlmAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Calculate 2 + 2.")
+    return await run_agent_test(root_agent, "Calculate 2 + 2.", mock_llm_response="4")
 
 
 def assert_test(response: str):

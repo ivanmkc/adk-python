@@ -23,11 +23,12 @@ from unittest.mock import patch
 import pytest
 
 # Ensure src is in path
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[3]
 if str(project_root) not in sys.path:
     sys.path.append(str(project_root))
 
 from google.adk.events.event import Event  # Added import
+from google.adk.agents import Agent
 from google.genai import types
 
 from benchmarks.answer_generators import AdkAnswerGenerator
@@ -238,7 +239,9 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
 
         mock_runner_instance.run_async = counting_async_generator
 
-        generator = AdkAnswerGenerator()
+        mock_agent = MagicMock(spec=Agent)
+        mock_agent.name = "test_agent"
+        generator = AdkAnswerGenerator(agent=mock_agent)
         generated_answer = await generator.generate_answer(mock_api_case)
 
         assert generated_answer.output.code == "adk class"

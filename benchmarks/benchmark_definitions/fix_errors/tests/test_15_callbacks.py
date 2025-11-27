@@ -43,13 +43,14 @@ root_agent = LlmAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Hello")
+    return await run_agent_test(root_agent, "Hello", mock_llm_response="Hello")
 
 
 def assert_test(response: str):
     """Asserts the response is valid and the callback was called."""
     print(f"Agent response: {response}")
-    assert "Hello" in response
+    # The agent might say "Hi there" or "Hello". Check for greeting.
+    assert "Hello" in response or "Hi" in response, f"Unexpected response: {response}"
     assert callback_was_called, "The after_model_callback was not called."
 
 

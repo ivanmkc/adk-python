@@ -17,6 +17,10 @@
 import pytest
 import asyncio
 from pathlib import Path
+from unittest.mock import MagicMock, AsyncMock
+from google.adk.agents import Agent
+from google.adk.events import Event
+from google.genai import types
 from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
 from benchmarks.data_models import (
@@ -170,8 +174,25 @@ async def test_adk_generator_concurrency():
     Tests that the AdkAnswerGenerator can handle concurrent requests without collision.
     This ensures session IDs are unique per call.
     """
-    agent = create_default_adk_agent(model_name="gemini-2.5-flash")
-    generator = AdkAnswerGenerator(agent=agent)
+    # Create a mock agent that returns a valid JSON response
+    mock_agent = MagicMock(spec=Agent)
+    mock_agent.name = "mock_concurrency_agent"
+    
+    # Mock run_async to yield a response event
+    async def mock_run_async(*args, **kwargs):
+        response_json = json.dumps({
+            "code": "class Trivial:",
+            "fully_qualified_class_name": "trivial.Trivial",
+            "rationale": "Trivial."
+        })
+        yield Event(
+            author="model",
+            content=types.Content(parts=[types.Part(text=response_json)])
+        )
+
+    mock_agent.run_async = mock_run_async
+    
+    generator = AdkAnswerGenerator(agent=mock_agent)
     concurrency_level = 5
     
     # A trivial case that requires minimal processing

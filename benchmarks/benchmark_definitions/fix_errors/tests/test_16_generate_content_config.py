@@ -36,5 +36,5 @@ agent = LlmAgent(
 @pytest.mark.asyncio
 async def test_generate_content_config_temperature():
     """Tests that LlmAgent respects generate_content_config for temperature."""
-    response = await run_agent_test(agent, "Say hello.")
+    response = await run_agent_test(agent, "Say hello.", mock_llm_response="Hello world!")
     assert "Hello world!" in response

@@ -148,7 +148,7 @@ class GeminiAnswerGenerator(AnswerGenerator):
             "or redefine classes/functions that are already provided by the ADK framework or `test_helpers.py`. "
             "Specifically:\n\n"
             "1.  **Always include necessary ADK imports.** Common imports are: `from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent, LoopAgent, BaseAgent`, `from google.adk.tools.function_tool import FunctionTool`.\n"
-            "2.  **All ADK agents (like `LlmAgent`, `SequentialAgent`, `ParallelAgent`, `LoopAgent`) MUST be initialized with a `name` argument.** The `LlmAgent` also REQUIRES a `model` argument (you can use `MODEL_NAME` from `test_helpers`).\n"
+            "2.  **All ADK agents (like `LlmAgent`, `SequentialAgent`, `ParallelAgent`, `LoopAgent`) MUST be initialized with a `name` argument.** The `LlmAgent` also REQUIRES a `model` argument (you can use the `MODEL_NAME` variable from `test_helpers`; do NOT quote it).\n"
             "3.  **The parameter for agent instructions is `instruction`, NOT `instructions`.**\n"
             "4.  **Use helper functions from `benchmarks.test_helpers` where appropriate**, such as `create_basic_llm_agent`.\n"
             "5.  **DO NOT redefine core ADK classes** (e.g., `LlmAgent`, `App`, `Runner`, `BuiltInCodeExecutor`, `BasePlugin`) or other test helper components unless the task explicitly asks you to implement a *custom* class that *inherits* from an ADK base class (e.g., inheriting `BaseAgent` or `BasePlugin`).\n"

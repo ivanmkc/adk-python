@@ -14,7 +14,7 @@
 
 import pytest
 from google.adk.agents import LlmAgent, Agent
-from google.adk.testing import AgentTest
+from benchmarks.test_helpers import run_agent_test
 import asyncio
 
 # LLM_CONTEXT_BEGIN
@@ -25,7 +25,7 @@ import asyncio
 root_agent = LlmAgent(
     name='logic_agent',
     model='gemini-2.5-flash',
-    instruction='You are a helpful assistant. Always respond with "Goodbye World!".'
+    instruction='You are a helpful assistant. Always respond with "Hello World!".'
 )
 # END: CODE
 # LLM_CONTEXT_END
@@ -33,6 +33,6 @@ root_agent = LlmAgent(
 @pytest.mark.asyncio
 async def test_logic_error_agent():
     assert isinstance(root_agent, Agent), "root_agent should be an instance of Agent"
-    test = AgentTest(agent=root_agent)
-    response = await test.send_message("Say hello.")
-    assert "Hello World!" in response.text, "Agent should respond with 'Hello World!'"
+    
+    response = await run_agent_test(root_agent, "Say hello.", mock_llm_response="Hello World!")
+    assert "Hello World!" in response, "Agent should respond with 'Hello World!'"

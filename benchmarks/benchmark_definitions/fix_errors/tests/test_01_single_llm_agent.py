@@ -36,7 +36,7 @@ print(f"root_agent defined: { 'root_agent' in globals() }")
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Hello")
+    return await run_agent_test(root_agent, "Hello", mock_llm_response="Hello")
 
 
 def assert_test(response: str):

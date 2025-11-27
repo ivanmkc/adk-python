@@ -18,7 +18,7 @@ To ensure consistency and focus the LLM on the relevant task, all `fix_error` te
 2.  **Minimal Context**: The `LLM_CONTEXT` block should be as minimal as possible. It must only contain:
     *   Imports from the ADK (`google.adk.*`) or standard Python libraries (`typing`, `json`, etc.) that are directly used within the LLM's expected solution.
     *   Any necessary data models (e.g., Pydantic `BaseModel` classes) or helper functions (e.g., callback functions) that are *provided* to the LLM as part of the problem's setup and are directly referenced by the agent construction code. These should be defined outside the `# BEGIN: CODE` / `# END: CODE` block but within the `# LLM_CONTEXT_BEGIN` / `# LLM_CONTEXT_END` block.
-    *   The `# BEGIN: CODE` and `# END: CODE` markers, which enclose the section of code the LLM needs to write or fix. This block should typically be empty in the test file, as it represents the LLM's output.
+    *   The `# BEGIN: CODE` and `# END: CODE` markers, which enclose the section of code the LLM needs to write or fix. This block contains the complete and correct Python solution code. This is used by the `GroundTruthAnswerGenerator` to extract the expected answer for validation.
 
 3.  **Exclude Test Boilerplate**: All test-running logic and boilerplate must be **outside** the `# LLM_CONTEXT_BEGIN` / `# LLM_CONTEXT_END` block. This includes:
     *   Imports from `__future__`.

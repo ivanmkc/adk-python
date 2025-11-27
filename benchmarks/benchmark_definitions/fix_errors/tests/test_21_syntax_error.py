@@ -14,7 +14,7 @@
 
 import pytest
 from google.adk.agents import LlmAgent, Agent
-from google.adk.testing import AgentTest
+from benchmarks.test_helpers import run_agent_test
 import asyncio
 
 # LLM_CONTEXT_BEGIN
@@ -22,13 +22,12 @@ import asyncio
 # Fix it to define a valid LlmAgent.
 
 # BEGIN: CODE
-root_agent = LlmAgent(name='syntax_agent', model='gemini-2.5-flash', instruction='You are a helpful assistant.'
+root_agent = LlmAgent(name='syntax_agent', model='gemini-2.5-flash', instruction='You are a helpful assistant.')
 # END: CODE
 # LLM_CONTEXT_END
 
 @pytest.mark.asyncio
 async def test_syntax_error_agent():
     assert isinstance(root_agent, Agent), "root_agent should be an instance of Agent"
-    test = AgentTest(agent=root_agent)
-    response = await test.send_message("Hello")
-    assert "Hello" in response.text, "Agent should respond to 'Hello' with 'Hello'"
+    response = await run_agent_test(root_agent, "Hello", mock_llm_response="Hello")
+    assert "Hello" in response, "Agent should respond to 'Hello' with 'Hello'"

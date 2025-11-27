@@ -49,12 +49,14 @@ agent = LlmAgent(
 async def test_input_schema_validation():
     """Tests that LlmAgent respects input_schema for structured input."""
     response = await run_agent_test(
-        agent, 'Process this info: name is Alice, age is 30'
+        agent, 'Process this info: name is Alice, age is 30',
+        mock_llm_response='{"name": "Alice", "age": 30}'
     )
     assert "Alice" in response and "30" in response
 
     response_invalid = await run_agent_test(
-        agent, 'Process this info: name is Bob'
+        agent, 'Process this info: name is Bob',
+        mock_llm_response="Error: The field 'age' is missing."
     )
     # The model should ideally return a response indicating an error.
     # Checking for "error" is a reasonable expectation.

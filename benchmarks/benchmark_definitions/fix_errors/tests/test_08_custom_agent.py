@@ -65,9 +65,9 @@ root_agent = CustomConditionalAgent(
 # LLM_CONTEXT_END
 
 
-async def run_test(run_a: bool) -> str:
+async def run_test(run_a: bool, mock_response: str) -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Run", initial_state={"run_agent_a": run_a})
+    return await run_agent_test(root_agent, "Run", initial_state={"run_agent_a": run_a}, mock_llm_response=mock_response)
 
 
 def assert_test(response: str, expected_agent: str):
@@ -78,11 +78,11 @@ def assert_test(response: str, expected_agent: str):
 
 async def test_custom_agent_condition_a():
     """Tests that the custom agent runs agent_a when the condition is met."""
-    response = await run_test(run_a=True)
+    response = await run_test(run_a=True, mock_response="Agent A")
     assert_test(response, "Agent A")
 
 
 async def test_custom_agent_condition_b():
     """Tests that the custom agent runs agent_b when the condition is not met."""
-    response = await run_test(run_a=False)
+    response = await run_test(run_a=False, mock_response="Agent B")
     assert_test(response, "Agent B")

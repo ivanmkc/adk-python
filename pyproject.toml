@@ -197,12 +197,13 @@ include = ["py.typed"]
 [tool.isort]
 profile = "google"
 single_line_exclusions = []
-line_length = 200                  # Prevent line wrap flickering.
+line_length = 80                  # Prevent line wrap flickering.
 known_third_party = ["google.adk"]
 
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = ["benchmarks/benchmark_definitions"]
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 

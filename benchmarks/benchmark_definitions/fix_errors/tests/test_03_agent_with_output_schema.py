@@ -41,7 +41,10 @@ root_agent = LlmAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Generate the JSON.")
+    return await run_agent_test(
+        root_agent, "Output JSON",
+        mock_llm_response='{"field_one": "value1", "field_two": 2}'
+    )
 
 def assert_test(response: str):
     """Asserts the response is valid."""

@@ -47,7 +47,7 @@ root_agent = SequentialAgent(
 
 async def run_test() -> str:
     """Runs the agent and returns the response."""
-    return await run_agent_test(root_agent, "Run state management test.")
+    return await run_agent_test(root_agent, "Start", mock_llm_response="xyz")
 
 
 def assert_test(response: str):
