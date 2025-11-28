@@ -45,6 +45,7 @@ class BenchmarkLogger(abc.ABC):
         result: str,
         validation_error: Optional[str],
         temp_test_file: Optional[Path],
+        answer_data: Optional[dict] = None,
     ) -> None:
         """Logs the result of a test execution."""
         pass
@@ -74,6 +75,7 @@ class ConsoleBenchmarkLogger(BenchmarkLogger):
         result: str,
         validation_error: Optional[str],
         temp_test_file: Optional[Path],
+        answer_data: Optional[dict] = None,
     ) -> None:
         status = "PASSED" if result == "pass" else "FAILED"
         print(f"--- TEST {status} for {benchmark_name} ---")
@@ -115,6 +117,7 @@ class TraceMarkdownLogger(BenchmarkLogger):
         result: str,
         validation_error: Optional[str],
         temp_test_file: Optional[Path],
+        answer_data: Optional[dict] = None,
     ) -> None:
         status_icon = "✅" if result == "pass" else "❌"
         status_text = "PASSED" if result == "pass" else "FAILED"
@@ -124,6 +127,9 @@ class TraceMarkdownLogger(BenchmarkLogger):
                 f.write(f"**Validation Error:** {validation_error}\n")
             if temp_test_file:
                 f.write(f"**Temp Test File:** `{temp_test_file}`\n")
+            if answer_data:
+                f.write("**Generated Answer:**\n")
+                f.write(f"```json\n{json.dumps(answer_data, indent=2)}\n```\n")
             f.write("\n")
 
     def finalize_run(self) -> None:
@@ -174,6 +180,7 @@ class JsonTraceLogger(BenchmarkLogger):
         result: str,
         validation_error: Optional[str],
         temp_test_file: Optional[Path],
+        answer_data: Optional[dict] = None,
     ) -> None:
         self._log_event(
             "test_result",
@@ -182,6 +189,7 @@ class JsonTraceLogger(BenchmarkLogger):
                 "result": result,
                 "validation_error": validation_error,
                 "temp_test_file": str(temp_test_file) if temp_test_file else None,
+                "answer_data": answer_data,
             },
         )
 

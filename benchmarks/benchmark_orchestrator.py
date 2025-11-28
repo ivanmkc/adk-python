@@ -112,6 +112,7 @@ async def _run_single_benchmark(
                 result=result,
                 validation_error=validation_error,
                 temp_test_file=Path(temp_file_path) if temp_file_path else None,
+                answer_data=generated_answer.output.model_dump() if generated_answer else None,
             )
 
     return BenchmarkRunResult(

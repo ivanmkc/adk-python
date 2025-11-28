@@ -132,8 +132,7 @@ if not raw_results_df.empty:
     )
     summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
 
-    print(f"{bcolors.HEADER}--- Benchmark Summary ---
-{bcolors.ENDC}")
+    print(f"{bcolors.HEADER}--- Benchmark Summary ---\n{bcolors.ENDC}")
     print(summary_df)
 '''
 
@@ -160,14 +159,12 @@ if not raw_results_df.empty:
         # Calculate failure rate
         error_summary["failure_ratio"] = error_summary["count"] / error_summary["total_runs"]
         
-        print(f"{bcolors.HEADER}--- Detailed Error Breakdown ---
-{bcolors.ENDC}")
+        print(f"{bcolors.HEADER}--- Detailed Error Breakdown ---\n{bcolors.ENDC}")
         # Sort for better readability
         error_summary = error_summary.sort_values(["answer_generator", "suite", "count"], ascending=[True, True, False])
         print(error_summary.to_string(index=False))
     else:
-        print(f"{bcolors.OKGREEN}No failures detected!
-{bcolors.ENDC}")
+        print(f"{bcolors.OKGREEN}No failures detected!\n{bcolors.ENDC}")
 '''
 
     # --- Cell 9: Log Inspection (Deep Dive) ---
@@ -178,8 +175,7 @@ if not raw_results_df.empty:
     failed_df = raw_results_df[raw_results_df["result"] == 0]
     
     # --- DETAILED DEBUG FOR GEMINI CLI FAILURES ---
-    print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---
-{bcolors.ENDC}")
+    print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---\n{bcolors.ENDC}")
     cli_failures = failed_df[failed_df["answer_generator"].str.contains("GeminiCliAnswerGenerator")]
     
     if not cli_failures.empty:
