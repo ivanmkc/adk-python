@@ -35,17 +35,25 @@ async def _mock_tool_func(query: str) -> str:
 from google.adk.agents import LlmAgent
 from google.adk.tools.function_tool import FunctionTool
 
-# BEGIN: CODE
-# The callbacks need to be defined here since they are directly referenced by the agent.
-# We will use placeholders for them and define the actual functions in the test.
+before_called = []
+after_called = []
 
+async def before_callback_func(tool, args, tool_context):
+    before_called.append(True)
+    return None  # Do not modify tool args
+
+async def after_callback_func(tool, args, tool_context, tool_response):
+    after_called.append(True)
+    return None  # Do not modify tool response
+
+# BEGIN: CODE
 root_agent = LlmAgent(
     name="callback_agent",
     model=MODEL_NAME,
     instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
     tools=[FunctionTool(func=_mock_tool_func)],
-    before_tool_callback=None,  # Placeholder, will be set in the test
-    after_tool_callback=None,  # Placeholder, will be set in the test
+    before_tool_callback=before_callback_func,
+    after_tool_callback=after_callback_func,
 )
 # END: CODE
 # LLM_CONTEXT_END
@@ -56,27 +64,6 @@ async def test_before_and_after_tool_callbacks():
     """Tests that before_tool_callback and after_tool_callback are invoked."""
     assert "root_agent" in globals(), "root_agent must be defined"
     
-    before_called = []
-    after_called = []
-
-    async def before_callback_func(tool, args, tool_context):
-        before_called.append(True)
-        return None  # Do not modify tool args
-
-    async def after_callback_func(tool, args, tool_context, tool_response):
-        after_called.append(True)
-        return None  # Do not modify tool response
-
-    # Re-instantiate the agent here to apply the actual callback functions
-    agent_for_test = LlmAgent(
-        name="callback_agent",
-        model=MODEL_NAME,
-        instruction="Use the test_tool to respond to the user. Return the tool's output verbatim.",
-        tools=[FunctionTool(func=_mock_tool_func)],
-        before_tool_callback=before_callback_func,
-        after_tool_callback=after_callback_func,
-    )
-
     # Manually run the agent logic without run_agent_test to have full control over mocking
     with patch(
         "google.adk.models.google_llm.Gemini.generate_content_async"
@@ -121,7 +108,7 @@ async def test_before_and_after_tool_callbacks():
         )
         mock_generate.side_effect = lambda *args, **kwargs: next(response_iter)
 
-        app = App(name=f"test_app_{agent_for_test.name}", root_agent=agent_for_test)
+        app = App(name=f"test_app_{root_agent.name}", root_agent=root_agent)
         runner = InMemoryRunner(app=app)
 
         session = await runner.session_service.create_session(

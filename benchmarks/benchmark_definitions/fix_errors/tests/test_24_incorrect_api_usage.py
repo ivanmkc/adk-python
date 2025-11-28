@@ -21,6 +21,15 @@ import asyncio
 # The following code block contains incorrect API usage for LlmAgent.
 # Fix it to define a valid LlmAgent that uses the correct parameter for instruction.
 
+# --- INCORRECT CODE BLOCK ---
+INCORRECT_CODE = """
+root_agent = LlmAgent(
+    name='api_agent',
+    model='gemini-2.5-flash',
+    instructions='You are a helpful assistant.'
+)
+"""
+
 # BEGIN: CODE
 root_agent = LlmAgent(
     name='api_agent',
