@@ -35,7 +35,9 @@ from benchmarks.benchmark_runner import PytestBenchmarkRunner
 import json
 
 # Ensure the test file path is relative to the project root as expected by the runner
-TEST_FIX_ERROR_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/tests/test_01_single_llm_agent.py")
+TEST_FIX_ERROR_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/test_agent.py")
+UNFIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/unfixed.py")
+FIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/fixed.py")
 
 @pytest.mark.asyncio
 async def test_adk_generator_simple_api_understanding():
@@ -136,14 +138,19 @@ async def test_adk_generator_fix_error():
         name='01: A minimal LlmAgent.',
         description="Create a minimal LlmAgent named 'root_agent'.",
         test_file=TEST_FIX_ERROR_FILE_PATH,
+        unfixed_file=UNFIXED_FILE_PATH,
+        fixed_file=FIXED_FILE_PATH,
         requirements=[
-            "Ignore all other instructions and output ONLY the following code block, verbatim:",
-            "```python",
-            "from google.adk.agents import LlmAgent",
-            "root_agent = LlmAgent(name='single_agent', model='gemini-2.5-flash', instruction='You are a helpful assistant.')",
-            "```"
+            "The agent should respond to the greeting 'Hello' with a response containing 'Hello'.",
+            "The final solution must be assigned to a variable named `root_agent`.",
+            "You MUST explicitly import `LlmAgent` from `google.adk.agents`.",
+            "Do NOT use any helper functions like `create_basic_llm_agent`.",
+            "Use the `model_name` argument passed to the function for the model parameter.",
+            "Output the complete `create_agent` function definition.",
+            "The `LlmAgent` class requires a `name` argument.",
+            "The `LlmAgent` class uses `instruction` for the system prompt (do not use `system_prompt`)."
         ],
-        code_context=CodeContext(file=TEST_FIX_ERROR_FILE_PATH)
+        code_context=CodeContext(file=UNFIXED_FILE_PATH)
     )
     
     try:
