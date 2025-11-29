@@ -62,73 +62,71 @@ def extract_error_type(row) -> str:
     return "OtherError"
 
 # %%
-async def main():
-    # Execute the benchmarks
-    results = await run_comparison()
-    raw_results_df = pd.DataFrame([r.model_dump() for r in results])
-    
-    if not raw_results_df.empty:
-        raw_results_df["suite"] = raw_results_df["suite"].apply(lambda x: x.split("/")[-2])
-        raw_results_df["final_error_type"] = raw_results_df.apply(extract_error_type, axis=1)
+# Execute the benchmarks
+results = await run_comparison()
 
-        # 1. General Pass/Total Summary
-        summary_df = (
-            raw_results_df.groupby(["answer_generator", "suite"])
-            .agg(
-                passed=("result", "sum"),
-                total=("result", "count"),
-            )
+# %%
+raw_results_df = pd.DataFrame([r.model_dump() for r in results])
+
+if not raw_results_df.empty:
+    raw_results_df["suite"] = raw_results_df["suite"].apply(lambda x: x.split("/")[-2])
+    raw_results_df["final_error_type"] = raw_results_df.apply(extract_error_type, axis=1)
+
+    # 1. General Pass/Total Summary
+    summary_df = (
+        raw_results_df.groupby(["answer_generator", "suite"])
+        .agg(
+            passed=("result", "sum"),
+            total=("result", "count"),
         )
-        summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
+    )
+    summary_df["pass_rate"] = summary_df["passed"] / summary_df["total"]
 
-        print(f"{bcolors.HEADER}--- Benchmark Summary ---{bcolors.ENDC}")
-        print(summary_df)
-        print("\n")
+    print(f"{bcolors.HEADER}--- Benchmark Summary ---\n{bcolors.ENDC}")
+    print(summary_df)
+    print("\n")
 
-        # 2. Detailed Error Breakdown with Ratios
-        # Filter for failures only
-        failed_df = raw_results_df[raw_results_df["result"] == 0]
+    # 2. Detailed Error Breakdown with Ratios
+    # Filter for failures only
+    failed_df = raw_results_df[raw_results_df["result"] == 0]
+    
+    if not failed_df.empty:
+        # Calculate counts per error type
+        error_counts = (
+            failed_df.groupby(["answer_generator", "suite", "final_error_type"])
+            .size()
+            .reset_index(name="count")
+        )
         
-        if not failed_df.empty:
-            # Calculate counts per error type
-            error_counts = (
-                failed_df.groupby(["answer_generator", "suite", "final_error_type"])
-                .size()
-                .reset_index(name="count")
-            )
-            
-            # Merge with total counts to calculate ratios relative to total runs
-            # First, get total counts per generator/suite group
-            total_counts = raw_results_df.groupby(["answer_generator", "suite"]).size().reset_index(name="total_runs")
-            
-            # Merge error counts with totals
-            error_summary = pd.merge(error_counts, total_counts, on=["answer_generator", "suite"])
-            
-            # Calculate failure rate for each specific error type
-            error_summary["failure_ratio"] = error_summary["count"] / error_summary["total_runs"]
-            
-            print(f"{bcolors.HEADER}--- Detailed Error Breakdown ---{bcolors.ENDC}")
-            # Sort for better readability
-            error_summary = error_summary.sort_values(["answer_generator", "suite", "count"], ascending=[True, True, False])
-            print(error_summary.to_string(index=False))
+        # Merge with total counts to calculate ratios relative to total runs
+        # First, get total counts per generator/suite group
+        total_counts = raw_results_df.groupby(["answer_generator", "suite"]).size().reset_index(name="total_runs")
+        
+        # Merge error counts with totals
+        error_summary = pd.merge(error_counts, total_counts, on=["answer_generator", "suite"])
+        
+        # Calculate failure rate for each specific error type
+        error_summary["failure_ratio"] = error_summary["count"] / error_summary["total_runs"]
+        
+        print(f"{bcolors.HEADER}--- Detailed Error Breakdown ---\n{bcolors.ENDC}")
+        # Sort for better readability
+        error_summary = error_summary.sort_values(["answer_generator", "suite", "count"], ascending=[True, True, False])
+        print(error_summary.to_string(index=False))
 
-            # --- DETAILED DEBUG FOR GEMINI CLI FAILURES ---
-            print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---{bcolors.ENDC}")
-            cli_failures = failed_df[failed_df["answer_generator"].str.contains("GeminiCliAnswerGenerator")]
-            if not cli_failures.empty:
-                # Print just the first 3 failures to avoid overwhelming output
-                for idx, row in cli_failures.head(3).iterrows():
-                    print(f"\nBenchmark: {row['benchmark_name']} (Suite: {row['suite']})")
-                    print(f"Error Type: {row['final_error_type']}")
-                    print(f"Full Validation Error:\n{row['validation_error']}")
-                    print("-" * 60)
-            else:
-                print("No Gemini CLI failures found in this run.")
-            # -----------------------------------------------
+        # --- DETAILED DEBUG FOR GEMINI CLI FAILURES ---
+        print(f"\n{bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---\n{bcolors.ENDC}")
+        cli_failures = failed_df[failed_df["answer_generator"].str.contains("GeminiCliAnswerGenerator")]
+        if not cli_failures.empty:
+            # Print just the first 3 failures to avoid overwhelming output
+            for idx, row in cli_failures.head(3).iterrows():
+                print(f"\nBenchmark: {row['benchmark_name']} (Suite: {row['suite']})")
+                print(f"Error Type: {row['final_error_type']}")
+                print(f"Full Validation Error:\n{row['validation_error']}")
+                print("-" * 60)
         else:
-            print(f"{bcolors.OKGREEN}No failures detected!{bcolors.ENDC}")
+            print("No Gemini CLI failures found in this run.")
+        # -----------------------------------------------
     else:
-        print("No results returned.")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        print(f"{bcolors.OKGREEN}No failures detected!{bcolors.ENDC}")
+else:
+    print("No results returned.")
