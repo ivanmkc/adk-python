@@ -27,30 +27,33 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
 
     def __init__(
         self,
+        image_name: str, # Made non-optional
         model_name: str = "gemini-2.5-pro",
         context: str | Path | None = None,
-        image_name: str = "adk-gemini-sandbox:latest",
+        context_instruction: str | None = None, # New optional argument
     ):
         super().__init__(model_name=model_name, context=context, cli_path="gemini")
         self.image_name = image_name
+        self.context_instruction = context_instruction
 
     @property
     def name(self) -> str:
         """Returns a unique name for this generator instance."""
         base = super().name
-        return base.replace("GeminiCliAnswerGenerator", "GeminiCliDockerAnswerGenerator")
+        return f"GeminiCliDockerAnswerGenerator({self.model_name}, image={self.image_name})"
 
     async def _run_cli_command(self, prompt: str) -> dict[str, Any]:
         """Executes the gemini CLI command inside Docker and returns the parsed JSON output."""
         
-        # Prepend filesystem context instructions
-        context_instruction = (
+        # Determine context instruction to use
+        default_context_instruction = (
             "\nCONTEXT: You are working in a Docker container. "
             "The current working directory is `/repos`. "
             "The project source code is located in the subdirectory `./adk-python`. "
             "You MUST look into `./adk-python` to find source files, tests, or configuration.\n\n"
         )
-        full_prompt = context_instruction + prompt
+        final_context_instruction = self.context_instruction if self.context_instruction is not None else default_context_instruction
+        full_prompt = final_context_instruction + prompt
 
         # Prepare Docker command
         # We need to run the container, pass auth env vars, and execute the gemini command.
@@ -89,7 +92,7 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
         gemini_args = [
             self.cli_path, # "gemini"
             full_prompt,
-            # "--output-format", "json",  <-- Removed: unsupported
+            "--output-format", "json", # Enabled output-format json
             "--model", self.model_name,
             "--yolo",
             # "--sandbox",  <-- Removed because we are already in a container
@@ -114,12 +117,7 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
             error_msg = stderr.decode().strip() or stdout.decode().strip()
             raise RuntimeError(f"Gemini CLI (Docker) failed with code {proc.returncode}: {error_msg}")
 
-        # Since we removed --output-format json, the CLI returns raw text (or markdown).
-        # We manually wrap it to match the expected format of the base class.
-        raw_output = stdout.decode().strip()
-        return {"response": raw_output}
-
-        # try:
-        #     return json.loads(stdout.decode())
-        # except json.JSONDecodeError as e:
-        #     raise RuntimeError(f"Failed to parse JSON output from Gemini CLI (Docker): {e}\nStdout: {stdout.decode()}") from e
+        try:
+            return json.loads(stdout.decode())
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse JSON output from Gemini CLI (Docker): {e}\nStdout: {stdout.decode()}") from e
