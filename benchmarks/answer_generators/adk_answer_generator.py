@@ -162,21 +162,32 @@ class AdkAnswerGenerator(AnswerGenerator):
             requirements_str = "\n".join(
                 f"- {req}" for req in (case.requirements or [])
             )
+            
+            if not case.unfixed_file:
+                raise ValueError("unfixed_file not specified in benchmark case.")
+
+            if not case.unfixed_file.exists():
+                raise FileNotFoundError(f"Unfixed file not found: {case.unfixed_file}")
+
+            full_unfixed_content = case.unfixed_file.read_text()
+
             prompt = (
                 "Your task is to fix the Python code provided. "
                 "You will be given a problem description, requirements for the fix, "
-                "and the content of the test file where the fix needs to be applied. "
+                "and the content of the file where the fix needs to be applied. "
                 "Your response should be a JSON object conforming to the following Pydantic schema, "
                 "enclosed in a markdown code block (```json...```):\n"
                 f"```json\n{schema_json}\n```\n\n"
                 f"Problem: {case.description}\n"
-                f"Test File: {case.test_file}\n"
                 f"Requirements:\n{requirements_str}\n\n"
-                f"Code Context (from {case.code_context.file}):\n"
+                f"Code Context (from {case.unfixed_file}):\n"
                 "```python\n"
-                f"{case.code_context.file.read_text()}\n"
+                f"{full_unfixed_content}\n"
                 "```\n\n"
-                "Please provide the complete, corrected Python code snippet to be injected into the test file."
+                "You must provide the complete, corrected code for the entire file in the `code` field of the JSON output. "
+                "CRITICAL: Your output MUST define a function with the exact signature: `def create_agent(model_name: str) -> BaseAgent:` "
+                "The code should be a complete and valid Python file and **must include all necessary imports** for the code to function correctly. "
+                "DO NOT include any other explanatory text or markdown outside the JSON object."
             )
             return prompt, FixErrorAnswerOutput
         elif isinstance(case, MultipleChoiceBenchmarkCase):

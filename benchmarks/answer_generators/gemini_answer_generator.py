@@ -142,28 +142,28 @@ class GeminiAnswerGenerator(AnswerGenerator):
         """Creates a prompt for a fix_error benchmark case."""
         prompt = (
             "You are an expert Python software engineer specializing in the ADK (Agent Development Kit) framework. "
-            "Your task is to fill in the missing code at the `[YOUR CODE GOES HERE]` placeholder in the Python code snippet below. "
-            "You must provide the complete, corrected code for the placeholder within the `code` field of the JSON output. "
-            "The code should seamlessly integrate into the existing test file, so DO NOT include unnecessary imports "
-            "or redefine classes/functions that are already provided by the ADK framework or `test_helpers.py`. "
+            "Your task is to fix or implement the provided Python file content. "
+            "You must provide the complete, corrected code for the entire file in the `code` field of the JSON output. "
+            "CRITICAL: Your output MUST define a function with the exact signature: `def create_agent(model_name: str) -> BaseAgent:` "
+            "DO NOT include any other functions or classes in your output unless they are part of the original unfixed file that you are fixing. "
+            "The code should be a complete and valid Python file and **must include all necessary imports** for the code to function correctly. "
             "Specifically:\n\n"
             "1.  **`MODEL_NAME`, `basic_tool`, `BasicOutputSchema`, `create_basic_llm_agent`, and `run_agent_test` are automatically available from `benchmarks.test_helpers` and DO NOT require explicit import statements within your generated code block.**\n"
-            "2.  **All ADK agents (like `LlmAgent`, `SequentialAgent`, `ParallelAgent`, `LoopAgent`) MUST be initialized with a `name` argument.** The `LlmAgent` also REQUIRES a `model` argument (you can use the `MODEL_NAME` variable from `test_helpers`; do NOT quote it).\n"
+            "2.  **All ADK agents (like `LlmAgent`, `SequentialAgent`, `ParallelAgent`, `LoopAgent`) MUST be initialized with a `name` argument.** The `LlmAgent` also REQUIRES a `model` argument (you can use the `model_name` variable passed to the `create_agent` function; do NOT quote it, e.g., `model=model_name`).\n"
             "3.  **The parameter for agent instructions is `instruction`, NOT `instructions`.**\n"
-            "4.  **Use helper functions from `benchmarks.test_helpers` where appropriate**, such as `create_basic_llm_agent`.\n"
+            "4.  **Use helper functions from `benchmarks.test_helpers` where appropriate**, such as `create_basic_llm_agent`. Note: For this benchmark, you are primarily expected to implement the agent directly, so helper function usage might be minimal.\n"
             "5.  **DO NOT redefine core ADK classes** (e.g., `LlmAgent`, `App`, `Runner`, `BuiltInCodeExecutor`, `BasePlugin`) or other test helper components unless the task explicitly asks you to implement a *custom* class that *inherits* from an ADK base class (e.g., inheriting `BaseAgent` or `BasePlugin`).\n"
             "6.  **When initializing `FunctionTool`, use the argument `func` to pass the callable, not `fn`.**\n"
-            "7.  **Your output should ONLY be the Python code for the agent definition.** Do not include any other code, functions, or classes.\n"
+            "7.  **Your output should ONLY be the Python code for the function definition.** Do not include any other code, functions, or classes outside the function.\n"
             "8.  **When creating a `SequentialAgent`, `ParallelAgent`, or `LoopAgent`, the list of sub-agents should be passed to the `sub_agents` parameter.**\n"
             "9.  **When creating a `LoopAgent`, the number of iterations should be passed to the `max_iterations` parameter.**\n"
             "10. **`FunctionTool` does not accept a `name` argument.** The tool's name is inferred from the function itself.\n"
             "11. **When implementing a custom agent's `_call` method, you must use `async for` to iterate over and `yield` events from sub-agents.** Do not use `yield from` with async generators.\n"
-            "12. **If you define a custom agent class, you must instantiate it and assign it to the `root_agent` variable.** For simple `LlmAgent` definitions, use the variable name specified in the description.\n"
-            "13. **The `create_basic_llm_agent` function takes `name` and `instruction` as arguments.** Do not use any other arguments.\n"
-            "14. **All plugins that inherit from `BasePlugin` must be initialized with a `name` argument.**\n"
-            "15. **The `App` class requires a `name` argument upon initialization.**\n"
-            "16. **When using `input_schema`, the fields from the schema are available to the model in the user's message.** Do not use `{field_name}` templating in the instruction string; the model will extract the values from the input content.\n\n"
-            f"Here is the detailed description of what the missing code should do: {case.description}\n\n"
+            "12. **If you define a custom agent class, you must instantiate it and assign it to the variable specified in the `requirements` (usually by returning it from the function).**\n"
+            "13. **All plugins that inherit from `BasePlugin` must be initialized with a `name` argument.**\n"
+            "14. **The `App` class requires a `name` argument upon initialization.**\n"
+            "15. **When using `input_schema`, the fields from the schema are available to the model in the user's message.** Do not use `{field_name}` templating in the instruction string; the model will extract the values from the input content.\n\n"
+            f"Here is the detailed description of what the function should do: {case.description}\n\n"
         )
 
         if case.requirements:
@@ -172,29 +172,19 @@ class GeminiAnswerGenerator(AnswerGenerator):
                 prompt += f"- {req}\n"
             prompt += "\n"
 
-        context_content = self._get_context_content()
-        if context_content:
-            prompt += f"Context:\n{context_content}\n\n"
+        # Use unfixed_file for context
+        if not case.unfixed_file:
+            raise ValueError("unfixed_file not specified in benchmark case.")
 
-        code_context_file = (
-            case.code_context.file if case.code_context else case.test_file
-        )
+        if not case.unfixed_file.exists():
+            raise FileNotFoundError(f"Unfixed file not found: {case.unfixed_file}")
 
-        # Replace the code block with a placeholder
-        import re
-
-        context_code = self._get_llm_context_from_file(code_context_file)
-        context_code = re.sub(
-            r"# BEGIN: CODE.*# END: CODE",
-            "[YOUR CODE GOES HERE]",
-            context_code,
-            flags=re.DOTALL,
-        )
+        full_unfixed_content = case.unfixed_file.read_text(encoding="utf-8")
 
         prompt += (
-            "Fill in the missing code in the file below:\n"
+            "Here is the full content of the file where you need to fix the `create_agent` function.\n"
             "```python\n"
-            f"{context_code}\n"
+            f"{full_unfixed_content}\n"
             "```"
         )
         return prompt

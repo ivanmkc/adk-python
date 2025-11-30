@@ -1,0 +1,22 @@
+from __future__ import annotations
+from google.adk.agents import LlmAgent, BaseAgent
+from google.adk.models.lite_llm import LiteLlm
+
+def create_agent(model_name: str) -> BaseAgent:
+    """
+    Creates an LlmAgent that uses an OpenAI model via LiteLlm.
+
+    This function represents the correct implementation for benchmark testing.
+
+    Args:
+        model_name: The name of the LLM model to use (for consistency, not directly used in LiteLlm here).
+
+    Returns:
+        An instance of LlmAgent configured with LiteLlm for OpenAI.
+    """
+    root_agent = LlmAgent(
+        model=LiteLlm(model="openai/gpt-3.5-turbo"),
+        name="openai_agent",
+        instruction="You are a helpful assistant.",
+    )
+    return root_agent

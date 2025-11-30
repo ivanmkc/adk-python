@@ -42,27 +42,19 @@ class GroundTruthAnswerGenerator(AnswerGenerator):
     ) -> GeneratedAnswer:
         """Returns the ground truth answer for the benchmark case."""
         if isinstance(benchmark_case, FixErrorBenchmarkCase):
-            # Extract the answer code from the test file (or code_context file).
-            file_path = benchmark_case.test_file
-            if benchmark_case.code_context:
-                file_path = benchmark_case.code_context.file
+            # Extract the answer code from the fixed_file.
+            file_path = benchmark_case.fixed_file
             
-            if not file_path.exists():
-                raise FileNotFoundError(f"Test file not found: {file_path}")
+            if not file_path:
+                raise ValueError("fixed_file not specified in benchmark case.")
 
-            content = file_path.read_text()
-            
-            # Extract code between markers
-            match = re.search(r"# BEGIN: CODE\n(.*?)# END: CODE", content, re.DOTALL)
-            if not match:
-                raise ValueError(f"Could not find code block in {file_path}")
-            
-            code = textwrap.dedent(match.group(1))
-            
-            # Remove any trailing newlines/whitespace
+            if not file_path.exists():
+                raise FileNotFoundError(f"Fixed file not found: {file_path}")
+
+            code = file_path.read_text()
             code = code.strip()
 
-            rationale = "Ground truth answer extracted from test file."
+            rationale = "Ground truth answer extracted from fixed file."
             output = FixErrorAnswerOutput(code=code, rationale=rationale)
             return GeneratedAnswer(output=output)
         elif isinstance(benchmark_case, ApiUnderstandingBenchmarkCase):

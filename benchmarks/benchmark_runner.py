@@ -16,6 +16,7 @@
 
 import abc
 import asyncio
+import ast
 from pathlib import Path
 import sys
 import tempfile
@@ -23,6 +24,8 @@ import textwrap
 from typing import Generic
 from typing import Optional
 from typing import TypeVar
+import os
+import re
 
 import pytest
 
@@ -76,31 +79,57 @@ class MultipleChoiceRunner(BenchmarkRunner[MultipleChoiceBenchmarkCase]):
 class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
     """A benchmark runner that uses pytest to run the tests."""
 
-    def _inject_code(self, content: str, code: str) -> str:
-        """Injects code between the `BEGIN: CODE` and `END: CODE` markers."""
-        # This regex finds the content between the markers, preserving the markers
-        # themselves and capturing the indentation of the BEGIN marker.
-        pattern = re.compile(
-            r"(\s*)# BEGIN: CODE.*?\s*\n(.*?)\s*# END: CODE", re.DOTALL
-        )
-        
-        match = pattern.search(content)
-        if not match:
-            raise ValueError("Could not find '# BEGIN: CODE' and '# END: CODE' markers.")
-        
-        # The first group captures the indentation of the BEGIN line.
-        indentation = match.group(1)
-        
-        # Indent the new code to match the original block's indentation level.
-        indented_code = textwrap.indent(code, indentation)
-        
-        # Reconstruct the block with the new code.
-        replacement_block = f"{indentation}# BEGIN: CODE\n{indented_code}\n{indentation}# END: CODE"
-        
-        # Replace the original block with the new one.
-        new_content = pattern.sub(replacement_block, content, count=1)
-        
-        return new_content
+    def _verify_signature(self, generated_code: str) -> Optional[str]:
+        """Verifies that the generated function signature matches the standard."""
+        try:
+            try:
+                tree = ast.parse(textwrap.dedent(generated_code))
+            except SyntaxError as e:
+                return f"Syntax error when parsing code for signature verification: {e}"
+
+            # Find function def
+            func_node = None
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name == "create_agent":
+                    func_node = node
+                    break
+            
+            if not func_node:
+                return "Generated code does not define 'create_agent' function."
+
+            # Verify args: (model_name: str)
+            args = func_node.args.args
+            if len(args) != 1:
+                 return f"Expected 1 argument 'model_name', got {len(args)}"
+            
+            arg = args[0]
+            if arg.arg != "model_name":
+                 return f"Expected argument name 'model_name', got '{arg.arg}'"
+            
+            # Check annotation if present
+            if arg.annotation:
+                 try:
+                     ann = ast.unparse(arg.annotation)
+                     if ann != "str":
+                          return f"Expected argument type 'str', got '{ann}'"
+                 except AttributeError:
+                     pass # Python < 3.9
+
+            # Verify return type: -> BaseAgent
+            if func_node.returns:
+                try:
+                    ret = ast.unparse(func_node.returns)
+                    if ret != "BaseAgent":
+                        return f"Expected return type 'BaseAgent', got '{ret}'"
+                except AttributeError:
+                     pass
+            else:
+                 return "Missing return type annotation '-> BaseAgent'"
+
+            return None
+
+        except Exception as e:
+            return f"Signature verification failed with internal error: {e}"
 
     async def run_benchmark(
         self, benchmark_case: FixErrorBenchmarkCase, generated_answer: GeneratedAnswer
@@ -108,30 +137,95 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
         """Runs a benchmark using pytest and returns the result and logs."""
         code_to_test = generated_answer.output.code
         project_root = Path(__file__).parent.parent
-        test_file_path = project_root / benchmark_case.test_file
-
-        if not test_file_path.exists():
-            raise FileNotFoundError(f"Could not find test file: {test_file_path}")
-
-        with open(test_file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        # Replace the code block with the code to test using robust injection
-        new_content = self._inject_code(content, code_to_test)
-
+        
+        # Create a temp directory for execution
         tmpdir = tempfile.mkdtemp(prefix="benchmark_")
-        tmp_path = Path(tmpdir) / "test_temp.py"
-        with open(tmp_path, "w", encoding="utf-8") as tmp:
-            tmp.write(new_content)
+        tmp_path = Path(tmpdir)
+
+        # Helper to read file content
+        def read_file(path: Path) -> str:
+            if not path.exists():
+                raise FileNotFoundError(f"Could not find file: {path}")
+            with open(path, "r", encoding="utf-8") as f:
+                return f.read()
+
+        target_test_file = tmp_path / "test_temp.py"
+
+        if benchmark_case.unfixed_file and benchmark_case.fixed_file:
+            test_file_path = project_root / benchmark_case.test_file
+            
+            # Verify signature before proceeding.
+            sig_error = self._verify_signature(code_to_test)
+            if sig_error:
+                from benchmarks.data_models import BenchmarkErrorType
+                return (
+                    BenchmarkResultType.FAIL_VALIDATION,
+                    f"Signature Verification Failed:\n{sig_error}",
+                    None,
+                    BenchmarkErrorType.MODEL_ANSWER_DID_NOT_MATCH_TEMPLATE
+                )
+
+            # 2. Write the generated code to 'agent.py' in the temp dir
+            (tmp_path / "agent.py").write_text(code_to_test, encoding="utf-8")
+            
+            # 3. Read and write the test file to the temp dir
+            test_content = read_file(test_file_path)
+            target_test_file.write_text(test_content, encoding="utf-8")
+            
+            # 4. Create __init__.py to make it a package (helps with relative imports)
+            (tmp_path / "__init__.py").touch()
+
+        elif benchmark_case.agent_file: # Fallback for deprecated agent_file
+            agent_file_path = project_root / benchmark_case.agent_file
+            test_file_path = project_root / benchmark_case.test_file
+
+            # Verify signature before proceeding (legacy check)
+            sig_error = self._verify_signature(code_to_test)
+            if sig_error:
+                from benchmarks.data_models import BenchmarkErrorType
+                return (
+                    BenchmarkResultType.FAIL_VALIDATION,
+                    f"Signature Verification Failed:\n{sig_error}",
+                    None,
+                    BenchmarkErrorType.MODEL_ANSWER_DID_NOT_MATCH_TEMPLATE
+                )
+
+            # For deprecated agent_file, we assume the generated code is still only the agent definition,
+            # and it needs to be injected into the original agent_file content.
+            # However, since the prompt specifies the candidate should return the *entire* unfixed.py,
+            # this legacy branch might become obsolete or need further adjustment.
+            # For now, if this branch is hit, we treat `code_to_test` as the full agent file.
+            (tmp_path / "agent.py").write_text(code_to_test, encoding="utf-8")
+            
+            # 3. Read and write test file
+            test_content = read_file(test_file_path)
+            target_test_file.write_text(test_content, encoding="utf-8")
+            
+            # 4. Create __init__.py to make it a package (helps with relative imports)
+            (tmp_path / "__init__.py").touch()
+
+        else: # Legacy single-file mode with no agent_file explicitly set
+            test_file_path = project_root / benchmark_case.test_file
+            # In this legacy mode, code_to_test should contain the full file.
+            target_test_file.write_text(code_to_test, encoding="utf-8")
+
+        # Prepare environment with PYTHONPATH including the temp directory
+        env = os.environ.copy()
+        pythonpath = env.get("PYTHONPATH", "")
+        if pythonpath:
+            env["PYTHONPATH"] = f"{pythonpath}{os.pathsep}{str(tmp_path)}"
+        else:
+            env["PYTHONPATH"] = str(tmp_path)
 
         proc = await asyncio.create_subprocess_exec(
             sys.executable,
             "-m",
             "pytest",
             "--asyncio-mode=auto",
-            str(tmp_path),
+            str(target_test_file),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=env,
         )
         stdout, stderr = await proc.communicate()
         
@@ -221,9 +315,6 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             error_type = BenchmarkErrorType.SYSTEM_EXIT
 
         return result, logs, str(tmp_path), error_type
-
-
-import re
 
 
 class ApiUnderstandingRunner(BenchmarkRunner[ApiUnderstandingBenchmarkCase]):

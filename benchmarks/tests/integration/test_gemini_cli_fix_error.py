@@ -21,7 +21,9 @@ from benchmarks.benchmark_runner import PytestBenchmarkRunner
 from pathlib import Path
 
 # Ensure the test file path is relative to the project root as expected by the runner
-TEST_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/tests/test_01_single_llm_agent.py")
+TEST_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/test_agent.py")
+UNFIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/unfixed.py")
+FIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/fixed.py")
 
 @pytest.mark.asyncio
 async def test_gemini_cli_fix_error_01():
@@ -35,11 +37,17 @@ async def test_gemini_cli_fix_error_01():
         name='01: A minimal LlmAgent.',
         description="Create a minimal LlmAgent named 'root_agent'.",
         test_file=TEST_FILE_PATH,
+        unfixed_file=UNFIXED_FILE_PATH,
+        fixed_file=FIXED_FILE_PATH,
         requirements=[
             "The agent should respond to the greeting 'Hello' with a response containing 'Hello'.",
-            "The final solution must be assigned to a variable named `root_agent`."
+            "The final solution must be assigned to a variable named `root_agent`.",
+            "You MUST explicitly import `LlmAgent` from `google.adk.agents`.",
+            "Do NOT use any helper functions like `create_basic_llm_agent`.",
+            "Use the `model_name` argument passed to the function for the model parameter.",
+            "Output the complete `create_agent` function definition."
         ],
-        code_context=CodeContext(file=TEST_FILE_PATH)
+        code_context=CodeContext(file=UNFIXED_FILE_PATH)
     )
     
     try:

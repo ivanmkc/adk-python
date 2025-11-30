@@ -18,11 +18,14 @@ This file serves as a central registry of configured generators to ensure consis
 across different evaluation runs.
 """
 
+import os
+import subprocess
 from pathlib import Path
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
 from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
 from benchmarks.answer_generators.gemini_answer_generator import GeminiAnswerGenerator
 from benchmarks.answer_generators.gemini_cli_answer_generator import GeminiCliAnswerGenerator
+from benchmarks.answer_generators.gemini_cli_docker_answer_generator import GeminiCliDockerAnswerGenerator
 from benchmarks.answer_generators.ground_truth_answer_generator import GroundTruthAnswerGenerator
 from benchmarks.answer_generators.trivial_answer_generator import TrivialAnswerGenerator
 from benchmarks.utils import permute
@@ -30,6 +33,20 @@ from benchmarks.utils import permute
 # Define model constants
 GEMINI_2_5_FLASH = "gemini-2.5-flash"
 GEMINI_2_5_PRO = "gemini-2.5-pro"
+
+# Helper to get project ID for Docker image
+def get_gcloud_project():
+    try:
+        if os.environ.get("GOOGLE_CLOUD_PROJECT"):
+            return os.environ.get("GOOGLE_CLOUD_PROJECT")
+        # Fallback to gcloud config
+        return subprocess.check_output(["gcloud", "config", "get-value", "project"], text=True).strip()
+    except Exception:
+        # Fallback hardcoded if everything fails (user can modify this)
+        return "ivanmkc-experimental-665175"
+
+project_id = get_gcloud_project()
+DOCKER_IMAGE = f"gcr.io/{project_id}/adk-gemini-sandbox:latest"
 
 # Create pre-configured agent instances for AdkAnswerGenerator
 agent_flash = create_default_adk_agent(model_name=GEMINI_2_5_FLASH)
@@ -39,15 +56,16 @@ agent_pro = create_default_adk_agent(model_name=GEMINI_2_5_PRO)
 CANDIDATE_GENERATORS = [
     # # ADK Agent-based generators (The primary targets for evaluation)
     # AdkAnswerGenerator(agent=agent_flash, name="adk_gemini_2_5_flash"),
-    # AdkAnswerGenerator(agent=agent_pro, name="adk_gemini_2_5_pro"),
+    
+    # # Gemini CLI Docker Generator (Testing this new implementation)
+    GeminiCliDockerAnswerGenerator(model_name=GEMINI_2_5_FLASH, image_name=DOCKER_IMAGE),
     
     # # Direct Gemini SDK generators (Baselines)
-    # # Using permute to easily create variations with different models and contexts
-    *permute(
-        GeminiAnswerGenerator,
-        model_name=[GEMINI_2_5_FLASH, GEMINI_2_5_PRO],
-        context=[None, Path("llm-relevant.txt")] # Example: Test with and without extra context
-    ),
+    # *permute(
+    #     GeminiAnswerGenerator,
+    #     model_name=[GEMINI_2_5_FLASH],
+    #     context=[None, Path("llm-relevant.txt")] 
+    # ),
     
     # Gemini CLI generators (Alternative baseline)
     GeminiCliAnswerGenerator(model_name=GEMINI_2_5_FLASH),

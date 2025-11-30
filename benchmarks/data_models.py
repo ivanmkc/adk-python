@@ -102,6 +102,11 @@ class FixErrorBenchmarkCase(BaseBenchmarkCase):
 
     test_file: Path
 
+    agent_file: Path | None = None # DEPRECATED: Use unfixed_file and fixed_file instead
+
+    unfixed_file: Path | None = None
+    fixed_file: Path | None = None
+
     # DEPRECATED: These fields will be replaced by code_context.
     start_line: int | None = None
 
@@ -283,7 +288,7 @@ class FixErrorAnswerOutput(BaseAnswerOutput):
 
     code: str = Field(
         ...,
-        description="The complete, corrected Python code snippet to be injected into the test file.",
+        description="The complete, corrected Python file content, including the `create_agent(model_name: str) -> BaseAgent:` function definition.",
     )
 
 

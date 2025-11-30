@@ -267,36 +267,8 @@ This structure provides clear, natural language requirements. The YAML configura
   requirements:
     - "When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'."
     - "The agent's final response must contain the word 'test'."
-```
+    - "The generated solution must be a complete Python file defining a function `create_agent(model_name: str) -> BaseAgent:`."
 
-The benchmark runner will then extract the relevant code context from the `test_file` by looking for special tags. This ensures that test-specific logic, like assertions, is not shown to the model.
-
-For example, the corresponding test file would be structured with tags like `# LLM_CONTEXT_BEGIN` and `# LLM_CONTEXT_END` to delineate the context.
-
-```python
-# test_02_agent_with_tool.py
-
-# LLM_CONTEXT_BEGIN
-"""02: An LlmAgent with a simple function tool."""
-
-from __future__ import annotations
-
-from google.adk.agents import LlmAgent
-from benchmarks.test_helpers import MODEL_NAME, basic_tool
-
-# The LLM is expected to fill in the code between BEGIN: CODE and END: CODE
-# BEGIN: CODE
-# END: CODE
-# LLM_CONTEXT_END
-
-# This part of the file, containing the test runner and assertions,
-# is excluded from the LLM's view.
-async def run_test() -> str:
-    ...
-
-def assert_test(response: str):
-    ...
-```
 
 ### Multiple Choice (MC) Benchmarks
 
