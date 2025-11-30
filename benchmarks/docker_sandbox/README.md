@@ -18,7 +18,6 @@ The sandbox environment is built as a Docker image that mimics a typical develop
     *   Installs dependencies (Node.js, git, etc.)
     *   Clones `adk-python` into `/repos/adk-python`
     *   Sets up the environment but does *not* set `PYTHONPATH` for execution, treating the code primarily as a reference for the agent.
-*   `cloudbuild.yaml`: (Optional) Configuration for building the image using Google Cloud Build.
 
 ## Usage
 

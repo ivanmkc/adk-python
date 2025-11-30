@@ -124,6 +124,7 @@ from benchmarks.answer_generators import (
     TrivialAnswerGenerator,
     GeminiAnswerGenerator,
     AdkAnswerGenerator,
+    GeminiCliDockerAnswerGenerator,
 )
 
 async def main():
@@ -136,6 +137,7 @@ async def main():
         TrivialAnswerGenerator(),
         GeminiAnswerGenerator(model_name="gemini-2.5-pro"),
         AdkAnswerGenerator(model_name="gemini-2.5-flash"),
+        GeminiCliDockerAnswerGenerator(model_name="gemini-2.5-flash", image_name="adk-gemini-sandbox:latest"),
     ]
 
     print("Executing benchmark evaluation...")
@@ -241,33 +243,31 @@ This approach prevents the model from "gaming" the benchmark and encourages it t
 
 To implement this, the YAML definition for a `fix_error` case should be structured to separate the high-level task description and natural language requirements from the test implementation.
 
-A robust way to implement this is to use special comments or tags within the test file to explicitly mark the sections of code that should be passed to the LLM as context.
+We use a directory-based structure for organizing test cases. Each case resides in its own folder under `benchmarks/benchmark_definitions/fix_errors/cases/`.
 
-#### Bad Example (Legacy Approach)
+#### Directory Structure
 
-This example is not ideal because the description is generic and it implicitly sends the entire test file to the LLM, including the assertion logic which can be "gamed".
+Each case directory (e.g., `cases/01_my_test_case/`) must contain three files:
 
-```yaml
-- name: "02: An LlmAgent with a simple function tool."
-  description: "02: An LlmAgent with a simple function tool." # Vague description
-  benchmark_type: fix_error
-  test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
-  # Implicitly sends the whole file, including the test assertions.
-```
+1.  **`unfixed.py`**: The code containing the error or incomplete implementation that the LLM needs to fix.
+2.  **`fixed.py`**: The "ground truth" correct implementation. This is used for validation and comparison.
+3.  **`test_agent.py`**: A standard `pytest` file that imports the generated solution and verifies its correctness.
 
-#### Good Example (Recommended Approach)
+#### YAML Configuration
 
-This structure provides clear, natural language requirements. The YAML configuration specifies the test file, a high-level description of the task, and a list of specific requirements that the generated code must meet.
+The `benchmark.yaml` file points to these directories.
 
 ```yaml
-- name: "02: An LlmAgent with a simple function tool."
+- name: "01: My Test Case"
   benchmark_type: fix_error
-  test_file: benchmarks/benchmark_definitions/fix_errors/tests/test_02_agent_with_tool.py
+  case_path: benchmarks/benchmark_definitions/fix_errors/cases/01_my_test_case
   description: "Create a minimal LlmAgent named 'root_agent' that can use the `basic_tool`."
   requirements:
-    - "When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'."
-    - "The agent's final response must contain the word 'test'."
     - "The generated solution must be a complete Python file defining a function `create_agent(model_name: str) -> BaseAgent:`."
+    - "When asked 'Can you use your tool?', the agent should use the `basic_tool`."
+```
+
+The benchmark runner will automatically look for `unfixed.py` (to prompt the model) and `test_agent.py` (to verify the model's output) within the specified `case_path`.
 
 
 ### Multiple Choice (MC) Benchmarks
