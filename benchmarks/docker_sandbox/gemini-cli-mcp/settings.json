@@ -1,0 +1,10 @@
+
+{
+  "mcpServers": {
+    "context7": {
+      "command": "python",
+      "args": ["-m", "mcp", "serve", "--repo", "https://github.com/google/adk-python"],
+      "cwd": "/app"
+    }
+  }
+}
