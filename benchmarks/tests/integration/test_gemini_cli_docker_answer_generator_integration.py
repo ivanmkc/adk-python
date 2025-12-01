@@ -15,76 +15,135 @@
 import pytest
 import os
 import subprocess
-import json
 from pathlib import Path
-from benchmarks.answer_generators.gemini_cli_docker_answer_generator import GeminiCliDockerAnswerGenerator
-from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from pydantic import BaseModel, Field, ValidationError
+from typing import Optional
+from benchmarks.answer_generators.gemini_cli_docker_answer_generator import (
+    GeminiCliDockerAnswerGenerator,
+)
+from benchmarks.data_models import MultipleChoiceBenchmarkCase, TraceLogEvent
+from benchmarks.tests.integration.predefined_cases import ADK_QUESTION_DOCKER_CASE
+
+
+class DockerLogEntry(BaseModel):
+    """Represents a single log entry from the Docker CLI output."""
+    type: str
+    tool_name: Optional[str] = None
+
 
 # Helper to get image name (duplicated from candidates for test isolation)
 def get_docker_image_name():
-    try:
-        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or \
-                     subprocess.check_output(["gcloud", "config", "get-value", "project"], text=True).strip()
-        return f"gcr.io/{project_id}/adk-gemini-sandbox:latest"
-    except:
-        return "adk-gemini-sandbox:latest"
+  try:
+    project_id = (
+        os.environ.get("GOOGLE_CLOUD_PROJECT")
+        or subprocess.check_output(
+            ["gcloud", "config", "get-value", "project"], text=True
+        ).strip()
+    )
+    return f"gcr.io/{project_id}/adk-gemini-sandbox:latest"
+  except:
+    return "adk-gemini-sandbox:latest"
+
 
 DOCKER_IMAGE = get_docker_image_name()
 
-def docker_available():
-    try:
-        subprocess.run(["docker", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        return True
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        return False
 
+def docker_available():
+  try:
+    subprocess.run(
+        ["docker", "--version"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True,
+    )
+    return True
+  except (FileNotFoundError, subprocess.CalledProcessError):
+    return False
+
+
+@pytest.mark.parametrize("case", [ADK_QUESTION_DOCKER_CASE])
 @pytest.mark.asyncio
 @pytest.mark.skipif(not docker_available(), reason="Docker not available")
-async def test_docker_generator_integration_simple_math(tmp_path):
-    """
-    Runs a real integration test against the Docker container.
-    Verifies that we can talk to the container and get a valid JSON response.
-    """
+async def test_docker_generator_integration_adk_question(
+    tmp_path, case: MultipleChoiceBenchmarkCase
+):
+  """
+  Runs a real integration test asking a question about the ADK codebase.
+  Verifies that the model uses tools to inspect the code.
+  """
 
-    # Ensure we have credentials to pass
-    if not os.environ.get("GEMINI_API_KEY") and not os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
-        pytest.skip("No API credentials (GEMINI_API_KEY or VERTEX AI vars) found in environment.")
-
-    # Create a dummy context file
-    context_file = tmp_path / "context.txt"
-    context_file.write_text("This is a dummy context.")
-
-    generator = GeminiCliDockerAnswerGenerator(
-        model_name="gemini-2.5-flash",
-        image_name="adk-gemini-sandbox:adk-python",
-        context=context_file,
+  # Ensure we have credentials to pass
+  if not os.environ.get("GEMINI_API_KEY") and not os.environ.get(
+      "GOOGLE_GENAI_USE_VERTEXAI"
+  ):
+    pytest.skip(
+        "No API credentials (GEMINI_API_KEY or VERTEX AI vars) found in"
+        " environment."
     )
 
-    print(f"\nTesting with Docker image: {DOCKER_IMAGE}")
-    case = MultipleChoiceBenchmarkCase(
-        question="What is 2 + 2?",
-        options={"A": "3", "B": "4", "C": "5"},
-        correct_answer="B",
-        benchmark_type="multiple_choice",
-        explanation="Math."
+  # Inject context instruction to guide the model to the repo
+  repo_instruction = (
+      "\nCONTEXT: You are working in a Docker container. The current working"
+      " directory is `/repos`. The project source code is located in the"
+      " subdirectory `./adk-python`. You MUST look into `./adk-python` to find"
+      " source files, tests, or configuration.\n\n"
+  )
+
+  generator = GeminiCliDockerAnswerGenerator(
+      model_name="gemini-2.5-flash",
+      image_name="adk-gemini-sandbox:adk-python",
+      context_instruction=repo_instruction,
+  )
+
+  try:
+    result = await generator.generate_answer(case)
+
+    assert (
+        result.output.answer == "B"
+    ), f"Expected B, got {result.output.answer}"
+
+    # Check for evidence of tool use (e.g., listing directory or reading file)
+    # The specific tool name might vary, but it should be present in the logs.
+    # Common tools: list_directory, read_file, search_file_content, codebase_investigator
+    tool_used = False
+    for log_entry in result.trace_logs:
+      if log_entry.type == "tool_use":
+        if any(tool in log_entry.tool_name for tool in [
+            "list_directory",
+            "read_file",
+            "glob",
+            "codebase_investigator",
+        ]):
+          tool_used = True
+          break
+      elif log_entry.type == "DOCKER_CLI_STDOUT" and log_entry.content:
+        for line in log_entry.content.splitlines():
+          try:
+            parsed_entry = DockerLogEntry.model_validate_json(line)
+            if parsed_entry.type == "tool_use" and parsed_entry.tool_name:
+              if any(tool in parsed_entry.tool_name for tool in [
+                  "list_directory",
+                  "read_file",
+                  "glob",
+                  "codebase_investigator",
+              ]):
+                tool_used = True
+                break
+          except (ValidationError, ValueError):
+            # Not a valid JSON or not matching the schema, continue
+            pass
+    
+    assert tool_used, (
+        "Expected tool usage"
+        " (list_directory/read_file/glob/codebase_investigator) in logs. Logs"
+        f" preview:\n{result.trace_logs[:500]}"
     )
-
-    try:
-        result = await generator.generate_answer(case)
-        print(f"\nGenerated Answer: {result.output.answer}")
-        print(f"Rationale: {result.output.rationale}")
-
-        assert result.output.answer in ["B", "4"], f"Expected B or 4, got {result.output.answer}"
-        assert result.output.rationale, "Rationale should not be empty"
-        
-        # Check trace logs
-        assert result.output.trace_logs, "Trace logs should not be empty"
-        assert "--- DOCKER STDOUT ---" in result.output.trace_logs, "Trace logs should contain Docker output header"
-
-    except RuntimeError as e:
-        # If the image is missing, we might get a specific error. 
-        if "Unable to find image" in str(e) or "pull access denied" in str(e):
-             pytest.fail(f"Could not pull/find Docker image {DOCKER_IMAGE}. Please ensure it is built/pushed.\nError: {e}")
-        else:
-             pytest.fail(f"Docker execution failed: {e}")
-
+  except RuntimeError as e:
+    # If the image is missing, we might get a specific error.
+    if "Unable to find image" in str(e) or "pull access denied" in str(e):
+      pytest.fail(
+          f"Could not pull/find Docker image {DOCKER_IMAGE}. Please ensure it"
+          f" is built/pushed.\nError: {e}"
+      )
+    else:
+      pytest.fail(f"Docker execution failed: {e}")
