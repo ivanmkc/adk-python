@@ -33,14 +33,18 @@ async def test_gemini_cli_simple_call():
     prompt = "What is 2 + 2? Reply with just the number."
     
     try:
-        response = await generator._run_cli_command(prompt)
+        cli_json_response, logs = await generator._run_cli_command(prompt)
         
-        assert "response" in response, "CLI output missing 'response' field"
-        assert "4" in response["response"], f"Expected '4' in response, got: {response['response']}"
+        assert "response" in cli_json_response, "CLI output missing 'response' field"
+        assert "4" in cli_json_response["response"], f"Expected '4' in response, got: {cli_json_response['response']}"
         
         # Verify stats are present (indicating successful structured output)
-        assert "stats" in response
-        assert "models" in response["stats"]
+        assert "stats" in cli_json_response
+        assert "models" in cli_json_response["stats"]
+        
+        # Also verify logs are present
+        assert logs, "Logs should not be empty"
+        assert "--- CLI STDOUT ---" in logs
         
     except RuntimeError as e:
         pytest.fail(f"Gemini CLI integration test failed: {e}")

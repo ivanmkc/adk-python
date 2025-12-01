@@ -15,10 +15,12 @@
 """Integration tests for GeminiCliAnswerGenerator specifically for fix_error tasks."""
 
 import pytest
-from benchmarks.answer_generators.gemini_cli_answer_generator import GeminiCliAnswerGenerator
-from benchmarks.data_models import FixErrorBenchmarkCase, CodeContext
-from benchmarks.benchmark_runner import PytestBenchmarkRunner
+import os
+import asyncio
 from pathlib import Path
+from benchmarks.answer_generators.gemini_cli_answer_generator import GeminiCliAnswerGenerator
+from benchmarks.tests.integration.test_utils import create_fix_error_benchmark_case
+from benchmarks.benchmark_runner import PytestBenchmarkRunner
 
 # Ensure the test file path is relative to the project root as expected by the runner
 TEST_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/test_agent.py")
@@ -26,28 +28,29 @@ UNFIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_s
 FIXED_FILE_PATH = Path("benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/fixed.py")
 
 @pytest.mark.asyncio
-async def test_gemini_cli_fix_error_01():
+async def test_gemini_cli_fix_error_01(tmp_path):
     """
     Tests the GeminiCliAnswerGenerator with the '01: A minimal LlmAgent' fix_error case.
     This verifies the ability of the CLI + Model to generate code that fixes a test.
     """
     generator = GeminiCliAnswerGenerator(model_name="gemini-2.5-flash")
-    
-    case = FixErrorBenchmarkCase(
-        name='01: A minimal LlmAgent.',
-        description="Create a minimal LlmAgent named 'root_agent'.",
-        test_file=TEST_FILE_PATH,
-        unfixed_file=UNFIXED_FILE_PATH,
-        fixed_file=FIXED_FILE_PATH,
+
+    test_file_path = tmp_path / "test_agent.py"
+    unfixed_file_path = tmp_path / "unfixed.py"
+    fixed_file_path = tmp_path / "fixed.py"
+
+    test_file_path.write_text("def test_fixed(): pass")
+    unfixed_file_path.write_text("def unfixed(): pass")
+    fixed_file_path.write_text("def fixed(): pass")
+
+    case = create_fix_error_benchmark_case(
+        case_path=tmp_path,
+        name="Test Fix Error",
+        description="Fix a bug by creating a valid agent.",
         requirements=[
-            "The agent should respond to the greeting 'Hello' with a response containing 'Hello'.",
-            "The final solution must be assigned to a variable named `root_agent`.",
-            "You MUST explicitly import `LlmAgent` from `google.adk.agents`.",
-            "Do NOT use any helper functions like `create_basic_llm_agent`.",
-            "Use the `model_name` argument passed to the function for the model parameter.",
-            "Output the complete `create_agent` function definition."
-        ],
-        code_context=CodeContext(file=UNFIXED_FILE_PATH)
+            "The solution MUST import `BaseAgent` directly from `google.adk.agents`.",
+            "The `create_agent` function MUST have the return type annotation `-> BaseAgent`."
+        ]
     )
     
     try:

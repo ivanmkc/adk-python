@@ -9,8 +9,6 @@ benchmarks:
       - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
       - The agent MUST use the model 'gemini-2.5-flash' (passed as a string literal).
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/unfixed.py
   - name: '02: An LlmAgent with a simple function tool.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/02_agent_with_tool/test_agent.py
@@ -21,8 +19,6 @@ benchmarks:
       - When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'.
       - The agent's final response must contain the word 'test'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/02_agent_with_tool/unfixed.py
   - name: '03: An LlmAgent that uses output_schema to enforce JSON output.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/03_agent_with_output_schema/test_agent.py
@@ -33,8 +29,6 @@ benchmarks:
       - The agent's output must be a valid JSON string.
       - The JSON output must contain the keys 'field_one' and 'field_two'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/03_agent_with_output_schema/unfixed.py
   - name: '04: A SequentialAgent orchestrating two simple agents.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/04_sequential_agent/test_agent.py
@@ -44,8 +38,6 @@ benchmarks:
     requirements:
       - The final response should come from the second agent, containing the word 'two'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/04_sequential_agent/unfixed.py
   - name: '05: A ParallelAgent running two agents concurrently.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/05_parallel_agent/test_agent.py
@@ -55,8 +47,6 @@ benchmarks:
     requirements:
       - The final response should contain the word 'parallel'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/05_parallel_agent/unfixed.py
   - name: '06: A LoopAgent that runs a sub-agent a fixed number of times.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/06_loop_agent/test_agent.py
@@ -66,8 +56,6 @@ benchmarks:
     requirements:
       - The final response should contain the word 'loop'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/06_loop_agent/unfixed.py
   - name: '07: A root agent delegating a task to a sub-agent.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/07_agent_delegation/test_agent.py
@@ -79,8 +67,6 @@ benchmarks:
       - When the root agent is asked for a specialist, it should delegate the task to the 'specialist_agent'.
       - The final response should contain the phrase 'specialist ok'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/07_agent_delegation/unfixed.py
   - name: '08: A simple custom agent with conditional logic.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/08_custom_agent/test_agent.py
@@ -91,8 +77,6 @@ benchmarks:
       - If `run_agent_a` is true, the final response should contain 'Agent A'.
       - If `run_agent_a` is false, the final response should contain 'Agent B'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/08_custom_agent/unfixed.py
   - name: '10: An agent that writes to and reads from session.state.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/10_agent_with_state_management/test_agent.py
@@ -103,8 +87,6 @@ benchmarks:
       - The 'writer' agent should write the value 'xyz' to a key named 'my_value' in the session state.
       - The 'reader' agent should read the value from 'my_value' and the final response must contain 'xyz'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/10_agent_with_state_management/unfixed.py
   - name: '11: A direct implementation test for InMemoryRunner.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/11_in_memory_runner_direct/test_agent.py
@@ -114,8 +96,6 @@ benchmarks:
     requirements:
       - The agent should be able to respond to 'Hello, runner.' with a response containing 'Hello'.
       - The final solution must be assigned to a variable named `agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/11_in_memory_runner_direct/unfixed.py
   - name: '12: An App instance that includes a basic plugin.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/12_app_with_plugin/test_agent.py
@@ -126,8 +106,6 @@ benchmarks:
       - The app must define a plugin that inherits from `BasePlugin`.
       - The final response should contain the word 'Hello'.
       - The final solution must be assigned to a variable named `app`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/12_app_with_plugin/unfixed.py
   - name: '13: An LlmAgent with a BuiltInCodeExecutor.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/13_code_executor/test_agent.py
@@ -138,8 +116,6 @@ benchmarks:
       - The agent should be able to calculate 2 + 2.
       - The final response should contain the number 4.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/13_code_executor/unfixed.py
   - name: '14: An LlmAgent using an OpenAI model via LiteLlm.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/14_agent_with_litellm_openai/test_agent.py
@@ -150,8 +126,6 @@ benchmarks:
       - The agent should be able to respond to a greeting.
       - The final response should contain the word 'Hello'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/14_agent_with_litellm_openai/unfixed.py
   - name: '15: An LlmAgent with an after_model_callback.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/15_callbacks/test_agent.py
@@ -162,8 +136,6 @@ benchmarks:
       - The agent should use the `my_callback` function as its `after_model_callback`.
       - The agent should respond to a greeting with a response containing 'Hello'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/15_callbacks/unfixed.py
   - name: '16: Build integrity test for LlmAgent with generate_content_config.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/16_generate_content_config/test_agent.py
@@ -174,8 +146,6 @@ benchmarks:
       - The agent should be initialized with a `generate_content_config` that sets `temperature` to 0.
       - The agent should respond to 'Say hello.' with a response containing 'Hello world!'.
       - The final solution must be assigned to a variable named `agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/16_generate_content_config/unfixed.py
   - name: '17: Build integrity test for LlmAgent with input_schema.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/17_input_schema/test_agent.py
@@ -187,8 +157,6 @@ benchmarks:
       - The agent should be able to process a JSON string conforming to the `UserInfo` schema.
       - The agent's response should include the user's name and age from the input.
       - The final solution must be assigned to a variable named `agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/17_input_schema/unfixed.py
   - name: "18: Build integrity test for LlmAgent with include_contents='none'." 
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/18_include_contents_none/test_agent.py
@@ -200,8 +168,6 @@ benchmarks:
       - The agent should be initialized with `include_contents='none'`.
       - The agent's instruction should explain that it is a stateless bot.
       - The final solution must be assigned to a variable named `agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/18_include_contents_none/unfixed.py
   - name: '19: Build integrity test for LlmAgent with artifacts.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/19_artifacts/test_agent.py
@@ -212,8 +178,6 @@ benchmarks:
       - The agent's instruction should reference an artifact named 'my_data'.
       - The agent should directly state the content of the 'my_data' artifact in its response.
       - The final solution must be assigned to a variable named `agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/19_artifacts/unfixed.py
   - name: '20: Build integrity test for LlmAgent with expanded callbacks.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/20_expanded_callbacks/test_agent.py
@@ -225,8 +189,6 @@ benchmarks:
       - The agent should use `after_callback_func` as its `after_tool_callback`.
       - 'The final response should contain ''UNIQUE_TOOL_OUTPUT_FOR_TEST: hello''.'
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/20_expanded_callbacks/unfixed.py
   - name: '21: A minimal LlmAgent with a syntax error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/21_syntax_error/test_agent.py
@@ -237,8 +199,6 @@ benchmarks:
       - The agent should be a valid LlmAgent instance.
       - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/21_syntax_error/unfixed.py
   - name: '22: A minimal LlmAgent with a logic error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/22_logic_error/test_agent.py
@@ -249,8 +209,6 @@ benchmarks:
       - The agent should be a valid LlmAgent instance.
       - The agent should respond to the greeting 'Say hello.' with a response containing 'Hello World!'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/22_logic_error/unfixed.py
   - name: '23: A minimal LlmAgent with a missing import.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/23_missing_import/test_agent.py
@@ -261,8 +219,6 @@ benchmarks:
       - The agent should be a valid LlmAgent instance.
       - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/23_missing_import/unfixed.py
   - name: '24: A minimal LlmAgent with an incorrect API usage.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/24_incorrect_api_usage/test_agent.py
@@ -273,8 +229,6 @@ benchmarks:
       - The agent should be a valid LlmAgent instance.
       - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/24_incorrect_api_usage/unfixed.py
   - name: '25: A SequentialAgent with an interaction error.'
     benchmark_type: fix_error
     test_file: benchmarks/benchmark_definitions/fix_errors/cases/25_multi_agent_interaction_error/test_agent.py
@@ -285,5 +239,3 @@ benchmarks:
       - The `writer_agent` should output 'secret_message'.
       - The `reader_agent` should correctly read and output 'secret_message' from the session state.
       - The final solution must be assigned to a variable named `root_agent`.
-    code_context:
-      file: benchmarks/benchmark_definitions/fix_errors/cases/25_multi_agent_interaction_error/unfixed.py

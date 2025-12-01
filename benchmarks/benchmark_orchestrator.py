@@ -129,6 +129,7 @@ async def _run_single_benchmark(
         error_type=error_type,
         temp_test_file=temp_file_path,
         latency=latency,
+        trace_logs=generated_answer.output.trace_logs if generated_answer and generated_answer.output else None,
     )
 
 

@@ -85,12 +85,6 @@ class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
         raise NotImplementedError
 
 
-class CodeContext(pydantic.BaseModel):
-    """Specifies the code context to be provided to the LLM."""
-
-    file: Path
-
-
 class FixErrorBenchmarkCase(BaseBenchmarkCase):
     """Represents a single fix_error benchmark case."""
 
@@ -114,8 +108,6 @@ class FixErrorBenchmarkCase(BaseBenchmarkCase):
 
     # NEW FIELDS
     requirements: list[str] | None = None
-
-    code_context: CodeContext | None = None
 
     def get_identifier(self) -> str:
 
@@ -279,6 +271,10 @@ class BaseAnswerOutput(pydantic.BaseModel, abc.ABC):
     rationale: str = Field(
         ..., description="Explanation of the thinking process leading to the answer."
     )
+    
+    trace_logs: Optional[str] = Field(
+        None, description="Detailed execution logs, traces, or tool call history."
+    )
 
 
 class FixErrorAnswerOutput(BaseAnswerOutput):
@@ -377,3 +373,4 @@ class BenchmarkRunResult(pydantic.BaseModel):
     error_type: Optional[BenchmarkErrorType] = None
     temp_test_file: Optional[str] = None
     latency: float = 0.0
+    trace_logs: Optional[str] = None

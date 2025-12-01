@@ -98,6 +98,7 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
         mock_response.text = (
             '{"code": "mocked class", "fully_qualified_class_name": "mocked.module", "rationale": "mocked rationale"}'
         )
+        mock_response.model_dump_json.return_value = '{"full_metadata": "mocked"}'
         # The generator uses client.aio.models.generate_content
         mock_client.return_value.aio.models.generate_content = AsyncMock(
             return_value=mock_response
@@ -108,6 +109,7 @@ async def test_gemini_answer_generator(mock_api_case: ApiUnderstandingBenchmarkC
 
         assert generated_answer.output.code == "mocked class"
         assert generated_answer.output.fully_qualified_class_name == "mocked.module"
+        assert generated_answer.output.trace_logs == '{"full_metadata": "mocked"}'
         mock_client.return_value.aio.models.generate_content.assert_called_once()
 
 
@@ -136,6 +138,10 @@ async def test_gemini_cli_answer_generator(
         # Verify parsed output
         assert generated_answer.output.code == "cli class"
         assert generated_answer.output.fully_qualified_class_name == "cli.module"
+        
+        # Verify trace logs
+        expected_logs = f"--- CLI STDOUT ---\n{json.dumps(mock_cli_output)}\n--- CLI STDERR ---\n"
+        assert generated_answer.output.trace_logs == expected_logs
         
         # Verify CLI invocation arguments
         mock_exec.assert_called_once()
@@ -246,6 +252,8 @@ async def test_adk_answer_generator(mock_api_case: ApiUnderstandingBenchmarkCase
 
         assert generated_answer.output.code == "adk class"
         assert generated_answer.output.fully_qualified_class_name == "adk.module"
+        assert "Event:" in generated_answer.output.trace_logs
+        assert "adk class" in generated_answer.output.trace_logs
         assert call_count == 1
         mock_runner_instance.session_service.create_session.assert_called_once()
         MockInMemoryRunner.assert_called_once()

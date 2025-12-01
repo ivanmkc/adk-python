@@ -1,59 +1,46 @@
 # ADK Docker Sandbox
 
-This directory provides the infrastructure for running benchmarks in a sandboxed Docker environment using the Gemini CLI. This ensures a consistent and isolated environment for evaluating agent performance, particularly for tasks involving file system inspection and command execution.
-
-## Overview
-
-The sandbox environment is built as a Docker image that mimics a typical developer setup. It includes:
-*   **Python 3.11**: The core runtime.
-*   **Node.js 22.x & npm**: Required for the Gemini CLI.
-*   **Gemini CLI**: The `@google/gemini-cli` package installed globally.
-*   **ADK Python Source Code**: Cloned into `/repos/adk-python` to provide context for the agent.
-*   **Standard Tools**: `git`, `curl`, `uv` (for fast Python dependency management).
+This directory provides the infrastructure for running benchmarks in a sandboxed Docker environment using the Gemini CLI. It uses a **multi-stage build approach** where a common "base" image supports multiple "variant" images with different tool or agent configurations.
 
 ## Directory Structure
 
-*   `Dockerfile`: Defines the image build process.
-    *   Base image: `python:3.11-slim-bookworm`
-    *   Installs dependencies (Node.js, git, etc.)
-    *   Clones `adk-python` into `/repos/adk-python`
-    *   Sets up the environment but does *not* set `PYTHONPATH` for execution, treating the code primarily as a reference for the agent.
+*   `base/`: The foundation image.
+    *   `Dockerfile`: Installs Python 3.11, Node.js 22.x, git, curl, uv, and `@google/gemini-cli`.
+*   `adk-python/`: The default variant for the Python ADK.
+    *   `Dockerfile`: Clones the `adk-python` repo and sets up dependencies.
+*   `[variant_name]/`: Future variants.
 
 ## Usage
 
-### 1. Building the Image
+### 1. Build the Base Image
 
-You can build the image locally or via Cloud Build.
+You **must** build the base image first, tagging it as `adk-gemini-sandbox:base`.
 
-**Local Build:**
 ```bash
-docker build -t adk-gemini-sandbox:latest -f benchmarks/docker_sandbox/Dockerfile .
+docker build -t adk-gemini-sandbox:base -f benchmarks/docker_sandbox/base/Dockerfile .
 ```
 
-**Cloud Build:**
+### 2. Build a Variant Image
+
+After building the base, you can build any variant. For example, the `adk-python` variant:
+
 ```bash
-gcloud builds submit . --config benchmarks/docker_sandbox/cloudbuild.yaml --project YOUR_PROJECT_ID
+docker build -t adk-gemini-sandbox:adk-python -f benchmarks/docker_sandbox/adk-python/Dockerfile .
 ```
 
-### 2. Running Benchmarks with Docker
+### 3. Running Benchmarks
 
-The `GeminiCliDockerAnswerGenerator` class utilizes this image. To use it in benchmarks:
-
-1.  Ensure the image `adk-gemini-sandbox:latest` (or your custom tag) is available locally.
-2.  Configure the answer generator in your benchmark script:
+Update your `GeminiCliDockerAnswerGenerator` configuration to point to the specific variant tag you built.
 
 ```python
 from benchmarks.answer_generators.gemini_cli_docker_answer_generator import GeminiCliDockerAnswerGenerator
 
 generator = GeminiCliDockerAnswerGenerator(
     model_name="gemini-2.5-flash",
-    image_name="adk-gemini-sandbox:latest"
+    image_name="adk-gemini-sandbox:adk-python" # Use the variant tag here
 )
 ```
 
-The generator automatically prepends a context prompt instructing the agent that it is running inside the container at `/repos` and should look into `./adk-python` for source code.
+## Troubleshooting
 
-## troubleshooting
-
-*   **Gemini CLI Errors**: Ensure `GEMINI_API_KEY` or Vertex AI credentials are correctly passed to the environment. The `GeminiCliDockerAnswerGenerator` handles this automatically for standard environment variables.
-*   **Platform Warnings**: If running on Apple Silicon (ARM64) and using an AMD64 image, Docker will warn about platform mismatch. This is usually harmless for simple CLI tasks but ideally, build the image for your architecture or use `--platform linux/amd64`.
+*   **Platform Warnings**: If running on Apple Silicon (ARM64) and using an AMD64 image, use `--platform linux/amd64` for compatibility if needed.

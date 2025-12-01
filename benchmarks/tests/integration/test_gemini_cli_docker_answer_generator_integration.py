@@ -40,23 +40,27 @@ def docker_available():
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(not docker_available(), reason="Docker not available")
-async def test_docker_generator_integration_simple_math():
+async def test_docker_generator_integration_simple_math(tmp_path):
     """
     Runs a real integration test against the Docker container.
     Verifies that we can talk to the container and get a valid JSON response.
     """
-    
+
     # Ensure we have credentials to pass
     if not os.environ.get("GEMINI_API_KEY") and not os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
         pytest.skip("No API credentials (GEMINI_API_KEY or VERTEX AI vars) found in environment.")
 
+    # Create a dummy context file
+    context_file = tmp_path / "context.txt"
+    context_file.write_text("This is a dummy context.")
+
     generator = GeminiCliDockerAnswerGenerator(
         model_name="gemini-2.5-flash",
-        image_name=DOCKER_IMAGE
+        image_name="adk-gemini-sandbox:adk-python",
+        context=context_file,
     )
-    
+
     print(f"\nTesting with Docker image: {DOCKER_IMAGE}")
-    
     case = MultipleChoiceBenchmarkCase(
         question="What is 2 + 2?",
         options={"A": "3", "B": "4", "C": "5"},
@@ -64,15 +68,19 @@ async def test_docker_generator_integration_simple_math():
         benchmark_type="multiple_choice",
         explanation="Math."
     )
-    
+
     try:
         result = await generator.generate_answer(case)
         print(f"\nGenerated Answer: {result.output.answer}")
         print(f"Rationale: {result.output.rationale}")
-        
+
         assert result.output.answer in ["B", "4"], f"Expected B or 4, got {result.output.answer}"
         assert result.output.rationale, "Rationale should not be empty"
         
+        # Check trace logs
+        assert result.output.trace_logs, "Trace logs should not be empty"
+        assert "--- DOCKER STDOUT ---" in result.output.trace_logs, "Trace logs should contain Docker output header"
+
     except RuntimeError as e:
         # If the image is missing, we might get a specific error. 
         if "Unable to find image" in str(e) or "pull access denied" in str(e):

@@ -42,18 +42,12 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
         base = super().name
         return f"GeminiCliDockerAnswerGenerator({self.model_name}, image={self.image_name})"
 
-    async def _run_cli_command(self, prompt: str) -> dict[str, Any]:
+    async def _run_cli_command(self, prompt: str) -> tuple[dict[str, Any], str]:
         """Executes the gemini CLI command inside Docker and returns the parsed JSON output."""
         
-        # Determine context instruction to use
-        default_context_instruction = (
-            "\nCONTEXT: You are working in a Docker container. "
-            "The current working directory is `/repos`. "
-            "The project source code is located in the subdirectory `./adk-python`. "
-            "You MUST look into `./adk-python` to find source files, tests, or configuration.\n\n"
-        )
-        final_context_instruction = self.context_instruction if self.context_instruction is not None else default_context_instruction
-        full_prompt = final_context_instruction + prompt
+        full_prompt = prompt
+        if self.context_instruction:
+            full_prompt = self.context_instruction + prompt
 
         # Prepare Docker command
         # We need to run the container, pass auth env vars, and execute the gemini command.
@@ -112,12 +106,16 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
         )
 
         stdout, stderr = await proc.communicate()
+        
+        stdout_str = stdout.decode()
+        stderr_str = stderr.decode()
+        logs = f"--- DOCKER STDOUT ---\n{stdout_str}\n--- DOCKER STDERR ---\n{stderr_str}"
 
         if proc.returncode != 0:
-            error_msg = stderr.decode().strip() or stdout.decode().strip()
+            error_msg = stderr_str.strip() or stdout_str.strip()
             raise RuntimeError(f"Gemini CLI (Docker) failed with code {proc.returncode}: {error_msg}")
 
         try:
-            return json.loads(stdout.decode())
+            return json.loads(stdout_str), logs
         except json.JSONDecodeError as e:
-            raise RuntimeError(f"Failed to parse JSON output from Gemini CLI (Docker): {e}\nStdout: {stdout.decode()}") from e
+            raise RuntimeError(f"Failed to parse JSON output from Gemini CLI (Docker): {e}\nStdout: {stdout_str}") from e

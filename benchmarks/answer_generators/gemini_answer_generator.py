@@ -111,6 +111,9 @@ class GeminiAnswerGenerator(AnswerGenerator):
         )
 
         output = response_schema.model_validate_json(response.text)
+        
+        # Populate trace_logs with the full response metadata (usage, safety ratings, etc.)
+        output.trace_logs = response.model_dump_json(indent=2)
 
         return GeneratedAnswer(output=output)
 

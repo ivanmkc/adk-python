@@ -25,8 +25,7 @@ async def test_docker_command_construction_api_key():
 
     with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}, clear=True):
         generator = GeminiCliDockerAnswerGenerator(
-            model_name="gemini-2.5-flash",
-            image_name="my-image:latest"
+            model_name="gemini-2.5-flash", image_name="adk-gemini-sandbox:adk-python"
         )
 
         # The CLI with --output-format json returns a JSON object with a "response" key.
@@ -73,7 +72,7 @@ async def test_docker_command_construction_api_key():
             assert "--rm" in cmd
             assert "-e" in cmd
             assert "GEMINI_API_KEY" in cmd
-            assert "my-image:latest" in cmd
+            assert "adk-gemini-sandbox:adk-python" in cmd
             
             # Check for Gemini CLI parts
             assert "gemini" in cmd
@@ -81,6 +80,15 @@ async def test_docker_command_construction_api_key():
             assert "json" in cmd
             assert "--model" in cmd
             assert "gemini-2.5-flash" in cmd
+
+            # Verify that generate_answer sets trace_logs (although we don't return the answer object here to check, 
+            # we can verify the mock returns enough info for it. The logic is shared with GeminiCliAnswerGenerator)
+            # To strictly verify, we should capture the return value:
+            
+            # Re-run capturing result
+            result = await generator.generate_answer(case)
+            expected_logs = f"--- DOCKER STDOUT ---\n{json.dumps(cli_output)}\n--- DOCKER STDERR ---\n"
+            assert result.output.trace_logs == expected_logs
 
 @pytest.mark.asyncio
 async def test_docker_command_construction_vertex_adc():
@@ -93,7 +101,7 @@ async def test_docker_command_construction_vertex_adc():
     }
 
     with patch.dict(os.environ, env_vars, clear=True):
-        generator = GeminiCliDockerAnswerGenerator(image_name="my-image:latest")
+        generator = GeminiCliDockerAnswerGenerator(image_name="adk-gemini-sandbox:adk-python")
 
         # Inner model JSON
         inner_model_json = {
@@ -119,7 +127,11 @@ async def test_docker_command_construction_vertex_adc():
                 template=AnswerTemplate.CLASS_DEFINITION, answers=[]
             )
 
-            await generator.generate_answer(case)
+            result = await generator.generate_answer(case)
+            
+            # Check trace logs
+            expected_logs = f"--- DOCKER STDOUT ---\n{json.dumps(cli_output)}\n--- DOCKER STDERR ---\n"
+            assert result.output.trace_logs == expected_logs
             
             # Check arguments
             args, _ = mock_exec.call_args

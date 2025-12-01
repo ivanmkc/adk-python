@@ -59,7 +59,7 @@ class AdkAnswerGenerator(AnswerGenerator):
         prompt, output_schema_class = self._create_prompt_and_schema(benchmark_case)
 
         # Run the agent asynchronously.
-        response_text = await self._run_agent_async(prompt)
+        response_text, trace_logs = await self._run_agent_async(prompt)
 
         # Extract JSON from markdown code block if present
         if "```json" in response_text:
@@ -70,9 +70,10 @@ class AdkAnswerGenerator(AnswerGenerator):
         # Parse the JSON response into the appropriate Pydantic model.
         # This will raise a ValidationError if the schema doesn't match.
         output = output_schema_class.model_validate_json(json_str)
+        output.trace_logs = trace_logs
         return GeneratedAnswer(output=output)
 
-    async def _run_agent_async(self, prompt: str) -> str:
+    async def _run_agent_async(self, prompt: str) -> tuple[str, str]:
         """Helper to run the agent and get the response."""
         session_id = f"benchmark_session_{uuid.uuid4()}"
         session = await self.runner.session_service.create_session(
@@ -81,17 +82,23 @@ class AdkAnswerGenerator(AnswerGenerator):
             session_id=session_id,
         )
         final_response = ""
+        logs = []
 
         new_message = types.UserContent(parts=[types.Part(text=prompt)])
 
         async for event in self.runner.run_async(
             user_id=session.user_id, session_id=session.id, new_message=new_message
         ):
+            # Capture log of the event
+            logs.append(f"Event: {event}")
             if event.is_final_response():
                 if event.content and event.content.parts:
                     final_response = event.content.parts[0].text
+                # Don't break immediately if we want full traces? 
+                # Usually final response is the end, but let's keep breaking to match logic.
                 break
-        return final_response
+        
+        return final_response, "\n".join(logs)
 
     def _create_prompt_and_schema(
         self, case: BaseBenchmarkCase

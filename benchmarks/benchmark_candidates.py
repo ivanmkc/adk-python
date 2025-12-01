@@ -48,6 +48,13 @@ def get_gcloud_project():
 project_id = get_gcloud_project()
 DOCKER_IMAGE = f"gcr.io/{project_id}/adk-gemini-sandbox:latest"
 
+ADK_REPO_INSTRUCTION = (
+    "\nCONTEXT: You are working in a Docker container. "
+    "The current working directory is `/repos`. "
+    "The project source code is located in the subdirectory `./adk-python`. "
+    "You MUST look into `./adk-python` to find source files, tests, or configuration.\n\n"
+)
+
 # Create pre-configured agent instances for AdkAnswerGenerator
 agent_flash = create_default_adk_agent(model_name=GEMINI_2_5_FLASH)
 agent_pro = create_default_adk_agent(model_name=GEMINI_2_5_PRO)
@@ -58,7 +65,11 @@ CANDIDATE_GENERATORS = [
     # AdkAnswerGenerator(agent=agent_flash, name="adk_gemini_2_5_flash"),
     
     # # Gemini CLI Docker Generator (Testing this new implementation)
-    GeminiCliDockerAnswerGenerator(model_name=GEMINI_2_5_FLASH, image_name=DOCKER_IMAGE),
+    GeminiCliDockerAnswerGenerator(
+        model_name=GEMINI_2_5_FLASH, 
+        image_name=DOCKER_IMAGE,
+        context_instruction=ADK_REPO_INSTRUCTION,
+    ),
     
     # # Direct Gemini SDK generators (Baselines)
     # *permute(

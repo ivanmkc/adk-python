@@ -25,12 +25,12 @@ from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
 from benchmarks.data_models import (
     ApiUnderstandingBenchmarkCase,
+    MultipleChoiceBenchmarkCase,
     AnswerTemplate,
     StringMatchAnswer,
-    MultipleChoiceBenchmarkCase,
-    FixErrorBenchmarkCase,
-    CodeContext,
+    BenchmarkType,
 )
+from benchmarks.tests.integration.test_utils import create_fix_error_benchmark_case
 from benchmarks.benchmark_runner import PytestBenchmarkRunner
 import json
 
@@ -86,6 +86,10 @@ async def test_adk_generator_simple_api_understanding():
         assert "Event" in generated_answer.output.fully_qualified_class_name, "FQN missing 'Event'"
         assert "Event" in generated_answer.output.code, "Code missing 'Event'"
         
+        # Verify trace logs are present
+        assert generated_answer.output.trace_logs, "Trace logs should not be empty"
+        assert "Event:" in generated_answer.output.trace_logs, "Trace logs should contain event details"
+        
     except Exception as e:
         pytest.fail(f"AdkAnswerGenerator integration test failed: {e}")
 
@@ -121,12 +125,15 @@ async def test_adk_generator_multiple_choice():
         # Check rationale exists
         assert generated_answer.output.rationale, "Rationale should not be empty"
         
+        # Check trace logs
+        assert generated_answer.output.trace_logs, "Trace logs should not be empty"
+        
     except Exception as e:
         pytest.fail(f"ADK generator MC benchmark failed: {e}")
 
 
 @pytest.mark.asyncio
-async def test_adk_generator_fix_error():
+async def test_adk_generator_fix_error(tmp_path):
     """
     Tests the AdkAnswerGenerator with the '01: A minimal LlmAgent' fix_error case.
     We provide the exact solution code in the requirements to ensure the test passes.
@@ -134,23 +141,23 @@ async def test_adk_generator_fix_error():
     agent = create_default_adk_agent(model_name="gemini-2.5-flash")
     generator = AdkAnswerGenerator(agent=agent)
     
-    case = FixErrorBenchmarkCase(
-        name='01: A minimal LlmAgent.',
-        description="Create a minimal LlmAgent named 'root_agent'.",
-        test_file=TEST_FIX_ERROR_FILE_PATH,
-        unfixed_file=UNFIXED_FILE_PATH,
-        fixed_file=FIXED_FILE_PATH,
+    # Create a dummy fix_error case
+    test_file_path = tmp_path / "test_agent.py"
+    unfixed_file_path = tmp_path / "unfixed.py"
+    fixed_file_path = tmp_path / "fixed.py"
+
+    test_file_path.write_text("def test_placeholder(): pass")
+    unfixed_file_path.write_text("def unfixed(): pass")
+    fixed_file_path.write_text("def fixed(): pass")
+
+    case = create_fix_error_benchmark_case(
+        case_path=tmp_path,
+        name="Test Fix Error",
+        description="Fix a bug by creating a valid agent.",
         requirements=[
-            "The agent should respond to the greeting 'Hello' with a response containing 'Hello'.",
-            "The final solution must be assigned to a variable named `root_agent`.",
-            "You MUST explicitly import `LlmAgent` from `google.adk.agents`.",
-            "Do NOT use any helper functions like `create_basic_llm_agent`.",
-            "Use the `model_name` argument passed to the function for the model parameter.",
-            "Output the complete `create_agent` function definition.",
-            "The `LlmAgent` class requires a `name` argument.",
-            "The `LlmAgent` class uses `instruction` for the system prompt (do not use `system_prompt`)."
-        ],
-        code_context=CodeContext(file=UNFIXED_FILE_PATH)
+            "The solution MUST import `BaseAgent` directly from `google.adk.agents`.",
+            "The `create_agent` function MUST have the return type annotation `-> BaseAgent`."
+        ]
     )
     
     try:
@@ -158,6 +165,9 @@ async def test_adk_generator_fix_error():
         generated_answer = await generator.generate_answer(case)
         
         print(f"Generated Code:\n{generated_answer.output.code}")
+        
+        # Check trace logs
+        assert generated_answer.output.trace_logs, "Trace logs should not be empty"
         
         # 2. Verify the answer using the actual PytestBenchmarkRunner
         runner = PytestBenchmarkRunner()

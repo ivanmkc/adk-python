@@ -44,6 +44,17 @@
                 "panel": "new"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Generate and Run Benchmarks Notebook",
+            "type": "shell",
+            "command": "cd benchmarks && ../env/bin/python convert_py_to_ipynb.py && cd .. && env/bin/papermill benchmarks/benchmark_run.ipynb benchmarks/output_notebook.ipynb --cwd . -k python3",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
         }
     ]
 }

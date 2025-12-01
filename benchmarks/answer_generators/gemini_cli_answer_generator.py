@@ -79,7 +79,7 @@ class GeminiCliAnswerGenerator(GeminiAnswerGenerator):
         )
 
         # Run the CLI command
-        cli_response = await self._run_cli_command(prompt)
+        cli_response, logs = await self._run_cli_command(prompt)
 
         # Extract the 'response' field which contains the model's text output
         model_text = cli_response.get("response", "")
@@ -91,6 +91,7 @@ class GeminiCliAnswerGenerator(GeminiAnswerGenerator):
         try:
             # Parse the inner JSON content into the Pydantic model
             output = response_schema.model_validate_json(json_content)
+            output.trace_logs = logs
         except Exception as e:
             # If parsing fails, wrap it in a generic error or re-raise
             # For now, we'll try to fail gracefully if possible, or just raise
@@ -98,8 +99,8 @@ class GeminiCliAnswerGenerator(GeminiAnswerGenerator):
 
         return GeneratedAnswer(output=output)
 
-    async def _run_cli_command(self, prompt: str) -> dict[str, Any]:
-        """Executes the gemini CLI command and returns the parsed JSON output."""
+    async def _run_cli_command(self, prompt: str) -> tuple[dict[str, Any], str]:
+        """Executes the gemini CLI command and returns the parsed JSON output and raw logs."""
         args = [
             self.cli_path,
             prompt,  # Pass prompt as positional argument
@@ -119,15 +120,19 @@ class GeminiCliAnswerGenerator(GeminiAnswerGenerator):
         )
 
         stdout, stderr = await proc.communicate()
+        
+        stdout_str = stdout.decode()
+        stderr_str = stderr.decode()
+        logs = f"--- CLI STDOUT ---\n{stdout_str}\n--- CLI STDERR ---\n{stderr_str}"
 
         if proc.returncode != 0:
-            error_msg = stderr.decode().strip() or stdout.decode().strip()
+            error_msg = stderr_str.strip() or stdout_str.strip()
             raise RuntimeError(f"Gemini CLI failed with code {proc.returncode}: {error_msg}")
 
         try:
-            return json.loads(stdout.decode())
+            return json.loads(stdout_str), logs
         except json.JSONDecodeError as e:
-            raise RuntimeError(f"Failed to parse JSON output from Gemini CLI: {e}\nStdout: {stdout.decode()}") from e
+            raise RuntimeError(f"Failed to parse JSON output from Gemini CLI: {e}\nStdout: {stdout_str}") from e
 
     def _extract_json_from_text(self, text: str) -> str:
         """Extracts JSON content from a string, handling markdown code blocks."""
