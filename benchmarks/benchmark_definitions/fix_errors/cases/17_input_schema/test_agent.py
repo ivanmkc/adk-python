@@ -12,29 +12,34 @@ Test Verification:
     - Correctly handles input matching the schema.
     - Correctly handles (or fails on) invalid input.
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    
-    # Valid input test
-    response = await run_agent_test(
-        root_agent, 'Process this info: name is Alice, age is 30',
-        mock_llm_response='{"name": "Alice", "age": 30}'
-    )
-    assert "Alice" in response and "30" in response
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
 
-    # Invalid input test
-    response_invalid = await run_agent_test(
-        root_agent, 'Process this info: name is Bob',
-        mock_llm_response="Error: The field 'age' is missing."
-    )
-    assert "age" in response_invalid.lower()
+  # Valid input test
+  response = await run_agent_test(
+      root_agent,
+      "Process this info: name is Alice, age is 30",
+      mock_llm_response='{"name": "Alice", "age": 30}',
+  )
+  assert "Alice" in response and "30" in response
+
+  # Invalid input test
+  response_invalid = await run_agent_test(
+      root_agent,
+      "Process this info: name is Bob",
+      mock_llm_response="Error: The field 'age' is missing.",
+  )
+  assert "age" in response_invalid.lower()

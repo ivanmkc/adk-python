@@ -11,27 +11,36 @@ Description:
 Test Verification:
   - Verifies that `create_agent` returns a valid LlmAgent that responds to "Hello".
 """
+
 import pytest
 from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 def test_create_agent_unfixed_fails():
-    # In a real fix_error scenario, this would test that the unfixed code fails.
-    # For now, we skip or just ensure the module is loadable.
-    if agent is None: pytest.fail("No agent module")
-    pass
+  # In a real fix_error scenario, this would test that the unfixed code fails.
+  # For now, we skip or just ensure the module is loadable.
+  if agent is None:
+    pytest.fail("No agent module")
+  pass
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    
-    assert isinstance(root_agent, Agent), "root_agent should be an instance of Agent"
-    response = await run_agent_test(root_agent, "Hello", mock_llm_response="Hello")
-    assert "Hello" in response, "Agent should respond to 'Hello' with 'Hello'"
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+
+  assert isinstance(
+      root_agent, Agent
+  ), "root_agent should be an instance of Agent"
+  response = await run_agent_test(
+      root_agent, "Hello", mock_llm_response="Hello"
+  )
+  assert "Hello" in response, "Agent should respond to 'Hello' with 'Hello'"

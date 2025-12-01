@@ -11,21 +11,24 @@ Test Verification:
     - Correctly calls the tool when prompted ("Can you use your tool?").
     - Returns a response containing the tool's output ("test").
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(
-        root_agent,
-        "Can you use your tool?",
-        mock_llm_response="I used the tool with query 'test'",
-    )
-    assert "test" in response.lower()
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(
+      root_agent,
+      "Can you use your tool?",
+      mock_llm_response="I used the tool with query 'test'",
+  )
+  assert "test" in response.lower()

@@ -23,28 +23,32 @@ from benchmarks.answer_generators import GeminiAnswerGenerator
 
 @pytest.mark.asyncio
 async def test_gemini_answer_generator_smoke():
-    """
-    Runs a smoke test for the GeminiAnswerGenerator.
+  """
+  Runs a smoke test for the GeminiAnswerGenerator.
 
-    This test verifies that the GeminiAnswerGenerator can run through a subset
-    of benchmarks without crashing and produces at least one successful result.
-    It does not enforce a high pass rate, focusing on basic operational integrity.
-    """
-    benchmark_suites = [
-        "benchmarks/benchmark_definitions/fix_errors/benchmark.yaml",
-        "benchmarks/benchmark_definitions/configure_adk_features_mc/benchmark.yaml",
-    ]
-    
-    answer_generators = [GeminiAnswerGenerator(model_name="gemini-1.5-flash", context=Path("llms.txt"))]
-    
-    results = await benchmark_orchestrator.run_benchmarks(
-        benchmark_suites, answer_generators, max_retries=2
-    )
-    
-    assert results, "The benchmark run should produce results."
+  This test verifies that the GeminiAnswerGenerator can run through a subset
+  of benchmarks without crashing and produces at least one successful result.
+  It does not enforce a high pass rate, focusing on basic operational integrity.
+  """
+  benchmark_suites = [
+      "benchmarks/benchmark_definitions/fix_errors/benchmark.yaml",
+      "benchmarks/benchmark_definitions/configure_adk_features_mc/benchmark.yaml",
+  ]
 
-    # Assert that at least one result passed to confirm basic functionality
-    # without being strict about overall model performance.
-    assert len(results) > 0, (
-        "GeminiAnswerGenerator should produce results without crashing."
-    )
+  answer_generators = [
+      GeminiAnswerGenerator(
+          model_name="gemini-1.5-flash", context=Path("llms.txt")
+      )
+  ]
+
+  results = await benchmark_orchestrator.run_benchmarks(
+      benchmark_suites, answer_generators, max_retries=2
+  )
+
+  assert results, "The benchmark run should produce results."
+
+  # Assert that at least one result passed to confirm basic functionality
+  # without being strict about overall model performance.
+  assert (
+      len(results) > 0
+  ), "GeminiAnswerGenerator should produce results without crashing."

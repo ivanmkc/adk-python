@@ -11,19 +11,22 @@ Test Verification:
     - Successfully delegates the task.
     - Returns the sub-agent's response ("specialist ok").
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(
-        root_agent, "I need a specialist.", mock_llm_response="specialist ok"
-    )
-    assert "specialist ok" in response.lower()
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(
+      root_agent, "I need a specialist.", mock_llm_response="specialist ok"
+  )
+  assert "specialist ok" in response.lower()

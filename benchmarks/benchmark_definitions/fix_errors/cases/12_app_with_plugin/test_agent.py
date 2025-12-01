@@ -11,17 +11,22 @@ Test Verification:
     - Includes the `SimplePlugin`.
     - Can execute the root agent to return a greeting ("Hello").
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    app = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(app.root_agent, "Hello", mock_llm_response="Hello")
-    assert "Hello" in response
+  if agent is None:
+    pytest.fail("No agent module")
+  app = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(
+      app.root_agent, "Hello", mock_llm_response="Hello"
+  )
+  assert "Hello" in response

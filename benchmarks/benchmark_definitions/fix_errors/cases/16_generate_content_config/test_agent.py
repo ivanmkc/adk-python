@@ -10,17 +10,22 @@ Test Verification:
     - Has the configuration set.
     - Responds as instructed ("Hello world!").
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(root_agent, "Say hello.", mock_llm_response="Hello world!")
-    assert "Hello world!" in response
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(
+      root_agent, "Say hello.", mock_llm_response="Hello world!"
+  )
+  assert "Hello world!" in response

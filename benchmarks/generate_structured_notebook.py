@@ -1,11 +1,13 @@
+"""Utility to generate a structured Jupyter Notebook for benchmark analysis."""
+
 import nbformat as nbf
-from pathlib import Path
+
 
 def create_notebook():
-    nb = nbf.v4.new_notebook()
+  nb = nbf.v4.new_notebook()
 
-    # --- Cell 1: Imports & Setup ---
-    source_1 = r'''
+  # --- Cell 1: Imports & Setup ---
+  source_1 = r"""
 import asyncio
 import itertools
 from typing import List
@@ -28,10 +30,10 @@ pd.set_option('display.max_colwidth', None)
 pd.set_option('display.max_rows', None)
 
 logger = JsonTraceLogger(output_dir="traces")
-'''
+"""
 
-    # --- Cell 2: Helpers ---
-    source_2 = r'''
+  # --- Cell 2: Helpers ---
+  source_2 = r'''
 # ANSI escape codes for colors
 class bcolors:
     HEADER = '\033[95m'
@@ -62,8 +64,8 @@ def extract_error_type(row) -> str:
     return "OtherError"
 '''
 
-    # --- Cell 3: Configuration ---
-    source_3 = r'''
+  # --- Cell 3: Configuration ---
+  source_3 = r"""
 benchmark_suites = [
     "benchmarks/benchmark_definitions/api_understanding/benchmark.yaml",
     "benchmarks/benchmark_definitions/fix_errors/benchmark.yaml",
@@ -82,10 +84,10 @@ answer_generators = [
     ),
     GeminiCliAnswerGenerator(model_name="gemini-2.5-flash"),
 ]
-'''
+"""
 
-    # --- Cell 4: Execution Logic ---
-    source_4 = r'''
+  # --- Cell 4: Execution Logic ---
+  source_4 = r'''
 async def run_comparison() -> List[BenchmarkRunResult]:
     """Sets up and runs the benchmark comparison."""
     print("Configuring benchmark run...")
@@ -101,15 +103,15 @@ async def run_comparison() -> List[BenchmarkRunResult]:
     return results
 '''
 
-    # --- Cell 5: Run Benchmarks ---
-    source_5 = r'''
+  # --- Cell 5: Run Benchmarks ---
+  source_5 = r"""
 # Execute the benchmarks
 # Note: In a notebook environment (IPykernel), top-level await is supported.
 results = await run_comparison()
-'''
+"""
 
-    # --- Cell 6: Data Processing ---
-    source_6 = r'''
+  # --- Cell 6: Data Processing ---
+  source_6 = r"""
 raw_results_df = pd.DataFrame([r.model_dump() for r in results])
 
 if not raw_results_df.empty:
@@ -117,10 +119,10 @@ if not raw_results_df.empty:
     raw_results_df["final_error_type"] = raw_results_df.apply(extract_error_type, axis=1)
 else:
     print("No results returned.")
-'''
+"""
 
-    # --- Cell 7: Summary Analysis ---
-    source_7 = r'''
+  # --- Cell 7: Summary Analysis ---
+  source_7 = r"""
 if not raw_results_df.empty:
     # 1. General Pass/Total Summary
     summary_df = (
@@ -134,10 +136,10 @@ if not raw_results_df.empty:
 
     print(f"{bcolors.HEADER}--- Benchmark Summary ---\n{bcolors.ENDC}")
     print(summary_df)
-'''
+"""
 
-    # --- Cell 8: Detailed Error Breakdown ---
-    source_8 = r'''
+  # --- Cell 8: Detailed Error Breakdown ---
+  source_8 = r"""
 if not raw_results_df.empty:
     # 2. Detailed Error Breakdown with Ratios
     failed_df = raw_results_df[raw_results_df["result"] == 0]
@@ -165,11 +167,11 @@ if not raw_results_df.empty:
         print(error_summary.to_string(index=False))
     else:
         print(f"{bcolors.OKGREEN}No failures detected!\n{bcolors.ENDC}")
-'''
+"""
 
-    # --- Cell 9: Log Inspection (Deep Dive) ---
-    # Note escaping for f-string newline
-    source_9 = r'''
+  # --- Cell 9: Log Inspection (Deep Dive) ---
+  # Note escaping for f-string newline
+  source_9 = r"""
 # Debug Logs for specific generators
 if not raw_results_df.empty:
     failed_df = raw_results_df[raw_results_df["result"] == 0]
@@ -187,24 +189,25 @@ if not raw_results_df.empty:
             print("-" * 60)
     else:
         print("No Gemini CLI failures found in this run.")
-'''
+"""
 
-    nb.cells = [
-        nbf.v4.new_code_cell(source_1),
-        nbf.v4.new_code_cell(source_2),
-        nbf.v4.new_code_cell(source_3),
-        nbf.v4.new_code_cell(source_4),
-        nbf.v4.new_code_cell(source_5),
-        nbf.v4.new_code_cell(source_6),
-        nbf.v4.new_code_cell(source_7),
-        nbf.v4.new_code_cell(source_8),
-        nbf.v4.new_code_cell(source_9),
-    ]
+  nb.cells = [
+      nbf.v4.new_code_cell(source_1),
+      nbf.v4.new_code_cell(source_2),
+      nbf.v4.new_code_cell(source_3),
+      nbf.v4.new_code_cell(source_4),
+      nbf.v4.new_code_cell(source_5),
+      nbf.v4.new_code_cell(source_6),
+      nbf.v4.new_code_cell(source_7),
+      nbf.v4.new_code_cell(source_8),
+      nbf.v4.new_code_cell(source_9),
+  ]
 
-    with open('benchmark_run.ipynb', 'w') as f:
-        nbf.write(nb, f)
-    
-    print("Successfully created benchmark_run.ipynb with structured cells.")
+  with open("benchmark_run.ipynb", "w", encoding="utf-8") as f:
+    nbf.write(nb, f)
+
+  print("Successfully created benchmark_run.ipynb with structured cells.")
+
 
 if __name__ == "__main__":
-    create_notebook()
+  create_notebook()

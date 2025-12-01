@@ -10,21 +10,24 @@ Test Verification:
     - Is configured with `LiteLlm`.
     - Responds to a greeting (mocked response).
 """
+
 import pytest
 import os
 from benchmarks.test_helpers import run_agent_test
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.skipif(
     not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
 )
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent("gemini-2.5-flash")
-    response = await run_agent_test(root_agent, "Hello")
-    assert "Hello" in response
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent("gemini-2.5-flash")
+  response = await run_agent_test(root_agent, "Hello")
+  assert "Hello" in response

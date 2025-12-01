@@ -10,19 +10,22 @@ Test Verification:
     - Runs the loop.
     - Returns a response indicative of the loop's execution (mocked as "Iteration 1 complete").
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(
-        root_agent, "Run the loop.", mock_llm_response="Iteration 1 complete."
-    )
-    assert "Iteration" in response or "loop" in response.lower()
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(
+      root_agent, "Run the loop.", mock_llm_response="Iteration 1 complete."
+  )
+  assert "Iteration" in response or "loop" in response.lower()

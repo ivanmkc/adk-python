@@ -23,20 +23,20 @@ from benchmarks.logger import BenchmarkLogger
 
 
 class AnswerGenerator(abc.ABC):
-    """Abstract base class for answer generators."""
+  """Abstract base class for answer generators."""
 
-    def __init__(self, logger: Optional[BenchmarkLogger] = None):
-        self.logger = logger
+  def __init__(self, logger: Optional[BenchmarkLogger] = None):
+    self.logger = logger
 
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """Returns a unique name for this generator instance, reflecting its configuration."""
-        pass
+  @property
+  @abc.abstractmethod
+  def name(self) -> str:
+    """Returns a unique name for this generator instance, reflecting its configuration."""
+    pass
 
-    @abc.abstractmethod
-    async def generate_answer(
-        self, benchmark_case: BaseBenchmarkCase
-    ) -> GeneratedAnswer:
-        """Generates an answer for a given benchmark case."""
-        pass
+  @abc.abstractmethod
+  async def generate_answer(
+      self, benchmark_case: BaseBenchmarkCase
+  ) -> GeneratedAnswer:
+    """Generates an answer for a given benchmark case."""
+    pass

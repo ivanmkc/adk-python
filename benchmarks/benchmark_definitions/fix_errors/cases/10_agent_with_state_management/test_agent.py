@@ -12,17 +12,20 @@ Test Verification:
     - Successfully passes the state from writer to reader.
     - Returns the correct secret word ("xyz") in the final response.
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    response = await run_agent_test(root_agent, "Start", mock_llm_response="xyz")
-    assert "xyz" in response.lower()
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+  response = await run_agent_test(root_agent, "Start", mock_llm_response="xyz")
+  assert "xyz" in response.lower()

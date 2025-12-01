@@ -17,22 +17,24 @@ from google.adk.agents import LlmAgent, SequentialAgent
 
 # --8<-- [start:duplicate_agent_name]
 def code_under_test():
-    a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
-    a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
-    root = SequentialAgent(name="root", sub_agents=[a1, a2])
-    return root
+  a1 = LlmAgent(name="worker", model="gemini-2.5-flash")
+  a2 = LlmAgent(name="worker", model="gemini-2.5-flash")
+  root = SequentialAgent(name="root", sub_agents=[a1, a2])
+  return root
+
+
 # --8<-- [end:duplicate_agent_name]
 
 
 def test_duplicate_agent_name():
-    """
-    Validates behavior when creating a SequentialAgent with duplicate sub-agent names.
-    """
-    # Expected behavior: No error is raised when a SequentialAgent is created
-    # with sub-agents that have duplicate names.
-    
-    root = code_under_test()
-    assert len(root.sub_agents) == 2
+  """
+  Validates behavior when creating a SequentialAgent with duplicate sub-agent names.
+  """
+  # Expected behavior: No error is raised when a SequentialAgent is created
+  # with sub-agents that have duplicate names.
 
-    assert root.sub_agents[0].name == "worker"
-    assert root.sub_agents[1].name == "worker"
+  root = code_under_test()
+  assert len(root.sub_agents) == 2
+
+  assert root.sub_agents[0].name == "worker"
+  assert root.sub_agents[1].name == "worker"

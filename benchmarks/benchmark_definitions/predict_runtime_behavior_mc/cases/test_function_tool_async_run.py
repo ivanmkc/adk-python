@@ -18,17 +18,20 @@ from google.adk.tools.function_tool import FunctionTool
 
 # --8<-- [start:function_tool_async_run]
 def code_under_test():
-    def add(a: int, b: int) -> int:
-        return a + b
-    FunctionTool(fn=add)
+  def add(a: int, b: int) -> int:
+    return a + b
+
+  FunctionTool(fn=add)
+
+
 # --8<-- [end:function_tool_async_run]
 
 
 def test_function_tool_async_run():
-    """
-    Validates FunctionTool initialization error.
-    """
-    # Expected behavior: A TypeError is raised because `fn` is an unexpected
-    # keyword argument.
-    with pytest.raises(TypeError, match="unexpected keyword argument 'fn'"):
-        code_under_test()
+  """
+  Validates FunctionTool initialization error.
+  """
+  # Expected behavior: A TypeError is raised because `fn` is an unexpected
+  # keyword argument.
+  with pytest.raises(TypeError, match="unexpected keyword argument 'fn'"):
+    code_under_test()

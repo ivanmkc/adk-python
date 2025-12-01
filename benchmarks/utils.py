@@ -16,17 +16,18 @@
 
 import itertools
 
+
 def permute(cls, **kwargs):
-    """Helper to generate permutations of class instances.
-    
-    Args:
-        cls: The class to instantiate.
-        **kwargs: Dictionary where keys are argument names and values are lists of possible values.
-        
-    Yields:
-        Instances of cls with all combinations of arguments.
-    """
-    keys = kwargs.keys()
-    values = kwargs.values()
-    for instance_values in itertools.product(*values):
-        yield cls(**dict(zip(keys, instance_values)))
+  """Helper to generate permutations of class instances.
+
+  Args:
+      cls: The class to instantiate.
+      **kwargs: Dictionary where keys are argument names and values are lists of possible values.
+
+  Yields:
+      Instances of cls with all combinations of arguments.
+  """
+  keys = kwargs.keys()
+  values = kwargs.values()
+  for instance_values in itertools.product(*values):
+    yield cls(**dict(zip(keys, instance_values)))

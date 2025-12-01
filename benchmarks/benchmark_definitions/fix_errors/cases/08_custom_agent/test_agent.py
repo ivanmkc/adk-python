@@ -11,27 +11,36 @@ Test Verification:
     - Runs `agent_a` when `run_agent_a` is True.
     - Runs `agent_b` when `run_agent_a` is False.
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 try:
-    import agent
+  import agent
 except ImportError:
-    agent = None
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None: pytest.fail("No agent module")
-    root_agent = agent.create_agent(MODEL_NAME)
-    
-    # Test Condition A
-    response_a = await run_agent_test(
-        root_agent, "Run", initial_state={"run_agent_a": True}, mock_llm_response="Agent A"
-    )
-    assert "Agent A" in response_a
-    
-    # Test Condition B
-    response_b = await run_agent_test(
-        root_agent, "Run", initial_state={"run_agent_a": False}, mock_llm_response="Agent B"
-    )
-    assert "Agent B" in response_b
+  if agent is None:
+    pytest.fail("No agent module")
+  root_agent = agent.create_agent(MODEL_NAME)
+
+  # Test Condition A
+  response_a = await run_agent_test(
+      root_agent,
+      "Run",
+      initial_state={"run_agent_a": True},
+      mock_llm_response="Agent A",
+  )
+  assert "Agent A" in response_a
+
+  # Test Condition B
+  response_b = await run_agent_test(
+      root_agent,
+      "Run",
+      initial_state={"run_agent_a": False},
+      mock_llm_response="Agent B",
+  )
+  assert "Agent B" in response_b

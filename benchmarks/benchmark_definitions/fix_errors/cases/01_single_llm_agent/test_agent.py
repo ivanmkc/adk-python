@@ -10,28 +10,32 @@ Test Verification:
     - Is named 'single_agent' (or as defined in the solution).
     - Responds to "Hello" with a string containing "Hello".
 """
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
 # We import 'agent' which is expected to be in the same directory as this test file.
 # When pytest runs this file from a temp dir, that dir is in sys.path.
 try:
-    import agent
+  import agent
 except ImportError:
-    # This might happen if run directly from source without the runner setup
-    agent = None
+  # This might happen if run directly from source without the runner setup
+  agent = None
+
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-    if agent is None:
-        pytest.fail("Could not import agent module.")
+  if agent is None:
+    pytest.fail("Could not import agent module.")
 
-    # Create the agent using the function
-    root_agent = agent.create_agent(MODEL_NAME)
-    
-    # Run the verification using standard helper
-    response = await run_agent_test(root_agent, "Hello", mock_llm_response="Hello")
-    
-    # Assertions
-    print(f"Agent response: {response}")
-    assert "Hello" in response, "Expected a greeting containing 'Hello'."
+  # Create the agent using the function
+  root_agent = agent.create_agent(MODEL_NAME)
+
+  # Run the verification using standard helper
+  response = await run_agent_test(
+      root_agent, "Hello", mock_llm_response="Hello"
+  )
+
+  # Assertions
+  print(f"Agent response: {response}")
+  assert "Hello" in response, "Expected a greeting containing 'Hello'."
