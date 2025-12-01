@@ -278,7 +278,11 @@ async def test_adk_answer_generator(
     assert generated_answer.output.fully_qualified_class_name == "adk.module"
     assert len(generated_answer.trace_logs) > 0
     assert generated_answer.trace_logs[0].type == "ADK_EVENT"
-    assert "adk class" in generated_answer.trace_logs[0].content
+    assert generated_answer.trace_logs[0].content["parts"][0]["text"] == (
+        '{"code": "adk class",'
+        ' "fully_qualified_class_name": "adk.module",'
+        ' "rationale": "mocked rationale"}'
+    )
     assert call_count == 1
     mock_runner_instance.session_service.create_session.assert_called_once()
     MockInMemoryRunner.assert_called_once()

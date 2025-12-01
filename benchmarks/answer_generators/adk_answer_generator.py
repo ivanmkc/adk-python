@@ -35,6 +35,7 @@ from benchmarks.data_models import (
     MultipleChoiceAnswerOutput,
     GeneratedAnswer,
     TraceLogEvent,
+    UsageMetadata,
 )
 from benchmarks.validation_utils import TEMPLATES
 
@@ -60,7 +61,7 @@ class AdkAnswerGenerator(AnswerGenerator):
     prompt, output_schema_class = self._create_prompt_and_schema(benchmark_case)
 
     # Run the agent asynchronously.
-    response_text, trace_logs = await self._run_agent_async(prompt)
+    response_text, trace_logs, usage_metadata = await self._run_agent_async(prompt)
 
     # Extract JSON from markdown code block if present
     if "```json" in response_text:
@@ -71,11 +72,13 @@ class AdkAnswerGenerator(AnswerGenerator):
     # Parse the JSON response into the appropriate Pydantic model.
     # This will raise a ValidationError if the schema doesn't match.
     output = output_schema_class.model_validate_json(json_str)
-    return GeneratedAnswer(output=output, trace_logs=trace_logs)
+    return GeneratedAnswer(
+        output=output, trace_logs=trace_logs, usage_metadata=usage_metadata
+    )
 
   async def _run_agent_async(
       self, prompt: str
-  ) -> tuple[str, list[TraceLogEvent]]:
+  ) -> tuple[str, list[TraceLogEvent], UsageMetadata]:
     """Helper to run the agent and get the response."""
     session_id = f"benchmark_session_{uuid.uuid4()}"
     session = await self.runner.session_service.create_session(
@@ -85,26 +88,74 @@ class AdkAnswerGenerator(AnswerGenerator):
     )
     final_response = ""
     logs: list[TraceLogEvent] = []
+    
+    total_prompt_tokens = 0
+    total_completion_tokens = 0
+    total_tokens = 0
 
     new_message = types.UserContent(parts=[types.Part(text=prompt)])
 
     async for event in self.runner.run_async(
         user_id=session.user_id, session_id=session.id, new_message=new_message
     ):
-      # Capture log of the event
-      logs.append(
-          TraceLogEvent(
-              type="ADK_EVENT", content=str(event), details=event.model_dump()
-          )
+      # Extract usage metadata if available
+      if hasattr(event, "usage_metadata") and event.usage_metadata:
+        # Note: ADK usage_metadata attributes might vary, assuming standard keys
+        # We try to get attributes safely
+        pmt = getattr(event.usage_metadata, "prompt_token_count", 0) or 0
+        cpt = getattr(event.usage_metadata, "candidates_token_count", 0) or 0
+        tt = getattr(event.usage_metadata, "total_token_count", 0) or 0
+        
+        total_prompt_tokens += pmt
+        total_completion_tokens += cpt
+        total_tokens += tt
+
+      # Map ADK event to TraceLogEvent
+      log_event = TraceLogEvent(
+          type=getattr(event, "action", "ADK_EVENT"),
+          source="adk",
+          timestamp=event.created_time.isoformat() if hasattr(event, "created_time") and event.created_time else None,
+          details=event.model_dump()
       )
+      
+      # Try to determine role and content
+      if hasattr(event, "action"):
+        if event.action == "user_message":
+            log_event.role = "user"
+            log_event.type = "message"
+        elif event.action == "model_response":
+            log_event.role = "model"
+            log_event.type = "message"
+        elif event.action == "tool_use":
+            log_event.type = "tool_use"
+            log_event.role = "model"
+            # Extract tool info if available in content or tool_use part
+            # This depends on ADK internal structure for tool calls
+            pass
+      
+      if event.content:
+          # Convert ADK content to dict/str
+          try:
+            log_event.content = event.content.model_dump()
+          except:
+            log_event.content = str(event.content)
+
+      logs.append(log_event)
+      
       if event.is_final_response():
         if event.content and event.content.parts:
           final_response = event.content.parts[0].text
         # Don't break immediately if we want full traces?
         # Usually final response is the end, but let's keep breaking to match logic.
         break
+    
+    usage_metadata = UsageMetadata(
+        total_tokens=total_tokens,
+        prompt_tokens=total_prompt_tokens,
+        completion_tokens=total_completion_tokens
+    )
 
-    return final_response, logs
+    return final_response, logs, usage_metadata
 
   def _create_prompt_and_schema(self, case: BaseBenchmarkCase) -> tuple[
       str,
