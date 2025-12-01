@@ -1,4 +1,3 @@
-
 import pytest
 import asyncio
 import json
@@ -9,7 +8,8 @@ import os
 async def test_mcp_server_running(server_name: str):
     """
     Verifies that the specified MCP server is running and connected
-    within the Gemini CLI Docker container.
+    within the Gemini CLI Docker container by asking a question that requires
+    access to the served repository.
     """
     image_name = "gemini-cli-mcp" 
     
@@ -20,12 +20,20 @@ async def test_mcp_server_running(server_name: str):
     # The entrypoint script will automatically pick up GEMINI_API_KEY
     # We need to pass the real API key to the docker container
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
-    env_vars = ["-e", f"GEMINI_API_KEY={gemini_api_key}"] if gemini_api_key else []
+    context7_api_key = os.environ.get("CONTEXT7_API_KEY")
+    
+    env_vars = []
+    if gemini_api_key:
+        env_vars.append(f"-e")
+        env_vars.append(f"GEMINI_API_KEY={gemini_api_key}")
+    if context7_api_key:
+        env_vars.append(f"-e")
+        env_vars.append(f"CONTEXT7_API_KEY={context7_api_key}")
     
     # Ask a question that requires context from the ADK codebase
     question = "What is the name of the base class for all agents in google.adk.agents?"
     expected_answer_part = "BaseAgent"
-    
+
     cmd = [
         "docker", "run", "--rm",
         *env_vars,
@@ -63,16 +71,6 @@ async def test_mcp_server_running(server_name: str):
     
     tools_stats = data.get("stats", {}).get("tools", {}).get("byName", {})
     
-    # We check if *any* tool was used, or specifically if known MCP-provided tools were used.
-    # Since we don't know the exact tool names exposed by 'context7' (mcp serve --repo),
-    # we'll look for evidence of file system or repo interaction tools.
-    
-    # Common tools exposed by 'mcp serve --repo' or similar might be:
-    # - list_directory
-    # - read_file
-    # - search_file_content
-    # - or prefixed names like context7__list_directory
-    
     found_mcp_tool = False
     for tool_name in tools_stats.keys():
         # Check for prefixed tools or standard file system tools
@@ -81,4 +79,3 @@ async def test_mcp_server_running(server_name: str):
             break
             
     assert found_mcp_tool, f"No relevant MCP tools (context7*, read_file, etc.) found in usage stats. Tools used: {list(tools_stats.keys())}"
-        

@@ -1,16 +1,16 @@
 FROM gemini-cli-base
 
+# Install gettext-base for envsubst
+RUN apt-get update && apt-get install -y --no-install-recommends gettext-base && rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 # WORKDIR /app # Base image already sets /app
 
-# Install the mcp[cli] package needed for the context7 server
-RUN pip install "mcp[cli]"
-
-# Create the .gemini directory and copy the settings.json file
+# Create the .gemini directory and copy the settings.json template
 RUN mkdir -p /root/.gemini/
-COPY settings.json /root/.gemini/settings.json
+COPY settings.json /root/.gemini/settings.json.template
 
-# Create an entrypoint script
+# Copy an entrypoint script that performs env var substitution
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

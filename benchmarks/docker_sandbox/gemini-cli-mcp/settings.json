@@ -2,9 +2,11 @@
 {
   "mcpServers": {
     "context7": {
-      "command": "python",
-      "args": ["-m", "mcp", "serve", "--repo", "https://github.com/google/adk-python"],
-      "cwd": "/app"
+      "httpUrl": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}",
+        "Accept": "application/json, text/event-stream"
+      }
     }
   }
 }
