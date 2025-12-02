@@ -37,8 +37,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - If `run_agent_a` is true, the final response should contain 'Agent A'.
       - If `run_agent_a` is false, the final response should contain 'Agent B'.
-      - The final solution must be assigned to a variable named `root_agent`.
-
+      
   Args:
       model_name: The name of the LLM model to use.
 

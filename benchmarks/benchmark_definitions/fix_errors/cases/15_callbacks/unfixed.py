@@ -22,8 +22,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The agent should use the `my_callback` function as its `after_model_callback`.
       - The agent should respond to a greeting with a response containing 'Hello'.
-      - The final solution must be assigned to a variable named `root_agent`.
-
+      
   Args:
       model_name: The name of the LLM model to use.
 

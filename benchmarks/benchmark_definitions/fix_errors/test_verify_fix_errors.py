@@ -223,9 +223,9 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture(scope="module")
 def llm_client():
     api_key = os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        return genai.Client(api_key=api_key)
-    return None
+    if not api_key:
+        pytest.fail("GEMINI_API_KEY environment variable not set. LLM client is required for verification.")
+    return genai.Client(api_key=api_key)
 
 @pytest.mark.asyncio
 async def test_verify_benchmark_case(benchmark_case, llm_client):
@@ -270,18 +270,19 @@ async def test_verify_benchmark_case(benchmark_case, llm_client):
     elif not await _check_test_verifies_failure(llm_client, test_full_path):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM).")
 
-    # 5. Advanced Semantic Checks (only if API key is present)
-    if llm_client:
-        # Check Alignment
-        alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path)
-        if not alignment_res.is_aligned:
-            print(
-                f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
-            )
-        
-        # Check Leakage
-        leakage_res = await _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
-        if leakage_res.is_leaked:
-            print(
-                f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
-            )
+    # 5. Advanced Semantic Checks
+    
+    # Check Alignment
+    yaml_reqs = benchmark_case.get("requirements", []) # kept for compatibility if needed, but not used by alignment check anymore
+    alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path)
+    if not alignment_res.is_aligned:
+        print(
+            f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
+        )
+    
+    # Check Leakage
+    leakage_res = await _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
+    if leakage_res.is_leaked:
+        print(
+            f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
+        )

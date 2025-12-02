@@ -13,8 +13,7 @@ def create_agent(model_name: str) -> BaseAgent:
 
       Requirements:
       - The final response should come from the second agent, containing the word 'two'.
-      - The final solution must be assigned to a variable named `root_agent`.
-
+      
   Args:
       model_name: The name of the LLM model to use.
 

@@ -19,8 +19,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - When asked 'Can you use your tool?', the agent should use the `basic_tool` with the query 'test'.
       - The agent's final response must contain the word 'test'.
-      - The final solution must be assigned to a variable named `root_agent`.
-
+      
   Args:
       model_name: The name of the LLM model to use.
 

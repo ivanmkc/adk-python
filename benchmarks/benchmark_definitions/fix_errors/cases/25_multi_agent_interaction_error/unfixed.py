@@ -15,8 +15,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The `writer_agent` should output 'secret_message'.
       - The `reader_agent` should correctly read and output 'secret_message' from the session state.
-      - The final solution must be assigned to a variable named `root_agent`.
-
+      
   Args:
       model_name: The name of the LLM model to use.
 
