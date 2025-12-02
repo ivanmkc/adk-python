@@ -210,133 +210,83 @@ def _check_function_exists(file_path: Path, func_name: str) -> bool:
     return False
 
 
-def test_verify_fix_errors():
-  """
-  Verification script for fix_errors/benchmark.yaml.
-  This script verifies the integrity and structure of fix_error benchmark definitions:
-  1. All referenced `test_file`, `unfixed_file`, and `fixed_file` paths exist.
-  2. `unfixed.py` and `fixed.py` each contain a `create_agent` function.
-  3. `test_agent.py` contains `test_create_agent_passes` and `test_create_agent_unfixed_fails`.
-  4. `test_create_agent_unfixed_fails` actively checks for failure (verified by LLM if key present).
-  """
-  base_dir = Path(__file__).parent
-  yaml_path = base_dir / "benchmark.yaml"
+def load_benchmarks():
+    base_dir = Path(__file__).parent
+    yaml_path = base_dir / "benchmark.yaml"
+    if not yaml_path.exists():
+        return []
+    with open(yaml_path, "r") as f:
+        data = yaml.safe_load(f)
+    return data.get("benchmarks", [])
 
-  if not yaml_path.exists():
-    pytest.fail(f"Error: {yaml_path} does not exist.")
+def pytest_generate_tests(metafunc):
+    if "benchmark_case" in metafunc.fixturenames:
+        benchmarks = load_benchmarks()
+        ids = [bm.get("name", f"case_{i}") for i, bm in enumerate(benchmarks)]
+        metafunc.parametrize("benchmark_case", benchmarks, ids=ids)
 
-  # Initialize LLM Client
-  api_key = os.environ.get("GEMINI_API_KEY")
-  client = None
-  if api_key:
-      client = genai.Client(api_key=api_key)
-  else:
-      print("Warning: GEMINI_API_KEY not set. Skipping LLM-based verification of failure checks.")
+@pytest.fixture(scope="module")
+def llm_client():
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if api_key:
+        return genai.Client(api_key=api_key)
+    return None
 
-  with open(yaml_path, "r") as f:
-    data = yaml.safe_load(f)
-
-  benchmarks = data.get("benchmarks", [])
-  print(f"Found {len(benchmarks)} benchmarks defined in {yaml_path.name}.")
-
-  issues = []
-  for bm in benchmarks:
-    name = bm.get("name", "Unknown Benchmark")
-    test_file_path_str = bm.get("test_file")
-    unfixed_file_path_str = bm.get("unfixed_file")
-    fixed_file_path_str = bm.get("fixed_file")
+def test_verify_benchmark_case(benchmark_case, llm_client):
+    """Verifies a single fix_error benchmark definition."""
+    name = benchmark_case.get("name", "Unknown Benchmark")
+    test_file_path_str = benchmark_case.get("test_file")
+    unfixed_file_path_str = benchmark_case.get("unfixed_file")
+    fixed_file_path_str = benchmark_case.get("fixed_file")
 
     # 1. Verify file existence
     if not test_file_path_str:
-      issues.append(f"Benchmark '{name}': missing 'test_file' field.")
-      continue
+        pytest.fail(f"Benchmark '{name}': missing 'test_file' field.")
     if not unfixed_file_path_str:
-      issues.append(f"Benchmark '{name}': missing 'unfixed_file' field.")
-      continue
+        pytest.fail(f"Benchmark '{name}': missing 'unfixed_file' field.")
     if not fixed_file_path_str:
-      issues.append(f"Benchmark '{name}': missing 'fixed_file' field.")
-      continue
+        pytest.fail(f"Benchmark '{name}': missing 'fixed_file' field.")
 
     test_full_path = Path(test_file_path_str)
     unfixed_full_path = Path(unfixed_file_path_str)
     fixed_full_path = Path(fixed_file_path_str)
 
     if not test_full_path.exists():
-      issues.append(
-          f"Benchmark '{name}': Test file not found: {test_full_path}"
-      )
+        pytest.fail(f"Benchmark '{name}': Test file not found: {test_full_path}")
     if not unfixed_full_path.exists():
-      issues.append(
-          f"Benchmark '{name}': Unfixed file not found: {unfixed_full_path}"
-      )
+        pytest.fail(f"Benchmark '{name}': Unfixed file not found: {unfixed_full_path}")
     if not fixed_full_path.exists():
-      issues.append(
-          f"Benchmark '{name}': Fixed file not found: {fixed_full_path}"
-      )
-
-    # Only proceed to function checks if files exist to avoid FileNotFoundError during ast.parse
-    if not (
-        test_full_path.exists()
-        and unfixed_full_path.exists()
-        and fixed_full_path.exists()
-    ):
-      continue
+        pytest.fail(f"Benchmark '{name}': Fixed file not found: {fixed_full_path}")
 
     # 2. Verify `create_agent` function exists in unfixed.py and fixed.py
     if not _check_function_exists(unfixed_full_path, "create_agent"):
-      issues.append(
-          f"Benchmark '{name}': 'create_agent' function not found in"
-          f" {unfixed_full_path.name}."
-      )
+        pytest.fail(f"Benchmark '{name}': 'create_agent' function not found in {unfixed_full_path.name}.")
     if not _check_function_exists(fixed_full_path, "create_agent"):
-      issues.append(
-          f"Benchmark '{name}': 'create_agent' function not found in"
-          f" {fixed_full_path.name}."
-      )
+        pytest.fail(f"Benchmark '{name}': 'create_agent' function not found in {fixed_full_path.name}.")
 
     # 3. Verify `test_create_agent_passes` and `test_create_agent_unfixed_fails` exist in test_agent.py
     if not _check_function_exists(test_full_path, "test_create_agent_passes"):
-      issues.append(
-          f"Benchmark '{name}': 'test_create_agent_passes' function not found in"
-          f" {test_full_path.name}."
-      )
+        pytest.fail(f"Benchmark '{name}': 'test_create_agent_passes' function not found in {test_full_path.name}.")
     if not _check_function_exists(test_full_path, "test_create_agent_unfixed_fails"):
-      issues.append(
-          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in"
-          f" {test_full_path.name}."
-      )
-    # 4. Verify `test_create_agent_unfixed_fails` checks for failure
-    elif not _check_test_verifies_failure(client, test_full_path):
-       issues.append(
-          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM)."
-       )
+        pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in {test_full_path.name}.")
     
+    # 4. Verify `test_create_agent_unfixed_fails` checks for failure
+    elif not _check_test_verifies_failure(llm_client, test_full_path):
+        pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM).")
+
     # 5. Advanced Semantic Checks (only if API key is present)
-    if client:
+    if llm_client:
         # Check Alignment
-        yaml_reqs = bm.get("requirements", [])
-        alignment_res = _check_requirements_alignment(client, unfixed_full_path, test_full_path, yaml_reqs)
+        yaml_reqs = benchmark_case.get("requirements", [])
+        alignment_res = _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path, yaml_reqs)
         if not alignment_res.is_aligned:
             print(
                 f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
             )
         
         # Check Leakage
-        leakage_res = _check_solution_leakage(client, unfixed_full_path, fixed_full_path)
+        leakage_res = _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
         if leakage_res.is_leaked:
             print(
                 f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
             )
-
-  if issues:
-    pytest.fail(
-        f"FAILED: {len(issues)} issues found in benchmark configuration:\n"
-        + "\n".join(issues)
-    )
-  else:
-    print("\nAll fix_error benchmark files verified successfully.")
-
-
-if __name__ == "__main__":
-  # Allow running as a script manually if needed
-  test_verify_fix_errors()
