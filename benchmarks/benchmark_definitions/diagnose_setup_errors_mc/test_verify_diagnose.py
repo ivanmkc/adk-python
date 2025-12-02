@@ -19,8 +19,6 @@ Verification script for diagnose_setup_errors_mc/benchmark.yaml.
 import inspect
 from pathlib import Path
 import sys
-import pytest
-
 
 from google.adk.agents.llm_agent import LlmAgent
 from google.adk.agents.parallel_agent import ParallelAgent
@@ -28,6 +26,7 @@ from google.adk.agents.sequential_agent import SequentialAgent
 from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.function_tool import FunctionTool
+import pytest
 
 
 def test_function_tool_wrapping():

@@ -1,5 +1,8 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, SequentialAgent, BaseAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
+from google.adk.agents import SequentialAgent
 
 
 def create_agent(model_name: str) -> BaseAgent:
@@ -13,7 +16,7 @@ def create_agent(model_name: str) -> BaseAgent:
 
       Requirements:
       - The final response should come from the second agent, containing the word 'two'.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 

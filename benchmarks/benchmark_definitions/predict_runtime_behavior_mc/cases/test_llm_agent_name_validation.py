@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 from google.adk.agents import LlmAgent
 from pydantic import ValidationError
+import pytest
 
 
 # --8<-- [start:llm_agent_name_validation]

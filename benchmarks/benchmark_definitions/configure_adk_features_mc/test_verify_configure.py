@@ -23,8 +23,6 @@ import importlib
 import inspect
 from pathlib import Path
 import sys
-import pytest
-
 
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.invocation_context import InvocationContext
@@ -48,6 +46,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.base_toolset import BaseToolset
 from google.genai import types
+import pytest
 
 
 # --- Question 1: Import Runner ---

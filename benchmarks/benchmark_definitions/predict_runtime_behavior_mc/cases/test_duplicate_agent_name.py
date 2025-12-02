@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import LlmAgent
+from google.adk.agents import SequentialAgent
 
 
 # --8<-- [start:duplicate_agent_name]

@@ -1,5 +1,7 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, BaseAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 
 
@@ -14,7 +16,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The agent should be able to respond to a greeting.
       - The final response should contain the word 'Hello'.
-      
+
   Args:
       model_name: The name of the LLM model to use (for consistency, not directly used in LiteLlm here).
 

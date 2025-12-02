@@ -1,5 +1,7 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, BaseAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
 
 callback_was_called = False
 
@@ -22,7 +24,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The agent should use the `my_callback` function as its `after_model_callback`.
       - The agent should respond to a greeting with a response containing 'Hello'.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 

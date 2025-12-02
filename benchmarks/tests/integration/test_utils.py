@@ -15,7 +15,9 @@
 """Shared utilities for integration tests."""
 
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
+from typing import Dict
+
 from benchmarks.data_models import FixErrorBenchmarkCase
 
 

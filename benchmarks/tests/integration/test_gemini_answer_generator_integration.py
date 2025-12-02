@@ -14,27 +14,27 @@
 
 """Integration tests for GeminiAnswerGenerator without mocking."""
 
-import pytest
 import asyncio
+import json
 from pathlib import Path
+
+import pytest
+
 from benchmarks.answer_generators.gemini_answer_generator import GeminiAnswerGenerator
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    AnswerTemplate,
-    StringMatchAnswer,
-    BenchmarkType,
-    TraceLogEvent,
-)
-from benchmarks.tests.integration.test_utils import setup_fix_error_case
+from benchmarks.benchmark_runner import PytestBenchmarkRunner
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BenchmarkType
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import StringMatchAnswer
+from benchmarks.data_models import TraceLogEvent
+from benchmarks.tests.integration.predefined_cases import CONCURRENCY_TEST_CASE
 from benchmarks.tests.integration.predefined_cases import (
-    SIMPLE_API_UNDERSTANDING_CASE,
-    SIMPLE_MULTIPLE_CHOICE_CASE,
-    CONCURRENCY_TEST_CASE,
     FIX_ERROR_MINIMAL_AGENT_CONTENT,
 )
-from benchmarks.benchmark_runner import PytestBenchmarkRunner
-import json
+from benchmarks.tests.integration.predefined_cases import SIMPLE_API_UNDERSTANDING_CASE
+from benchmarks.tests.integration.predefined_cases import SIMPLE_MULTIPLE_CHOICE_CASE
+from benchmarks.tests.integration.test_utils import setup_fix_error_case
 
 # Ensure the test file path is relative to the project root as expected by the runner
 TEST_FIX_ERROR_FILE_PATH = Path(

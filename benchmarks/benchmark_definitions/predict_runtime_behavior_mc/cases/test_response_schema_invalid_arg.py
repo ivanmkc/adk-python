@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 from google.adk.agents import LlmAgent
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+from pydantic import ValidationError
+import pytest
 
 
 # --8<-- [start:response_schema_invalid_arg]

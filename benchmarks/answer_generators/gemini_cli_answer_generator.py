@@ -16,8 +16,8 @@
 
 import asyncio
 import json
-import re
 from pathlib import Path
+import re
 from typing import Any
 
 from benchmarks.answer_generators.gemini_answer_generator import GeminiAnswerGenerator
@@ -29,8 +29,8 @@ from benchmarks.data_models import FixErrorBenchmarkCase
 from benchmarks.data_models import GeneratedAnswer
 from benchmarks.data_models import MultipleChoiceAnswerOutput
 from benchmarks.data_models import MultipleChoiceBenchmarkCase
-from benchmarks.data_models import UsageMetadata
 from benchmarks.data_models import TraceLogEvent
+from benchmarks.data_models import UsageMetadata
 
 
 class GeminiCliAnswerGenerator(GeminiAnswerGenerator):

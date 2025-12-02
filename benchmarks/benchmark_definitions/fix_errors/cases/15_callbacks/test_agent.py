@@ -12,12 +12,17 @@ Test Verification:
 """
 
 import pytest
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
@@ -32,6 +37,10 @@ async def test_create_agent_passes():
   )
 
   assert "Hello" in response or "Hi" in response
-  assert root_agent.after_model_callback.was_called, "The after_model_callback was not called."
-  assert root_agent.after_model_callback is not None, "Agent should have an after_model_callback."
+  assert (
+      root_agent.after_model_callback.was_called
+  ), "The after_model_callback was not called."
+  assert (
+      root_agent.after_model_callback is not None
+  ), "Agent should have an after_model_callback."
   assert root_agent.name == "callback_agent", "Agent name mismatch."

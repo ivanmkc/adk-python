@@ -133,6 +133,7 @@ def validate_answer_against_template(answer: str, template: AnswerTemplate):
         f"Answer does not match template '{template.value}' regex."
     )
 
+
 def load_snippet(ref: Any) -> str:
   """
   Loads a code snippet from a file, including the file header (imports/setup).

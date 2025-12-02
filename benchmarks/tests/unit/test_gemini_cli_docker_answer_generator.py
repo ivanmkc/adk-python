@@ -12,14 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-import os
 import json
-from unittest.mock import MagicMock, patch, AsyncMock
+import os
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+from unittest.mock import patch
+
+import pytest
+
 from benchmarks.answer_generators.gemini_cli_docker_answer_generator import (
     GeminiCliDockerAnswerGenerator,
 )
-from benchmarks.data_models import ApiUnderstandingBenchmarkCase, AnswerTemplate
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
 
 
 @pytest.mark.asyncio
@@ -110,6 +115,7 @@ async def test_docker_command_construction_api_key():
       assert "stream-json" in cmd  # Expect stream-json
       assert "--model" in cmd
       assert "gemini-2.5-flash" in cmd
+
 
 @pytest.mark.asyncio
 async def test_docker_command_construction_api_key():

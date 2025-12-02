@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from typing import AsyncGenerator
-from google.adk.agents import BaseAgent, LlmAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 
@@ -37,7 +40,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - If `run_agent_a` is true, the final response should contain 'Agent A'.
       - If `run_agent_a` is false, the final response should contain 'Agent B'.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 

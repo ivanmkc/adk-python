@@ -19,8 +19,9 @@ across different evaluation runs.
 """
 
 import os
-import subprocess
 from pathlib import Path
+import subprocess
+
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
 from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
 from benchmarks.answer_generators.gemini_answer_generator import GeminiAnswerGenerator
@@ -59,10 +60,10 @@ project_id = get_gcloud_project()
 DOCKER_IMAGE = f"gcr.io/{project_id}/adk-gemini-sandbox:latest"
 
 ADK_REPO_INSTRUCTION = (
-    "\nCONTEXT: You are working in a Docker container. "
-    "The current working directory is `/repos`. "
-    "The project source code is located in the subdirectory `./adk-python`. "
-    "You MUST look into `./adk-python` to find source files, tests, or configuration.\n\n"
+    "\nCONTEXT: You are working in a Docker container. The current working"
+    " directory is `/repos`. The project source code is located in the"
+    " subdirectory `./adk-python`. You MUST look into `./adk-python` to find"
+    " source files, tests, or configuration.\n\n"
 )
 
 # Create pre-configured agent instances for AdkAnswerGenerator

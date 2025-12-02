@@ -130,6 +130,7 @@ class StringMatchAnswer(pydantic.BaseModel):
 
 class AnswerTemplate(str, enum.Enum):
   """The template for the answer."""
+
   CLASS_DEFINITION = "class_definition"
 
   PARAMETER_DEFINITION = "parameter_definition"
@@ -287,7 +288,8 @@ class TraceLogEvent(pydantic.BaseModel):
       "unknown", description="The source of the event (e.g., 'docker', 'adk')."
   )
   role: Optional[str] = Field(
-      None, description="The role associated with the event (user/model/system)."
+      None,
+      description="The role associated with the event (user/model/system).",
   )
   tool_name: Optional[str] = Field(None, description="Name of the tool used.")
   tool_call_id: Optional[str] = Field(
@@ -354,9 +356,11 @@ class ApiUnderstandingAnswerOutput(BaseAnswerOutput):
   fully_qualified_class_name: str = Field(
       description=(
           "The fully qualified name (FQN) for the relevant class. This should"
-          " be the path to the module file itself, including the class's name only, not method or parameter names."
-          " Examples: - Good: 'google.adk.agents.llm_agent.LlmAgent' - Bad: 'google.adk.agents.llm_agent.LlmAgent.model' (includes parameter name)"
-          " - Bad: 'google.adk.runners.Runner.run' (includes method name)"
+          " be the path to the module file itself, including the class's name"
+          " only, not method or parameter names. Examples: - Good:"
+          " 'google.adk.agents.llm_agent.LlmAgent' - Bad:"
+          " 'google.adk.agents.llm_agent.LlmAgent.model' (includes parameter"
+          " name) - Bad: 'google.adk.runners.Runner.run' (includes method name)"
       ),
   )
 
@@ -419,7 +423,9 @@ class BenchmarkRunResult(pydantic.BaseModel):
   )
   benchmark_name: str = Field(
       ...,
-      description="The unique name or identifier of the specific benchmark case.",
+      description=(
+          "The unique name or identifier of the specific benchmark case."
+      ),
   )
   answer_generator: str = Field(
       ...,

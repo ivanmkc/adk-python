@@ -13,17 +13,23 @@ Test Verification:
     - Returns the tool's output.
 """
 
-import pytest
 from unittest.mock import patch
+
 from google.adk.apps import App
-from google.adk.runners import InMemoryRunner
 from google.adk.models.llm_response import LlmResponse
+from google.adk.runners import InMemoryRunner
 from google.genai import types
+import pytest
+
 from benchmarks.test_helpers import MODEL_NAME
+
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
@@ -97,6 +103,10 @@ async def test_create_agent_passes():
     assert root_agent.before_tool_callback.logs["before"]
     assert root_agent.before_tool_callback.logs["after"]
     assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in final_response
-    assert root_agent.before_tool_callback is not None, "before_tool_callback missing."
-    assert root_agent.after_tool_callback is not None, "after_tool_callback missing."
+    assert (
+        root_agent.before_tool_callback is not None
+    ), "before_tool_callback missing."
+    assert (
+        root_agent.after_tool_callback is not None
+    ), "after_tool_callback missing."
     assert root_agent.name == "callback_agent", "Agent name mismatch."

@@ -14,32 +14,33 @@
 
 """Integration tests for AdkAnswerGenerator without mocking."""
 
-import pytest
 import asyncio
+import json
 from pathlib import Path
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+
 from google.adk.agents import Agent
 from google.adk.events import Event
 from google.genai import types
-from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
+import pytest
+
 from benchmarks.answer_generators.adk_agents import create_default_adk_agent
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    AnswerTemplate,
-    StringMatchAnswer,
-    BenchmarkType,
-    TraceLogEvent,
-)
-from benchmarks.tests.integration.test_utils import setup_fix_error_case
+from benchmarks.answer_generators.adk_answer_generator import AdkAnswerGenerator
+from benchmarks.benchmark_runner import PytestBenchmarkRunner
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BenchmarkType
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import StringMatchAnswer
+from benchmarks.data_models import TraceLogEvent
+from benchmarks.tests.integration.predefined_cases import CONCURRENCY_TEST_CASE
 from benchmarks.tests.integration.predefined_cases import (
-    SIMPLE_API_UNDERSTANDING_CASE,
-    SIMPLE_MULTIPLE_CHOICE_CASE,
-    CONCURRENCY_TEST_CASE,
     FIX_ERROR_MINIMAL_AGENT_CONTENT,
 )
-from benchmarks.benchmark_runner import PytestBenchmarkRunner
-import json
+from benchmarks.tests.integration.predefined_cases import SIMPLE_API_UNDERSTANDING_CASE
+from benchmarks.tests.integration.predefined_cases import SIMPLE_MULTIPLE_CHOICE_CASE
+from benchmarks.tests.integration.test_utils import setup_fix_error_case
 
 # Ensure the test file path is relative to the project root as expected by the runner
 TEST_FIX_ERROR_FILE_PATH = Path(

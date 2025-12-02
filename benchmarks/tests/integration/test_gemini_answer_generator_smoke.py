@@ -14,8 +14,9 @@
 
 """Smoke test for the GeminiAnswerGenerator to verify basic functionality."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from benchmarks import benchmark_orchestrator
 from benchmarks.answer_generators import GeminiAnswerGenerator

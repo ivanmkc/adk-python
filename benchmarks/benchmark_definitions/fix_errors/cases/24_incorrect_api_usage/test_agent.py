@@ -9,15 +9,19 @@ Test Verification:
   - Verifies that `create_agent` returns a valid LlmAgent.
 """
 
-import pytest
-from pydantic import ValidationError
-from google.adk.agents import Agent
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
+
+from google.adk.agents import Agent
+from pydantic import ValidationError
+import pytest
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
+
   with pytest.raises(ValidationError):
     unfixed.create_agent(MODEL_NAME)
 
@@ -25,6 +29,7 @@ def test_create_agent_unfixed_fails():
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(
@@ -36,4 +41,6 @@ async def test_create_agent_passes():
   assert "Hello" in response
 
   # Verify that the instruction was correctly set (this confirms the API usage fix)
-  assert "helpful assistant" in root_agent.instruction, "Instruction attribute not set correctly."
+  assert (
+      "helpful assistant" in root_agent.instruction
+  ), "Instruction attribute not set correctly."

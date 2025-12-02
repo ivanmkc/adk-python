@@ -1,5 +1,7 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, BaseAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
 
 
 def create_agent(model_name: str) -> BaseAgent:
@@ -14,7 +16,7 @@ def create_agent(model_name: str) -> BaseAgent:
       - The root agent should have a sub-agent named 'specialist_agent'.
       - When the root agent is asked for a specialist, it should delegate the task to the 'specialist_agent'.
       - The final response should contain the phrase 'specialist ok'.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 

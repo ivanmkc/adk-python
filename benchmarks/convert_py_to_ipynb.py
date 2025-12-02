@@ -1,7 +1,8 @@
 """Utility to convert Python benchmark script to a Jupyter Notebook."""
 
-import nbformat as nbf
 from pathlib import Path
+
+import nbformat as nbf
 
 
 def convert():

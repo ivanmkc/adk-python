@@ -27,8 +27,8 @@ project_root = Path(__file__).resolve().parents[3]
 if str(project_root) not in sys.path:
   sys.path.append(str(project_root))
 
-from google.adk.events.event import Event  # Added import
 from google.adk.agents import Agent
+from google.adk.events.event import Event  # Added import
 from google.genai import types
 
 from benchmarks.answer_generators import AdkAnswerGenerator
@@ -115,12 +115,12 @@ async def test_gemini_answer_generator(
 
     assert generated_answer.output.code == "mocked class"
     assert generated_answer.output.fully_qualified_class_name == "mocked.module"
-    
+
     # Verify trace logs are a list of TraceLogEvent
     assert len(generated_answer.trace_logs) == 1
     assert generated_answer.trace_logs[0].type == "GEMINI_API_RESPONSE"
     assert generated_answer.trace_logs[0].details == {"full_metadata": "mocked"}
-    
+
     mock_client.return_value.aio.models.generate_content.assert_called_once()
 
 

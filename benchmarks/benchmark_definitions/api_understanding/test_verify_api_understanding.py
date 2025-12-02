@@ -19,8 +19,6 @@ Verification script for api_understanding/benchmark.yaml.
 import inspect
 from pathlib import Path
 import sys
-import pytest
-
 
 # Imports based on the "file" field in the benchmark YAML
 from google.adk.agents.base_agent import BaseAgent
@@ -49,6 +47,7 @@ from google.adk.tools.function_tool import FunctionTool
 from google.adk.tools.google_search_tool import GoogleSearchTool
 from google.adk.tools.tool_configs import ToolConfig
 from google.adk.tools.tool_context import ToolContext
+import pytest
 
 
 def test_base_agent():

@@ -15,13 +15,12 @@
 """Pre-defined benchmark cases for integration tests."""
 
 from pathlib import Path
-from benchmarks.data_models import (
-    ApiUnderstandingBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    AnswerTemplate,
-    StringMatchAnswer,
-    BenchmarkType,
-)
+
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BenchmarkType
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import StringMatchAnswer
 
 # A simple API Understanding case
 SIMPLE_API_UNDERSTANDING_CASE = ApiUnderstandingBenchmarkCase(

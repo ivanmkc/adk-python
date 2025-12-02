@@ -15,17 +15,17 @@
 """Abstract base classes for benchmark runners."""
 
 import abc
-import asyncio
 import ast
+import asyncio
+import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import textwrap
 from typing import Generic
 from typing import Optional
 from typing import TypeVar
-import os
-import re
 
 from benchmarks.data_models import ApiUnderstandingBenchmarkCase
 from benchmarks.data_models import BaseBenchmarkCase

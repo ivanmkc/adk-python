@@ -1,5 +1,7 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, BaseAgent
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
 from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
 
 
@@ -14,7 +16,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The agent should be able to calculate 2 + 2.
       - The final response should contain the number 4.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 

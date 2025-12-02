@@ -10,7 +10,6 @@ from benchmarks.benchmark_candidates import CANDIDATE_GENERATORS
 from benchmarks.data_models import BenchmarkRunResult
 from benchmarks.logger import JsonTraceLogger
 
-
 # Set pandas display options
 pd.set_option("display.max_colwidth", None)
 pd.set_option("display.max_rows", None)
@@ -136,7 +135,8 @@ async def main():
 
       # --- DETAILED DEBUG FOR GEMINI CLI FAILURES ---
       print(
-          f"\n{Bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES ---\n{Bcolors.ENDC}"
+          f"\n{Bcolors.FAIL}--- DETAILED GEMINI CLI FAILURES"
+          f" ---\n{Bcolors.ENDC}"
       )
       cli_failures = failed_df[
           failed_df["answer_generator"].str.contains("GeminiCliAnswerGenerator")
@@ -144,7 +144,10 @@ async def main():
       if not cli_failures.empty:
         # Print just the first 3 failures to avoid overwhelming output
         for _, failure_row in cli_failures.head(3).iterrows():
-          print(f"\nBenchmark: {failure_row["benchmark_name"]} (Suite: {failure_row["suite"]})")
+          print(
+              f"\nBenchmark: {failure_row['benchmark_name']} (Suite:"
+              f" {failure_row['suite']})"
+          )
           print(f"Error Type: {failure_row["final_error_type"]}")
           print(f"Full Validation Error:\n{failure_row["validation_error"]}")
           print("-" * 60)

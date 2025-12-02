@@ -11,14 +11,19 @@ Test Verification:
     - Responds to a greeting (mocked response).
 """
 
-import pytest
 import os
+
+import pytest
+
 from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent("gemini-2.5-flash")
 
 
@@ -28,10 +33,14 @@ def test_create_agent_unfixed_fails():
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   root_agent = fixed.create_agent("gemini-2.5-flash")
   response = await run_agent_test(root_agent, "Hello")
   assert "Hello" in response
 
   from google.adk.models.lite_llm import LiteLlm
+
   assert isinstance(root_agent.model, LiteLlm), "Agent should use LiteLlm."
-  assert "openai" in root_agent.model.model, "Model name should contain 'openai'."
+  assert (
+      "openai" in root_agent.model.model
+  ), "Model name should contain 'openai'."

@@ -98,7 +98,8 @@ class TraceMarkdownLogger(BenchmarkLogger):
     self.output_file = Path(output_file)
     self.start_time = time.time()
     self.output_file.write_text(
-        f"# Benchmark Trace Log - {time.ctime(self.start_time)}\n\n", encoding="utf-8"
+        f"# Benchmark Trace Log - {time.ctime(self.start_time)}\n\n",
+        encoding="utf-8",
     )
 
   def log_message(self, message: str) -> None:

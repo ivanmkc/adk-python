@@ -125,14 +125,14 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
     stderr_str = stderr.decode()
 
     logs: list[TraceLogEvent] = []
-    
+
     # Process stderr as a raw log event if present
     if stderr_str:
-      logs.append(TraceLogEvent(
-          type="DOCKER_CLI_STDERR", 
-          source="docker", 
-          content=stderr_str
-      ))
+      logs.append(
+          TraceLogEvent(
+              type="DOCKER_CLI_STDERR", source="docker", content=stderr_str
+          )
+      )
 
     if proc.returncode != 0:
       error_msg = stderr_str.strip() or stdout_str.strip()
@@ -151,28 +151,28 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
         event = json.loads(line)
         event_type = event.get("type")
         timestamp = event.get("timestamp")
-        
+
         # Handle potential 'data' wrapper if present (though usually flat in CLI)
         event_data = event.get("data", event)
-        
+
         # Create a structured TraceLogEvent
         log_event = TraceLogEvent(
             type=event_type or "unknown",
             source="docker",
             timestamp=timestamp,
-            details=event # Store full raw event in details
+            details=event,  # Store full raw event in details
         )
 
         if event_type == "init":
-            log_event.type = "system_init"
-            log_event.content = event
+          log_event.type = "system_init"
+          log_event.content = event
 
         elif event_type == "message":
           role = event_data.get("role")
           log_event.role = role
           content = event_data.get("content")
           log_event.content = content
-          
+
           if role in ["model", "assistant"]:
             # Aggregate model response for the final output
             if isinstance(content, list):
@@ -183,14 +183,14 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
               response_dict["response"] += content
 
         elif event_type == "tool_use":
-            log_event.tool_name = event_data.get("tool_name")
-            log_event.tool_call_id = event_data.get("tool_id")
-            log_event.tool_input = event_data.get("parameters")
-            
+          log_event.tool_name = event_data.get("tool_name")
+          log_event.tool_call_id = event_data.get("tool_id")
+          log_event.tool_input = event_data.get("parameters")
+
         elif event_type == "tool_result":
-            log_event.tool_call_id = event_data.get("tool_id")
-            log_event.tool_output = str(event_data.get("output"))
-            
+          log_event.tool_call_id = event_data.get("tool_id")
+          log_event.tool_output = str(event_data.get("output"))
+
         elif event_type == "result":
           log_event.type = "system_result"
           if "stats" in event_data:
@@ -201,10 +201,10 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
 
       except json.JSONDecodeError:
         # Fallback for non-JSON lines
-        logs.append(TraceLogEvent(
-            type="DOCKER_CLI_STDOUT_RAW", 
-            source="docker", 
-            content=line
-        ))
+        logs.append(
+            TraceLogEvent(
+                type="DOCKER_CLI_STDOUT_RAW", source="docker", content=line
+            )
+        )
 
     return response_dict, logs

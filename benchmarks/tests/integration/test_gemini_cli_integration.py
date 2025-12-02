@@ -14,16 +14,17 @@
 
 """Integration tests for GeminiCliAnswerGenerator without mocking."""
 
+from pathlib import Path
+
 import pytest
+
 from benchmarks.answer_generators.gemini_cli_answer_generator import (
     GeminiCliAnswerGenerator,
 )
-from benchmarks.data_models import (
-    MultipleChoiceBenchmarkCase,
-    ApiUnderstandingBenchmarkCase,
-)
-from benchmarks.data_models import AnswerTemplate, StringMatchAnswer
-from pathlib import Path
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import StringMatchAnswer
 
 
 @pytest.mark.asyncio

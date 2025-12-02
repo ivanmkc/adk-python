@@ -14,18 +14,24 @@ Test Verification:
 """
 
 import pytest
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   root_agent = fixed.create_agent(MODEL_NAME)
 
   # First turn: Agent should introduce itself
@@ -44,4 +50,6 @@ async def test_create_agent_passes():
   assert "remember" in response2.lower()
   assert "what is your name" not in response2.lower()
   assert root_agent.name == "stateless_agent", "Agent name mismatch."
-  assert root_agent.include_contents == "none", "Agent should be stateless (include_contents='none')."
+  assert (
+      root_agent.include_contents == "none"
+  ), "Agent should be stateless (include_contents='none')."

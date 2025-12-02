@@ -15,6 +15,7 @@
 """Verification test to ensure TrivialAnswerGenerator yields 0% pass rate on non-MC benchmarks."""
 
 import pytest
+
 from benchmarks import benchmark_orchestrator
 from benchmarks.answer_generators import TrivialAnswerGenerator
 from benchmarks.logger import JsonTraceLogger

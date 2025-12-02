@@ -27,8 +27,8 @@ from benchmarks.data_models import FixErrorBenchmarkCase
 from benchmarks.data_models import GeneratedAnswer
 from benchmarks.data_models import MultipleChoiceAnswerOutput
 from benchmarks.data_models import MultipleChoiceBenchmarkCase
-from benchmarks.data_models import UsageMetadata
 from benchmarks.data_models import TraceLogEvent
+from benchmarks.data_models import UsageMetadata
 from benchmarks.validation_utils import load_snippet
 from benchmarks.validation_utils import TEMPLATES
 from google import genai

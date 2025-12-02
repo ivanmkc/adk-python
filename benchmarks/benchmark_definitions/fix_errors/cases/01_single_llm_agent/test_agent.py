@@ -12,20 +12,26 @@ Test Verification:
 """
 
 import pytest
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
+
   if unfixed is None:
     pytest.fail("Could not import agent module.")
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   if fixed is None:
     pytest.fail("Could not import agent module.")
 

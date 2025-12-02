@@ -24,19 +24,17 @@ from google.adk.sessions import Session
 from google.genai import types
 
 from benchmarks.answer_generators.base import AnswerGenerator
-from benchmarks.data_models import (
-    AnswerTemplate,
-    ApiUnderstandingAnswerOutput,
-    ApiUnderstandingBenchmarkCase,
-    BaseBenchmarkCase,
-    FixErrorBenchmarkCase,
-    MultipleChoiceBenchmarkCase,
-    FixErrorAnswerOutput,
-    MultipleChoiceAnswerOutput,
-    GeneratedAnswer,
-    TraceLogEvent,
-    UsageMetadata,
-)
+from benchmarks.data_models import AnswerTemplate
+from benchmarks.data_models import ApiUnderstandingAnswerOutput
+from benchmarks.data_models import ApiUnderstandingBenchmarkCase
+from benchmarks.data_models import BaseBenchmarkCase
+from benchmarks.data_models import FixErrorAnswerOutput
+from benchmarks.data_models import FixErrorBenchmarkCase
+from benchmarks.data_models import GeneratedAnswer
+from benchmarks.data_models import MultipleChoiceAnswerOutput
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import TraceLogEvent
+from benchmarks.data_models import UsageMetadata
 from benchmarks.validation_utils import TEMPLATES
 
 
@@ -61,7 +59,9 @@ class AdkAnswerGenerator(AnswerGenerator):
     prompt, output_schema_class = self._create_prompt_and_schema(benchmark_case)
 
     # Run the agent asynchronously.
-    response_text, trace_logs, usage_metadata = await self._run_agent_async(prompt)
+    response_text, trace_logs, usage_metadata = await self._run_agent_async(
+        prompt
+    )
 
     # Extract JSON from markdown code block if present
     if "```json" in response_text:
@@ -88,7 +88,7 @@ class AdkAnswerGenerator(AnswerGenerator):
     )
     final_response = ""
     logs: list[TraceLogEvent] = []
-    
+
     total_prompt_tokens = 0
     total_completion_tokens = 0
     total_tokens = 0
@@ -105,7 +105,7 @@ class AdkAnswerGenerator(AnswerGenerator):
         pmt = getattr(event.usage_metadata, "prompt_token_count", 0) or 0
         cpt = getattr(event.usage_metadata, "candidates_token_count", 0) or 0
         tt = getattr(event.usage_metadata, "total_token_count", 0) or 0
-        
+
         total_prompt_tokens += pmt
         total_completion_tokens += cpt
         total_tokens += tt
@@ -114,45 +114,49 @@ class AdkAnswerGenerator(AnswerGenerator):
       log_event = TraceLogEvent(
           type=getattr(event, "action", "ADK_EVENT"),
           source="adk",
-          timestamp=event.created_time.isoformat() if hasattr(event, "created_time") and event.created_time else None,
-          details=event.model_dump()
+          timestamp=(
+              event.created_time.isoformat()
+              if hasattr(event, "created_time") and event.created_time
+              else None
+          ),
+          details=event.model_dump(),
       )
-      
+
       # Try to determine role and content
       if hasattr(event, "action"):
         if event.action == "user_message":
-            log_event.role = "user"
-            log_event.type = "message"
+          log_event.role = "user"
+          log_event.type = "message"
         elif event.action == "model_response":
-            log_event.role = "model"
-            log_event.type = "message"
+          log_event.role = "model"
+          log_event.type = "message"
         elif event.action == "tool_use":
-            log_event.type = "tool_use"
-            log_event.role = "model"
-            # Extract tool info if available in content or tool_use part
-            # This depends on ADK internal structure for tool calls
-            pass
-      
+          log_event.type = "tool_use"
+          log_event.role = "model"
+          # Extract tool info if available in content or tool_use part
+          # This depends on ADK internal structure for tool calls
+          pass
+
       if event.content:
-          # Convert ADK content to dict/str
-          try:
-            log_event.content = event.content.model_dump()
-          except:
-            log_event.content = str(event.content)
+        # Convert ADK content to dict/str
+        try:
+          log_event.content = event.content.model_dump()
+        except:
+          log_event.content = str(event.content)
 
       logs.append(log_event)
-      
+
       if event.is_final_response():
         if event.content and event.content.parts:
           final_response = event.content.parts[0].text
         # Don't break immediately if we want full traces?
         # Usually final response is the end, but let's keep breaking to match logic.
         break
-    
+
     usage_metadata = UsageMetadata(
         total_tokens=total_tokens,
         prompt_tokens=total_prompt_tokens,
-        completion_tokens=total_completion_tokens
+        completion_tokens=total_completion_tokens,
     )
 
     return final_response, logs, usage_metadata

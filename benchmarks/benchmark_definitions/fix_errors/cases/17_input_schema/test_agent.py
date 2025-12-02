@@ -14,18 +14,24 @@ Test Verification:
 """
 
 import pytest
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
 
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   root_agent = fixed.create_agent(MODEL_NAME)
 
   # Valid input test
@@ -53,8 +59,10 @@ async def test_create_agent_passes():
       None,
   )
   assert worker_agent is not None, "Worker agent tool not found."
-  assert worker_agent.input_schema is not None, "Worker agent needs an input_schema."
-  
+  assert (
+      worker_agent.input_schema is not None
+  ), "Worker agent needs an input_schema."
+
   schema_fields = worker_agent.input_schema.model_fields
   assert "name" in schema_fields, "Schema missing 'name' field."
   assert "age" in schema_fields, "Schema missing 'age' field."

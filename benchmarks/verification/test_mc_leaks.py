@@ -16,11 +16,14 @@
 
 import os
 from pathlib import Path
-import yaml
-from pydantic import BaseModel, Field
-import pytest
 
-from benchmarks.data_models import BenchmarkFile, MultipleChoiceBenchmarkCase
+from pydantic import BaseModel
+from pydantic import Field
+import pytest
+import yaml
+
+from benchmarks.data_models import BenchmarkFile
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
 from benchmarks.validation_utils import load_snippet
 from google import genai
 
@@ -106,14 +109,14 @@ def pytest_generate_tests(metafunc):
           if isinstance(case, MultipleChoiceBenchmarkCase):
             # Only test cases that actually have a code snippet to check for leaks
             if not case.code_snippet_ref:
-                continue
-            
+              continue
+
             try:
-                snippet = load_snippet(case.code_snippet_ref)
-                if not snippet:
-                    continue
-            except Exception:
+              snippet = load_snippet(case.code_snippet_ref)
+              if not snippet:
                 continue
+            except Exception:
+              continue
 
             # Use a short ID based on the question
             short_q = case.question[:30].replace(" ", "_").replace("\n", "")

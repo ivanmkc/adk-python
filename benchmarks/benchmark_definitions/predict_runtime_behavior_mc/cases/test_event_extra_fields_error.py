@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 from google.adk.events import Event
 from pydantic import ValidationError
+import pytest
 
 
 # --8<-- [start:event_extra_fields_error]

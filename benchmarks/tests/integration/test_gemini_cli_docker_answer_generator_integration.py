@@ -12,23 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import os
-import subprocess
 from pathlib import Path
-from pydantic import BaseModel, Field, ValidationError
+import subprocess
 from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import ValidationError
+import pytest
+
 from benchmarks.answer_generators.gemini_cli_docker_answer_generator import (
     GeminiCliDockerAnswerGenerator,
 )
-from benchmarks.data_models import MultipleChoiceBenchmarkCase, TraceLogEvent
+from benchmarks.data_models import MultipleChoiceBenchmarkCase
+from benchmarks.data_models import TraceLogEvent
 from benchmarks.tests.integration.predefined_cases import ADK_QUESTION_DOCKER_CASE
 
 
 class DockerLogEntry(BaseModel):
-    """Represents a single log entry from the Docker CLI output."""
-    type: str
-    tool_name: Optional[str] = None
+  """Represents a single log entry from the Docker CLI output."""
+
+  type: str
+  tool_name: Optional[str] = None
 
 
 # Helper to get image name (duplicated from candidates for test isolation)
@@ -108,12 +114,15 @@ async def test_docker_generator_integration_adk_question(
     tool_used = False
     for log_entry in result.trace_logs:
       if log_entry.type == "tool_use":
-        if any(tool in log_entry.tool_name for tool in [
-            "list_directory",
-            "read_file",
-            "glob",
-            "codebase_investigator",
-        ]):
+        if any(
+            tool in log_entry.tool_name
+            for tool in [
+                "list_directory",
+                "read_file",
+                "glob",
+                "codebase_investigator",
+            ]
+        ):
           tool_used = True
           break
       elif log_entry.type == "DOCKER_CLI_STDOUT" and log_entry.content:
@@ -121,18 +130,21 @@ async def test_docker_generator_integration_adk_question(
           try:
             parsed_entry = DockerLogEntry.model_validate_json(line)
             if parsed_entry.type == "tool_use" and parsed_entry.tool_name:
-              if any(tool in parsed_entry.tool_name for tool in [
-                  "list_directory",
-                  "read_file",
-                  "glob",
-                  "codebase_investigator",
-              ]):
+              if any(
+                  tool in parsed_entry.tool_name
+                  for tool in [
+                      "list_directory",
+                      "read_file",
+                      "glob",
+                      "codebase_investigator",
+                  ]
+              ):
                 tool_used = True
                 break
           except (ValidationError, ValueError):
             # Not a valid JSON or not matching the schema, continue
             pass
-    
+
     assert tool_used, (
         "Expected tool usage"
         " (list_directory/read_file/glob/codebase_investigator) in logs. Logs"

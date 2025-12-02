@@ -12,21 +12,27 @@ Test Verification:
     - The JSON contains keys 'field_one' and 'field_two'.
 """
 
-
+import json
 
 import pytest
-import json
-from benchmarks.test_helpers import run_agent_test, MODEL_NAME
+
+from benchmarks.test_helpers import MODEL_NAME
+from benchmarks.test_helpers import run_agent_test
+
 
 def test_create_agent_unfixed_fails():
   import unfixed
-  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+
+  with pytest.raises(
+      NotImplementedError, match="Agent implementation incomplete."
+  ):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
+
   root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       root_agent,
@@ -42,8 +48,10 @@ async def test_create_agent_passes():
     pytest.fail("The response was not valid JSON.")
 
   assert root_agent.name == "output_schema_agent", "Agent name mismatch."
-  assert root_agent.output_schema is not None, "Agent should have an output_schema."
-  
+  assert (
+      root_agent.output_schema is not None
+  ), "Agent should have an output_schema."
+
   # Verify schema fields
   schema_fields = root_agent.output_schema.model_fields
   assert "field_one" in schema_fields

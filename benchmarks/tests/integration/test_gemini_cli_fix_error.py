@@ -14,15 +14,17 @@
 
 """Integration tests for GeminiCliAnswerGenerator specifically for fix_error tasks."""
 
-import pytest
-import os
 import asyncio
+import os
 from pathlib import Path
+
+import pytest
+
 from benchmarks.answer_generators.gemini_cli_answer_generator import (
     GeminiCliAnswerGenerator,
 )
-from benchmarks.tests.integration.test_utils import create_fix_error_benchmark_case
 from benchmarks.benchmark_runner import PytestBenchmarkRunner
+from benchmarks.tests.integration.test_utils import create_fix_error_benchmark_case
 
 # Ensure the test file path is relative to the project root as expected by the runner
 TEST_FILE_PATH = Path(

@@ -1,6 +1,9 @@
 from __future__ import annotations
-from google.adk.agents import LlmAgent, BaseAgent
-from pydantic import BaseModel, Field
+
+from google.adk.agents import BaseAgent
+from google.adk.agents import LlmAgent
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class BasicOutputSchema(BaseModel):
@@ -19,7 +22,7 @@ def create_agent(model_name: str) -> BaseAgent:
       Requirements:
       - The agent's output must be a valid JSON string.
       - The JSON output must contain the keys 'field_one' and 'field_two'.
-      
+
   Args:
       model_name: The name of the LLM model to use.
 
