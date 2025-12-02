@@ -186,9 +186,18 @@ async def run_benchmarks(
       f"\n--- Running {len(tasks)} benchmarks in parallel"
       f" (max_concurrency={max_concurrency}) ---\n"
   )
-  results = [
-      await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Running benchmarks against answer generators")
-  ]
+  pbar = tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Starting...")
+  results = []
+  for f in pbar:
+    result = await f
+    results.append(result)
+    # Truncate generator name if it's too long to keep the bar readable
+    gen_name = (
+        result.answer_generator[:40] + "..."
+        if len(result.answer_generator) > 40
+        else result.answer_generator
+    )
+    pbar.set_description(f"Processing {gen_name}")
 
   if logger:
     logger.finalize_run()
