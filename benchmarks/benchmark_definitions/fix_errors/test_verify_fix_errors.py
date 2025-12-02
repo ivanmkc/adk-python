@@ -40,7 +40,7 @@ def _get_docstring(file_path: Path, func_name: str) -> str | None:
     except Exception:
         return None
 
-def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path, yaml_requirements: list[str]) -> AlignmentCheckResult:
+async def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path, yaml_requirements: list[str]) -> AlignmentCheckResult:
     """Verifies that test assertions match the requirements and instructions."""
     test_source = _get_function_source(test_path, "test_create_agent_passes")
     instructions = _get_docstring(unfixed_path, "create_agent")
@@ -72,7 +72,7 @@ def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test
 Reply with JSON: 'is_aligned' (bool), 'missing_requirements' (list of strings - things tested but not required), and 'explanation'."""
 
     try:
-        response = client.models.generate_content(
+        response = await client.aio.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
             config={
@@ -85,7 +85,7 @@ Reply with JSON: 'is_aligned' (bool), 'missing_requirements' (list of strings - 
         print(f"  [LLM Error] Alignment check failed: {e}")
         return AlignmentCheckResult(is_aligned=True, explanation="Check failed", missing_requirements=[])
 
-def _check_solution_leakage(client: genai.Client, unfixed_path: Path, fixed_path: Path) -> LeakageCheckResult:
+async def _check_solution_leakage(client: genai.Client, unfixed_path: Path, fixed_path: Path) -> LeakageCheckResult:
     """Checks if unfixed.py leaks the solution found in fixed.py."""
     try:
         unfixed_code = unfixed_path.read_text()
@@ -113,7 +113,7 @@ Determine if the 'Unfixed' code inadvertently leaks the solution.
 Reply with JSON: 'is_leaked' (bool) and 'explanation'."""
 
     try:
-        response = client.models.generate_content(
+        response = await client.aio.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
             config={
@@ -138,7 +138,7 @@ def _get_function_source(file_path: Path, func_name: str) -> str | None:
     except Exception:
         return None
 
-def _check_test_verifies_failure(client: genai.Client | None, file_path: Path) -> bool:
+async def _check_test_verifies_failure(client: genai.Client | None, file_path: Path) -> bool:
   """
   Checks if `test_create_agent_unfixed_fails` contains failure verification logic.
   Uses an LLM if a client is provided; otherwise falls back to basic AST inspection.
@@ -171,7 +171,7 @@ Does this function explicitly check for failure according to the criteria?
 Reply with a JSON object containing 'verifies_failure' (boolean) and 'explanation' (string)."""
 
   try:
-    response = client.models.generate_content(
+    response = await client.aio.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
         config={
@@ -232,7 +232,8 @@ def llm_client():
         return genai.Client(api_key=api_key)
     return None
 
-def test_verify_benchmark_case(benchmark_case, llm_client):
+@pytest.mark.asyncio
+async def test_verify_benchmark_case(benchmark_case, llm_client):
     """Verifies a single fix_error benchmark definition."""
     name = benchmark_case.get("name", "Unknown Benchmark")
     test_file_path_str = benchmark_case.get("test_file")
@@ -271,21 +272,21 @@ def test_verify_benchmark_case(benchmark_case, llm_client):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in {test_full_path.name}.")
     
     # 4. Verify `test_create_agent_unfixed_fails` checks for failure
-    elif not _check_test_verifies_failure(llm_client, test_full_path):
+    elif not await _check_test_verifies_failure(llm_client, test_full_path):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM).")
 
     # 5. Advanced Semantic Checks (only if API key is present)
     if llm_client:
         # Check Alignment
         yaml_reqs = benchmark_case.get("requirements", [])
-        alignment_res = _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path, yaml_reqs)
+        alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path, yaml_reqs)
         if not alignment_res.is_aligned:
             print(
                 f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
             )
         
         # Check Leakage
-        leakage_res = _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
+        leakage_res = await _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
         if leakage_res.is_leaked:
             print(
                 f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
