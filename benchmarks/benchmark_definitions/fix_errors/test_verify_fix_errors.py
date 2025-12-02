@@ -10,7 +10,7 @@ def _check_function_exists(file_path: Path, func_name: str) -> bool:
     content = file_path.read_text()
     tree = ast.parse(content)
     for node in ast.walk(tree):
-      if isinstance(node, ast.FunctionDef) and node.name == func_name:
+      if (isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef)) and node.name == func_name:
         return True
     return False
   except SyntaxError:
@@ -28,6 +28,7 @@ def test_verify_fix_errors():
   This script verifies the integrity and structure of fix_error benchmark definitions:
   1. All referenced `test_file`, `unfixed_file`, and `fixed_file` paths exist.
   2. `unfixed.py` and `fixed.py` each contain a `create_agent` function.
+  3. `test_agent.py` contains `test_create_agent_passes` and `test_create_agent_unfixed_fails`.
   """
   base_dir = Path(__file__).parent
   yaml_path = base_dir / "benchmark.yaml"
@@ -94,6 +95,18 @@ def test_verify_fix_errors():
       issues.append(
           f"Benchmark '{name}': 'create_agent' function not found in"
           f" {fixed_full_path.name}."
+      )
+
+    # 3. Verify `test_create_agent_passes` and `test_create_agent_unfixed_fails` exist in test_agent.py
+    if not _check_function_exists(test_full_path, "test_create_agent_passes"):
+      issues.append(
+          f"Benchmark '{name}': 'test_create_agent_passes' function not found in"
+          f" {test_full_path.name}."
+      )
+    if not _check_function_exists(test_full_path, "test_create_agent_unfixed_fails"):
+      issues.append(
+          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in"
+          f" {test_full_path.name}."
       )
 
   if issues:
