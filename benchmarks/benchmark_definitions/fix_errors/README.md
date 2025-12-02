@@ -73,7 +73,7 @@ By following these standards, we ensure that the LLM is only presented with the 
     *   **Imports:** Use `import unfixed` and `import fixed` locally within test functions to avoid top-level import errors or circular dependencies.
     *   **Test Case 1 (`test_create_agent_unfixed_fails`):**
         *   Import `unfixed`.
-        *   Assert that `unfixed.create_agent` raises the expected exception or exhibits the expected failure.
+        *   **Must actively verify failure.** Use `pytest.raises(...)` for exceptions, or asserts that check for *incorrect* values/state (e.g. `assert agent.instruction != "correct instruction"`). Do not just run the code and assert `True` or `is not None` unless `None` is the failure mode.
     *   **Test Case 2 (`test_create_agent_passes`):**
         *   Import `fixed`.
         *   Call `root_agent = fixed.create_agent(MODEL_NAME)`.

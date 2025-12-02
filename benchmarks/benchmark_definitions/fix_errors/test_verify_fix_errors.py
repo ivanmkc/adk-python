@@ -22,6 +22,40 @@ def _check_function_exists(file_path: Path, func_name: str) -> bool:
     return False
 
 
+def _check_test_verifies_failure(file_path: Path) -> bool:
+  """
+  Checks if `test_create_agent_unfixed_fails` in the file contains 
+  failure verification logic (asserts, pytest.raises, or pytest.fail).
+  """
+  try:
+    content = file_path.read_text()
+    tree = ast.parse(content)
+    
+    for node in ast.walk(tree):
+      if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "test_create_agent_unfixed_fails":
+        # Check body for Assert, or Call to pytest.raises / pytest.fail
+        for child in ast.walk(node):
+          if isinstance(child, ast.Assert):
+            return True
+          if isinstance(child, ast.With):
+            # Check for pytest.raises context manager
+            for item in child.items:
+              if isinstance(item.context_expr, ast.Call):
+                func = item.context_expr.func
+                # Check for pytest.raises
+                if isinstance(func, ast.Attribute) and func.attr == "raises":
+                   return True
+          if isinstance(child, ast.Call):
+             # Check for pytest.fail call
+             func = child.func
+             if isinstance(func, ast.Attribute) and func.attr == "fail":
+                 return True
+        return False # Function found but no failure check detected
+    return False # Function not found
+  except Exception:
+    return False
+
+
 def test_verify_fix_errors():
   """
   Verification script for fix_errors/benchmark.yaml.
@@ -29,6 +63,7 @@ def test_verify_fix_errors():
   1. All referenced `test_file`, `unfixed_file`, and `fixed_file` paths exist.
   2. `unfixed.py` and `fixed.py` each contain a `create_agent` function.
   3. `test_agent.py` contains `test_create_agent_passes` and `test_create_agent_unfixed_fails`.
+  4. `test_create_agent_unfixed_fails` actively checks for failure.
   """
   base_dir = Path(__file__).parent
   yaml_path = base_dir / "benchmark.yaml"
@@ -108,6 +143,11 @@ def test_verify_fix_errors():
           f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in"
           f" {test_full_path.name}."
       )
+    # 4. Verify `test_create_agent_unfixed_fails` checks for failure
+    elif not _check_test_verifies_failure(test_full_path):
+       issues.append(
+          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (no assert, pytest.raises, or pytest.fail)."
+       )
 
   if issues:
     pytest.fail(
