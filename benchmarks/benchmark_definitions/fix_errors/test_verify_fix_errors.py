@@ -15,6 +15,117 @@ class FailureVerificationResult(BaseModel):
       ..., description="Explanation of why the function does or does not verify failure."
   )
 
+class AlignmentCheckResult(BaseModel):
+  is_aligned: bool = Field(
+      ..., description="True if the test assertions cover the stated requirements and instructions without hidden expectations."
+  )
+  missing_requirements: list[str] = Field(
+      default_factory=list, description="List of requirements that are tested but not explicitly stated in instructions/YAML."
+  )
+  explanation: str
+
+class LeakageCheckResult(BaseModel):
+  is_leaked: bool = Field(..., description="True if the unfixed code contains the solution (e.g. in comments).")
+  explanation: str
+
+def _get_docstring(file_path: Path, func_name: str) -> str | None:
+    """Extracts the docstring of a function from a file."""
+    try:
+        content = file_path.read_text()
+        tree = ast.parse(content)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
+                return ast.get_docstring(node)
+        return None
+    except Exception:
+        return None
+
+def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path, yaml_requirements: list[str]) -> AlignmentCheckResult:
+    """Verifies that test assertions match the requirements and instructions."""
+    test_source = _get_function_source(test_path, "test_create_agent_passes")
+    instructions = _get_docstring(unfixed_path, "create_agent")
+    
+    if not test_source or not instructions:
+        return AlignmentCheckResult(is_aligned=True, explanation="Could not load source or docstring.", missing_requirements=[])
+
+    requirements_text = "\n".join(f"- {req}" for req in yaml_requirements)
+    
+    prompt = f"""You are a QA Lead. Verify if the test code aligns with the requirements provided to the candidate.
+
+**Candidate Instructions (from docstring):**
+{instructions}
+
+**Formal Requirements (from YAML):**
+{requirements_text}
+
+**Test Code (Verification Logic):**
+```python
+{test_source}
+```
+
+**Task:**
+1. Does the test code verify the requirements listed?
+2. **CRITICAL:** Does the test assert conditions that are *NOT* mentioned in the Instructions or Requirements? (Hidden requirements are unfair).
+   - Example of Hidden Requirement: Test asserts `agent.name == "my_agent"` but instructions never specified the name.
+   - Example of Aligned: Test asserts `agent.name == "my_agent"` and instructions said "Create an agent named 'my_agent'".
+
+Reply with JSON: 'is_aligned' (bool), 'missing_requirements' (list of strings - things tested but not required), and 'explanation'."""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": AlignmentCheckResult.model_json_schema(),
+            },
+        )
+        return AlignmentCheckResult.model_validate_json(response.text)
+    except Exception as e:
+        print(f"  [LLM Error] Alignment check failed: {e}")
+        return AlignmentCheckResult(is_aligned=True, explanation="Check failed", missing_requirements=[])
+
+def _check_solution_leakage(client: genai.Client, unfixed_path: Path, fixed_path: Path) -> LeakageCheckResult:
+    """Checks if unfixed.py leaks the solution found in fixed.py."""
+    try:
+        unfixed_code = unfixed_path.read_text()
+        fixed_code = fixed_path.read_text()
+    except Exception:
+        return LeakageCheckResult(is_leaked=False, explanation="Could not read files.")
+
+    prompt = f"""You are a strict exam proctor. Compare the 'Unfixed' code (problem) with the 'Fixed' code (solution).
+
+**Unfixed Code:**
+```python
+{unfixed_code}
+```
+
+**Fixed Code:**
+```python
+{fixed_code}
+```
+
+**Task:**
+Determine if the 'Unfixed' code inadvertently leaks the solution.
+- **LEAK:** The `unfixed.py` contains the exact solution code commented out, or provides the answer in a way that makes the task trivial copy-paste.
+- **NOT LEAK:** The `unfixed.py` has a different structure, placeholders, or genuine bugs. Hints or comments explaining *what* to do are fine; code showing *how* to do it exactly matching the fix is a leak.
+
+Reply with JSON: 'is_leaked' (bool) and 'explanation'."""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": LeakageCheckResult.model_json_schema(),
+            },
+        )
+        return LeakageCheckResult.model_validate_json(response.text)
+    except Exception as e:
+        print(f"  [LLM Error] Leakage check failed: {e}")
+        return LeakageCheckResult(is_leaked=False, explanation="Check failed")
+
 def _get_function_source(file_path: Path, func_name: str) -> str | None:
     """Extracts the source code of a function from a file."""
     try:
@@ -199,6 +310,23 @@ def test_verify_fix_errors():
        issues.append(
           f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM)."
        )
+    
+    # 5. Advanced Semantic Checks (only if API key is present)
+    if client:
+        # Check Alignment
+        yaml_reqs = bm.get("requirements", [])
+        alignment_res = _check_requirements_alignment(client, unfixed_full_path, test_full_path, yaml_reqs)
+        if not alignment_res.is_aligned:
+            print(
+                f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
+            )
+        
+        # Check Leakage
+        leakage_res = _check_solution_leakage(client, unfixed_full_path, fixed_full_path)
+        if leakage_res.is_leaked:
+            print(
+                f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
+            )
 
   if issues:
     pytest.fail(
