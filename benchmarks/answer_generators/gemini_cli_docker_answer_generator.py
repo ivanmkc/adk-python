@@ -68,6 +68,10 @@ class GeminiCliDockerAnswerGenerator(GeminiCliAnswerGenerator):
     if os.environ.get("GEMINI_API_KEY"):
       docker_args.extend(["-e", "GEMINI_API_KEY"])
 
+    # Pass CONTEXT7_API_KEY if present (for MCP)
+    if os.environ.get("CONTEXT7_API_KEY"):
+      docker_args.extend(["-e", "CONTEXT7_API_KEY"])
+
     # 2. Check for Vertex AI params
     if os.environ.get("GOOGLE_GENAI_USE_VERTEXAI"):
       docker_args.extend(["-e", "GOOGLE_GENAI_USE_VERTEXAI"])

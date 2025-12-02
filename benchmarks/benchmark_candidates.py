@@ -71,13 +71,16 @@ agent_pro = create_default_adk_agent(model_name=GEMINI_2_5_PRO)
 
 # List of standard candidate generators
 CANDIDATE_GENERATORS = [
-    # # ADK Agent-based generators (The primary targets for evaluation)
-    # AdkAnswerGenerator(agent=agent_flash, name="adk_gemini_2_5_flash"),
-    # # Gemini CLI Docker Generator (Testing this new implementation)
+    # Gemini CLI Docker Generator (Standard)
     GeminiCliDockerAnswerGenerator(
         model_name=GEMINI_2_5_FLASH,
         image_name=DOCKER_IMAGE,
         context_instruction=ADK_REPO_INSTRUCTION,
+    ),
+    # Gemini CLI Docker Generator (MCP Context7)
+    GeminiCliDockerAnswerGenerator(
+        model_name=GEMINI_2_5_FLASH,
+        image_name="gemini-cli-mcp-context7",
     ),
     # # Direct Gemini SDK generators (Baselines)
     # *permute(

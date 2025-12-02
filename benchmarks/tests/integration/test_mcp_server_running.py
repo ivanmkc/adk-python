@@ -10,7 +10,7 @@ async def test_mcp_server_running(server_name: str):
     Verifies that the specified MCP server is running and connected
     within the Gemini CLI Docker container by checking the output of 'gemini mcp list'.
     """
-    image_name = "gemini-cli-mcp" 
+    image_name = "gemini-cli-mcp-context7" 
     
     # Ensure real credentials for the Gemini CLI to function
     if not os.environ.get("GEMINI_API_KEY"):
