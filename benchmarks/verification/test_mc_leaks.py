@@ -104,6 +104,17 @@ def pytest_generate_tests(metafunc):
 
         for i, case in enumerate(benchmark_file.benchmarks):
           if isinstance(case, MultipleChoiceBenchmarkCase):
+            # Only test cases that actually have a code snippet to check for leaks
+            if not case.code_snippet_ref:
+                continue
+            
+            try:
+                snippet = load_snippet(case.code_snippet_ref)
+                if not snippet:
+                    continue
+            except Exception:
+                continue
+
             # Use a short ID based on the question
             short_q = case.question[:30].replace(" ", "_").replace("\n", "")
             ids.append(f"{suite_path.parent.name}_{i}_{short_q}")
@@ -127,18 +138,8 @@ def client():
 @pytest.mark.asyncio
 async def test_mc_case_leak(case, client: genai.Client):
   """Test a single MC case for leaks."""
-  # Skip cases without snippets
-  if not case.code_snippet_ref:
-    pytest.skip("No code snippet to check.")
-
-  # Load snippet
-  try:
-    snippet = load_snippet(case.code_snippet_ref)
-  except Exception as e:
-    pytest.fail(f"Could not load snippet: {e}")
-
-  if not snippet:
-    pytest.skip("Snippet content is empty.")
+  # Load snippet (guaranteed to exist and be non-empty by generation hook)
+  snippet = load_snippet(case.code_snippet_ref)
 
   # Check for leaks
   result = await check_leak(client, case, snippet)

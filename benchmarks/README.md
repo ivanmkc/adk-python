@@ -54,6 +54,7 @@ Before running experiments, it's crucial to ensure the benchmark data and runner
 These tests are not for evaluating candidates; they are for **validating the framework itself**. They work by running the `GroundTruthAnswerGenerator`—which is expected to be perfect—and asserting that it achieves a 100% pass rate. If these tests fail, it indicates a problem with the benchmark definitions or the runners, not the candidate generator.
 
 **To run the validation tests:**
+<!-- TODO: Is this still valid? Why not use python -m pytest like below? -->
 ```bash
 env/bin/pytest benchmarks/test_benchmarks.py
 ```

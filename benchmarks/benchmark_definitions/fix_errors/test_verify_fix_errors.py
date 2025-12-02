@@ -28,10 +28,9 @@ class LeakageCheckResult(BaseModel):
   is_leaked: bool = Field(..., description="True if the unfixed code contains the solution (e.g. in comments).")
   explanation: str
 
-def _get_docstring(file_path: Path, func_name: str) -> str | None:
-    """Extracts the docstring of a function from a file."""
+def _get_docstring(content: str, func_name: str) -> str | None:
+    """Extracts the docstring of a function from content."""
     try:
-        content = file_path.read_text()
         tree = ast.parse(content)
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
@@ -40,10 +39,10 @@ def _get_docstring(file_path: Path, func_name: str) -> str | None:
     except Exception:
         return None
 
-async def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path) -> AlignmentCheckResult:
+async def _check_requirements_alignment(client: genai.Client, unfixed_content: str, test_content: str) -> AlignmentCheckResult:
     """Verifies that test assertions match the instructions in unfixed.py."""
-    test_source = _get_function_source(test_path, "test_create_agent_passes")
-    instructions = _get_docstring(unfixed_path, "create_agent")
+    test_source = _get_function_source(test_content, "test_create_agent_passes")
+    instructions = _get_docstring(unfixed_content, "create_agent")
     
     if not test_source or not instructions:
         return AlignmentCheckResult(is_aligned=True, explanation="Could not load source or docstring.", missing_requirements=[])
@@ -80,24 +79,18 @@ Reply with JSON: 'is_aligned' (bool), 'missing_requirements' (list of strings - 
         print(f"  [LLM Error] Alignment check failed: {e}")
         return AlignmentCheckResult(is_aligned=True, explanation="Check failed", missing_requirements=[])
 
-async def _check_solution_leakage(client: genai.Client, unfixed_path: Path, fixed_path: Path) -> LeakageCheckResult:
+async def _check_solution_leakage(client: genai.Client, unfixed_content: str, fixed_content: str) -> LeakageCheckResult:
     """Checks if unfixed.py leaks the solution found in fixed.py."""
-    try:
-        unfixed_code = unfixed_path.read_text()
-        fixed_code = fixed_path.read_text()
-    except Exception:
-        return LeakageCheckResult(is_leaked=False, explanation="Could not read files.")
-
     prompt = f"""You are a strict exam proctor. Compare the 'Unfixed' code (problem) with the 'Fixed' code (solution).
 
 **Unfixed Code:**
 ```python
-{unfixed_code}
+{unfixed_content}
 ```
 
 **Fixed Code:**
 ```python
-{fixed_code}
+{fixed_content}
 ```
 
 **Task:**
@@ -121,10 +114,9 @@ Reply with JSON: 'is_leaked' (bool) and 'explanation'."""
         print(f"  [LLM Error] Leakage check failed: {e}")
         return LeakageCheckResult(is_leaked=False, explanation="Check failed")
 
-def _get_function_source(file_path: Path, func_name: str) -> str | None:
-    """Extracts the source code of a function from a file."""
+def _get_function_source(content: str, func_name: str) -> str | None:
+    """Extracts the source code of a function from content."""
     try:
-        content = file_path.read_text()
         tree = ast.parse(content)
         for node in ast.walk(tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
@@ -133,19 +125,14 @@ def _get_function_source(file_path: Path, func_name: str) -> str | None:
     except Exception:
         return None
 
-async def _check_test_verifies_failure(client: genai.Client | None, file_path: Path) -> bool:
+async def _check_test_verifies_failure(client: genai.Client, test_content: str) -> bool:
   """
   Checks if `test_create_agent_unfixed_fails` contains failure verification logic.
   Uses an LLM if a client is provided; otherwise falls back to basic AST inspection.
   """
-  func_source = _get_function_source(file_path, "test_create_agent_unfixed_fails")
+  func_source = _get_function_source(test_content, "test_create_agent_unfixed_fails")
   if not func_source:
       return False # Function not found
-
-  if not client:
-      # Fallback to heuristic AST check if no API key
-      print(f"  [Warning] No API Key. Using heuristic check for {file_path.name}")
-      return "assert" in func_source or "pytest.raises" in func_source or "pytest.fail" in func_source
 
   prompt = f"""You are a code reviewer. Analyze the following Python test function `test_create_agent_unfixed_fails`. 
 This function is intended to verify that a broken piece of code (imported as `unfixed`) actually fails or exhibits incorrect behavior.
@@ -176,32 +163,30 @@ Reply with a JSON object containing 'verifies_failure' (boolean) and 'explanatio
     )
     result = FailureVerificationResult.model_validate_json(response.text)
     if not result.verifies_failure:
-        print(f"  [LLM Check Failed] {file_path.name}: {result.explanation}")
+        print(f"  [LLM Check Failed] {result.explanation}")
     return result.verifies_failure
   except Exception as e:
-    print(f"  [LLM Error] Failed to check {file_path.name}: {e}")
+    print(f"  [LLM Error] Failed to check failure verification: {e}")
     # Fallback to heuristic on error to avoid blocking CI
     return "assert" in func_source or "pytest.raises" in func_source or "pytest.fail" in func_source
 
 
-def _check_function_exists(file_path: Path, func_name: str) -> bool:
-  """Checks if a Python file contains a function definition with the given name."""
+def _check_function_exists(content: str, func_name: str, file_name: str = "") -> bool:
+  """Checks if a Python file content contains a function definition with the given name."""
   try:
-    content = file_path.read_text()
     tree = ast.parse(content)
     for node in ast.walk(tree):
       if (isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef)) and node.name == func_name:
         return True
     return False
   except SyntaxError:
-    if file_path.name == "unfixed.py":
-        print(f"  [Info] Syntax error in {file_path.name}. Assuming intentional for benchmark case.")
+    if file_name == "unfixed.py":
+        print(f"  [Info] Syntax error in {file_name}. Assuming intentional for benchmark case.")
         return True # Assume existence if we can't parse, to allow syntax error cases
     pytest.fail(
-        f"Syntax error in {file_path}. Cannot parse for function existence."
+        f"Syntax error in content. Cannot parse for function existence."
     )
-  except FileNotFoundError:
-    # Should be caught by earlier checks, but defensive
+  except Exception:
     return False
 
 
@@ -254,34 +239,46 @@ async def test_verify_benchmark_case(benchmark_case, llm_client):
     if not fixed_full_path.exists():
         pytest.fail(f"Benchmark '{name}': Fixed file not found: {fixed_full_path}")
 
+    # Read content
+    unfixed_content = unfixed_full_path.read_text()
+    fixed_content = fixed_full_path.read_text()
+    test_content = test_full_path.read_text()
+
+    # Check for empty content
+    if not unfixed_content.strip():
+        pytest.fail(f"Benchmark '{name}': Unfixed file is empty: {unfixed_full_path}")
+    if not fixed_content.strip():
+        pytest.fail(f"Benchmark '{name}': Fixed file is empty: {fixed_full_path}")
+    if not test_content.strip():
+        pytest.fail(f"Benchmark '{name}': Test file is empty: {test_full_path}")
+
     # 2. Verify `create_agent` function exists in unfixed.py and fixed.py
-    if not _check_function_exists(unfixed_full_path, "create_agent"):
+    if not _check_function_exists(unfixed_content, "create_agent", file_name=unfixed_full_path.name):
         pytest.fail(f"Benchmark '{name}': 'create_agent' function not found in {unfixed_full_path.name}.")
-    if not _check_function_exists(fixed_full_path, "create_agent"):
+    if not _check_function_exists(fixed_content, "create_agent", file_name=fixed_full_path.name):
         pytest.fail(f"Benchmark '{name}': 'create_agent' function not found in {fixed_full_path.name}.")
 
     # 3. Verify `test_create_agent_passes` and `test_create_agent_unfixed_fails` exist in test_agent.py
-    if not _check_function_exists(test_full_path, "test_create_agent_passes"):
+    if not _check_function_exists(test_content, "test_create_agent_passes", file_name=test_full_path.name):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_passes' function not found in {test_full_path.name}.")
-    if not _check_function_exists(test_full_path, "test_create_agent_unfixed_fails"):
+    if not _check_function_exists(test_content, "test_create_agent_unfixed_fails", file_name=test_full_path.name):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' function not found in {test_full_path.name}.")
     
     # 4. Verify `test_create_agent_unfixed_fails` checks for failure
-    elif not await _check_test_verifies_failure(llm_client, test_full_path):
+    elif not await _check_test_verifies_failure(llm_client, test_content):
         pytest.fail(f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM).")
 
     # 5. Advanced Semantic Checks
     
     # Check Alignment
-    yaml_reqs = benchmark_case.get("requirements", []) # kept for compatibility if needed, but not used by alignment check anymore
-    alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path)
+    alignment_res = await _check_requirements_alignment(llm_client, unfixed_content, test_content)
     if not alignment_res.is_aligned:
         print(
             f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"
         )
     
     # Check Leakage
-    leakage_res = await _check_solution_leakage(llm_client, unfixed_full_path, fixed_full_path)
+    leakage_res = await _check_solution_leakage(llm_client, unfixed_content, fixed_content)
     if leakage_res.is_leaked:
         print(
             f"[WARNING] Benchmark '{name}': Solution Leakage Detected. {leakage_res.explanation}"
