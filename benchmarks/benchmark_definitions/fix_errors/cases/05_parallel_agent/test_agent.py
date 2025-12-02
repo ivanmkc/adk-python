@@ -14,18 +14,25 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       root_agent, "Run in parallel.", mock_llm_response="parallel"
   )
   assert "parallel" in response.lower()
+
+  from google.adk.agents import ParallelAgent
+  assert isinstance(root_agent, ParallelAgent), "Agent should be a ParallelAgent."
+  
+  sub_agent_names = [sub.name for sub in root_agent.sub_agents]
+  assert "agent_one" in sub_agent_names, "Missing 'agent_one'."
+  assert "agent_two" in sub_agent_names, "Missing 'agent_two'."

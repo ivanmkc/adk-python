@@ -16,17 +16,17 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   # Valid input test
   response = await run_agent_test(
@@ -43,3 +43,18 @@ async def test_create_agent_passes():
       mock_llm_response="Error: The field 'age' is missing.",
   )
   assert "age" in response_invalid.lower()
+
+  worker_agent = next(
+      (
+          t.agent
+          for t in root_agent.tools
+          if hasattr(t, "agent") and t.agent.name == "worker"
+      ),
+      None,
+  )
+  assert worker_agent is not None, "Worker agent tool not found."
+  assert worker_agent.input_schema is not None, "Worker agent needs an input_schema."
+  
+  schema_fields = worker_agent.input_schema.model_fields
+  assert "name" in schema_fields, "Schema missing 'name' field."
+  assert "age" in schema_fields, "Schema missing 'age' field."

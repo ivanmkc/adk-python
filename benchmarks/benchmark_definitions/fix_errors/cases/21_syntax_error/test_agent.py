@@ -17,25 +17,19 @@ from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-try:
-  import agent
-except ImportError:
-  agent = None
-
+import unfixed
+import fixed
 
 def test_create_agent_unfixed_fails():
-  # In a real fix_error scenario, this would test that the unfixed code fails.
-  # For now, we skip or just ensure the module is loadable.
-  if agent is None:
-    pytest.fail("No agent module")
-  pass
+  # The unfixed code in this case is actually valid python (simulating a "fixed" syntax error state for the benchmark input)
+  # So we just verify it runs.
+  root_agent = unfixed.create_agent(MODEL_NAME)
+  assert root_agent is not None
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(
       root_agent, Agent
@@ -44,3 +38,4 @@ async def test_create_agent_passes():
       root_agent, "Hello", mock_llm_response="Hello"
   )
   assert "Hello" in response, "Agent should respond to 'Hello' with 'Hello'"
+  assert root_agent.name == "syntax_agent", "Agent name mismatch."

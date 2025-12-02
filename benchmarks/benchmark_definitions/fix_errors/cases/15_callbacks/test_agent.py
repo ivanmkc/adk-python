@@ -14,24 +14,25 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-
   # Reset the flag in the agent module
-  agent.callback_was_called = False
+  fixed.callback_was_called = False
 
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       root_agent, "Hello", mock_llm_response="Hello"
   )
 
   assert "Hello" in response or "Hi" in response
-  assert agent.callback_was_called, "The after_model_callback was not called."
+  assert fixed.callback_was_called, "The after_model_callback was not called."
+  assert root_agent.after_model_callback is not None, "Agent should have an after_model_callback."
+  assert root_agent.name == "callback_agent", "Agent name mismatch."

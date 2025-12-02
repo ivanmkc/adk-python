@@ -21,22 +21,21 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from benchmarks.test_helpers import MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-
   # Reset callbacks
-  agent.before_called = []
-  agent.after_called = []
+  fixed.before_called = []
+  fixed.after_called = []
 
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   # Manually run the agent logic with mocks
   with patch(
@@ -99,6 +98,9 @@ async def test_create_agent_passes():
         if text_parts:
           final_response = "".join(text_parts)
 
-    assert agent.before_called
-    assert agent.after_called
+    assert fixed.before_called
+    assert fixed.after_called
     assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in final_response
+    assert root_agent.before_tool_callback is not None, "before_tool_callback missing."
+    assert root_agent.after_tool_callback is not None, "after_tool_callback missing."
+    assert root_agent.name == "callback_agent", "Agent name mismatch."

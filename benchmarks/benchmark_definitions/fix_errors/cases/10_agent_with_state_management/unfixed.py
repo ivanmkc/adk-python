@@ -4,12 +4,17 @@ from google.adk.agents import LlmAgent, SequentialAgent, BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy SequentialAgent that fails to manage state correctly.
+  Creates a SequentialAgent that demonstrates inter-agent state management.
+
+  Instructions:
+      Create a SequentialAgent named "state_management_coordinator" with two sub-agents:
+      1. "writer_agent": Writes the value 'xyz' to the session state key "secret_word".
+      2. "reader_agent": Reads the value from "secret_word" and outputs it.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in state management.
+      An instance of SequentialAgent with state-managing sub-agents.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

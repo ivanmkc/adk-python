@@ -6,7 +6,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates a stateless LlmAgent using `include_contents="none"`.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "stateless_agent" (aka StatelessBot) that is stateless.
+      It should not retain conversation history (set `include_contents="none"`).
 
   Args:
       model_name: The name of the LLM model to use.

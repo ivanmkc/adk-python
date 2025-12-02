@@ -11,12 +11,16 @@ class UserInfo(BaseModel):
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with an incorrect or missing input schema.
+  Creates an LlmAgent that uses `input_schema` for structured input.
+
+  Instructions:
+      Create a "worker" agent that accepts user info (name: str, age: int) via `input_schema`.
+      Then, create a root "agent" that uses the worker as a tool to process user info.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in input schema validation.
+      An instance of LlmAgent with a configured input schema.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

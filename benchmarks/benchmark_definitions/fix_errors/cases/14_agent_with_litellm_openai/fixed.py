@@ -7,7 +7,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent that uses an OpenAI model via LiteLlm.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "openai_agent" that uses the `LiteLlm` model wrapper.
+      The LiteLlm should be configured with `model="openai/gpt-3.5-turbo"`.
 
   Args:
       model_name: The name of the LLM model to use (for consistency, not directly used in LiteLlm here).

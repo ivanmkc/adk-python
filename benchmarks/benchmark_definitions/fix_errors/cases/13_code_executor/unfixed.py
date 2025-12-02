@@ -5,12 +5,16 @@ from google.adk.code_executors.built_in_code_executor import BuiltInCodeExecutor
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with an incorrect or missing code executor.
+  Creates an LlmAgent configured with a BuiltInCodeExecutor.
+
+  Instructions:
+      Create an LlmAgent named "code_exec_agent" equipped with a `BuiltInCodeExecutor`.
+      The agent should be instructed to use the code executor to calculate "2 + 2".
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in code execution.
+      An instance of LlmAgent with a configured code executor.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

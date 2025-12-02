@@ -6,7 +6,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates a root LlmAgent that delegates a task to a specialist sub-agent.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create a "delegator_agent" that delegates to a "specialist_agent" when needed.
+      The specialist_agent should be instructed to respond with "specialist ok".
 
   Args:
       model_name: The name of the LLM model to use.

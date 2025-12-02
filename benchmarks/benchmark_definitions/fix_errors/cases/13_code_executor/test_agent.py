@@ -15,18 +15,26 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       root_agent, "Calculate 2 + 2.", mock_llm_response="4"
   )
   assert "4" in response
+
+  from google.adk.code_executors.built_in_code_executor import (
+      BuiltInCodeExecutor,
+  )
+  assert isinstance(
+      root_agent.code_executor, BuiltInCodeExecutor
+  ), "Agent should have a BuiltInCodeExecutor."
+  assert root_agent.name == "code_exec_agent", "Agent name mismatch."

@@ -4,9 +4,11 @@ from google.adk.agents import LlmAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a minimal, syntactically correct LlmAgent.
+  Creates a minimal LlmAgent.
 
-  This function represents the correct implementation (ground truth) for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "syntax_agent" that responds to greetings.
+      Ensure the code is syntactically correct.
 
   Args:
       model_name: The name of the LLM model to use.

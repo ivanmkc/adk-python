@@ -6,7 +6,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent that utilizes artifact data in its instructions.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "artifact_agent" that references the artifact
+      `{artifact.my_data}` in its instructions.
 
   Args:
       model_name: The name of the LLM model to use.

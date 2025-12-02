@@ -15,17 +15,17 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   # Test Condition A
   response_a = await run_agent_test(
@@ -44,3 +44,7 @@ async def test_create_agent_passes():
       mock_llm_response="Agent B",
   )
   assert "Agent B" in response_b
+
+  assert root_agent.name == "custom_conditional_agent", "Agent name mismatch."
+  assert root_agent.agent_a.name == "agent_a", "Sub-agent A name mismatch."
+  assert root_agent.agent_b.name == "agent_b", "Sub-agent B name mismatch."

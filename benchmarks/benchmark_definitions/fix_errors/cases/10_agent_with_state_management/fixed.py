@@ -6,8 +6,10 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates a SequentialAgent that demonstrates inter-agent state management.
 
-  A 'writer' agent stores a value in session state, which a 'reader' agent then retrieves.
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create a SequentialAgent named "state_management_coordinator" with two sub-agents:
+      1. "writer_agent": Writes the value 'xyz' to the session state key "secret_word".
+      2. "reader_agent": Reads the value from "secret_word" and outputs it.
 
   Args:
       model_name: The name of the LLM model to use.

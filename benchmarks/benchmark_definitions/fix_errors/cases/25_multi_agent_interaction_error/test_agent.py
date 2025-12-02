@@ -18,17 +18,20 @@ from google.adk.agents import BaseAgent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  # Interaction error: output_key is missing
+  root_agent = unfixed.create_agent(MODEL_NAME)
+  writer = next((sub for sub in root_agent.sub_agents if sub.name == "writer_agent"), None)
+  assert writer is not None
+  assert writer.output_key != "correct_key"
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(
       root_agent, BaseAgent
@@ -40,3 +43,8 @@ async def test_create_agent_passes():
   assert (
       "secret_message" in response
   ), "Reader agent should output 'secret_message'"
+
+  # Verify structural fix: writer should have output_key set
+  writer = next((sub for sub in root_agent.sub_agents if sub.name == "writer_agent"), None)
+  assert writer is not None, "writer_agent not found."
+  assert writer.output_key == "correct_key", "writer_agent should write to 'correct_key'."

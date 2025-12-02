@@ -6,7 +6,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates a LoopAgent that runs a sub-agent a fixed number of times.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create a LoopAgent named "loop_coordinator" that runs a sub-agent named
+      "looper_agent" for 2 iterations.
 
   Args:
       model_name: The name of the LLM model to use.

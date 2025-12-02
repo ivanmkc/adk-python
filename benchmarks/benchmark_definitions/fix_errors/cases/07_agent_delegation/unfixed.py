@@ -4,12 +4,16 @@ from google.adk.agents import LlmAgent, BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent that fails to delegate to a sub-agent.
+  Creates a root LlmAgent that delegates a task to a specialist sub-agent.
+
+  Instructions:
+      Create a "delegator_agent" that delegates to a "specialist_agent" when needed.
+      The specialist_agent should be instructed to respond with "specialist ok".
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in delegation.
+      An instance of LlmAgent capable of delegation.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

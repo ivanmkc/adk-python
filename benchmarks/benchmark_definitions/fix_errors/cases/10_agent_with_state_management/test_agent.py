@@ -16,16 +16,25 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(root_agent, "Start", mock_llm_response="xyz")
   assert "xyz" in response.lower()
+
+  from google.adk.agents import SequentialAgent
+  assert isinstance(root_agent, SequentialAgent), "Agent should be a SequentialAgent."
+  assert root_agent.name == "state_management_coordinator", "Agent name mismatch."
+  writer = next(
+      (a for a in root_agent.sub_agents if a.name == "writer_agent"), None
+  )
+  assert writer is not None, "Writer agent not found."
+  assert writer.output_key == "secret_word", "Writer should write to 'secret_word'."

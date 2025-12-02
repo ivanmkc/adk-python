@@ -6,7 +6,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent with the necessary import statement.
 
-  This function represents the correct implementation (ground truth) for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "import_agent".
+      Ensure all necessary modules (like LlmAgent) are imported.
 
   Args:
       model_name: The name of the LLM model to use.

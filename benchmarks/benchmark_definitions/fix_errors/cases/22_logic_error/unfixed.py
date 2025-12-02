@@ -4,21 +4,21 @@ from google.adk.agents import LlmAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates an LlmAgent with a logic error in its instruction.
+  Creates an LlmAgent with an instruction to respond with "Hello World!".
 
-  The instruction is insufficient for the agent to meet a specific requirement.
-  This simulates a scenario where the LLM needs to fix the agent's behavior.
+  Instructions:
+      Create an LlmAgent named "logic_agent".
+      Instruct it to always respond with the exact string "Hello World!".
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of LlmAgent with a logic flaw.
+      An instance of LlmAgent with the correct logic.
   """
-  # Logic error: Missing the required instruction to always respond with "Hello World!"
   root_agent = LlmAgent(
       name="logic_agent",
       model=model_name,
-      instruction="You are a helpful assistant.",  # Wrong instruction for the test
+      instruction="You are a helpful assistant.",
   )
   return root_agent

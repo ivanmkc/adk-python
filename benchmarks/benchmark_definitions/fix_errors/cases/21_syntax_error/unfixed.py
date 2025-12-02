@@ -4,16 +4,17 @@ from google.adk.agents import LlmAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a dummy LlmAgent with a simulated syntax error.
+  Creates a minimal LlmAgent.
 
-  In a real scenario, this function would contain syntactically incorrect Python.
-  For this benchmark, it simulates a state that the LLM needs to 'fix' to a valid agent.
+  Instructions:
+      Create an LlmAgent named "syntax_agent" that responds to greetings.
+      Ensure the code is syntactically correct.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of LlmAgent (assuming fixed by the LLM).
+      An instance of LlmAgent.
   """
   root_agent = LlmAgent(
       name="syntax_agent",

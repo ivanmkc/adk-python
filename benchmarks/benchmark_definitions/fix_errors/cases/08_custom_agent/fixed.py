@@ -28,7 +28,11 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates a custom agent with conditional logic based on session state.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create a CustomConditionalAgent named "custom_conditional_agent".
+      It should run "agent_a" if session.state["run_agent_a"] is True, otherwise "agent_b".
+      - "agent_a" should respond "Agent A was chosen."
+      - "agent_b" should respond "Agent B was chosen."
 
   Args:
       model_name: The name of the LLM model to use.

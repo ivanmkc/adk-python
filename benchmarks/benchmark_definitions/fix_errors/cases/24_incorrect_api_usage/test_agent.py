@@ -15,17 +15,17 @@ from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(ValidationError):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(
       root_agent, Agent
@@ -34,3 +34,6 @@ async def test_create_agent_passes():
       root_agent, "Hello", mock_llm_response="Hello"
   )
   assert "Hello" in response
+
+  # Verify that the instruction was correctly set (this confirms the API usage fix)
+  assert "helpful assistant" in root_agent.instruction, "Instruction attribute not set correctly."

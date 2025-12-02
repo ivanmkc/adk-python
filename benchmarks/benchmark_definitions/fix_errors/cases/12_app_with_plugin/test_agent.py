@@ -15,18 +15,25 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  app = agent.create_agent(MODEL_NAME)
+  app = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       app.root_agent, "Hello", mock_llm_response="Hello"
   )
   assert "Hello" in response
+
+  from google.adk.apps import App
+  assert isinstance(app, App), "Returned object should be an App instance."
+  assert app.name == "my_app", "App name mismatch."
+  assert len(app.plugins) > 0, "App should have plugins."
+  assert app.plugins[0].name == "simple_plugin", "Plugin name mismatch."
+  assert app.root_agent.name == "app_agent", "Root agent name mismatch."

@@ -4,12 +4,17 @@ from google.adk.agents import LlmAgent, ParallelAgent, BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy ParallelAgent with incorrect sub-agent configuration.
+  Creates a ParallelAgent that runs two LlmAgents concurrently.
+
+  Instructions:
+      Create a ParallelAgent named "parallel_coordinator" with two sub-agents:
+      1. "agent_one": Responds with "This is the first parallel agent."
+      2. "agent_two": Responds with "This is the second parallel agent."
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in parallel execution.
+      An instance of ParallelAgent with configured sub-agents.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

@@ -12,23 +12,27 @@ Test Verification:
     - Returns a response containing the tool's output ("test").
 """
 
+
+
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(
       root_agent,
       "Can you use your tool?",
       mock_llm_response="I used the tool with query 'test'",
   )
   assert "test" in response.lower()
+  assert root_agent.name == "tool_agent", "Agent name mismatch."
+  assert len(root_agent.tools) == 1, "Agent should have exactly one tool."

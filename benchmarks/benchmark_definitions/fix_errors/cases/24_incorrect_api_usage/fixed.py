@@ -4,9 +4,12 @@ from google.adk.agents import LlmAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates an LlmAgent with correct API usage.
+  Creates an LlmAgent.
 
-  This function represents the correct implementation (ground truth) for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "api_agent".
+      Ensure that you use the correct arguments for the LlmAgent constructor
+      (e.g., `instruction` vs `instructions`).
 
   Args:
       model_name: The name of the LLM model to use.

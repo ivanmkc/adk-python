@@ -14,27 +14,19 @@ from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-try:
-  import agent
-except ImportError:
-  agent = None
-
+import unfixed
+import fixed
 
 def test_create_agent_unfixed_fails():
-  if agent is None:
-    pytest.fail("No agent module")
-  # Verify the unfixed agent DOES NOT produce the expected output
-  root_agent = agent.create_agent(MODEL_NAME)
-  # This verification is complex to mock without running the agent,
-  # but strictly speaking `create_agent_unfixed` returns a valid agent, just wrong logic.
-  pass
+  # Logic error: The agent exists but has the wrong instruction.
+  root_agent = unfixed.create_agent(MODEL_NAME)
+  # It should NOT have the correct instruction yet
+  assert "Hello World!" not in root_agent.instruction
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(
       root_agent, Agent
@@ -43,3 +35,4 @@ async def test_create_agent_passes():
       root_agent, "Say hello.", mock_llm_response="Hello World!"
   )
   assert "Hello World!" in response, "Agent should respond with 'Hello World!'"
+  assert root_agent.name == "logic_agent", "Agent name mismatch."

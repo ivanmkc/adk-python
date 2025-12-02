@@ -4,10 +4,13 @@ from google.adk.agents import LlmAgent, SequentialAgent, BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a SequentialAgent that correctly manages inter-agent communication.
+  Creates a SequentialAgent that manages inter-agent communication.
 
-  The `writer_agent` sets a value in session state, which the `reader_agent` then correctly retrieves.
-  This function represents the correct implementation (ground truth) for benchmark testing.
+  Instructions:
+      Create a SequentialAgent named "multi_agent_coordinator" with two sub-agents.
+      1. "writer_agent": Outputs "secret_message" to the state key "correct_key".
+      2. "reader_agent": Reads from "{correct_key}" and outputs the content.
+      Ensure the producer sets the correct output key so the consumer can read it.
 
   Args:
       model_name: The name of the LLM model to use.

@@ -10,12 +10,16 @@ def basic_tool(query: str) -> str:
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with a missing or incorrect tool configuration.
+  Creates an LlmAgent configured with a basic function tool.
+
+  Instructions:
+      Create an LlmAgent named "tool_agent" equipped with the `basic_tool`.
+      The agent should be able to use the tool when prompted.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in tool usage.
+      An instance of LlmAgent with a configured tool.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

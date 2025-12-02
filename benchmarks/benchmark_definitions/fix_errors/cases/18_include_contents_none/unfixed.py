@@ -4,12 +4,16 @@ from google.adk.agents import LlmAgent, BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with incorrect `include_contents` configuration.
+  Creates a stateless LlmAgent using `include_contents="none"`.
+
+  Instructions:
+      Create an LlmAgent named "stateless_agent" (aka StatelessBot) that is stateless.
+      It should not retain conversation history (set `include_contents="none"`).
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in stateless behavior.
+      A stateless instance of LlmAgent.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

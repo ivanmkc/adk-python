@@ -12,7 +12,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent configured with a basic function tool.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "tool_agent" equipped with the `basic_tool`.
+      The agent should be able to use the tool when prompted.
 
   Args:
       model_name: The name of the LLM model to use.

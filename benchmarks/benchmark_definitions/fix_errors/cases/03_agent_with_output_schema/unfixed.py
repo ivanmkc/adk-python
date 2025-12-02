@@ -10,12 +10,16 @@ class BasicOutputSchema(BaseModel):
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with an incorrect or missing output schema.
+  Creates an LlmAgent that enforces JSON output using `output_schema`.
+
+  Instructions:
+      Create an LlmAgent named "output_schema_agent" that uses `BasicOutputSchema`
+      to enforce structured JSON output.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in output schema validation.
+      An instance of LlmAgent with a configured output schema.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

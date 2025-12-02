@@ -13,12 +13,16 @@ def my_callback(**kwargs) -> None:
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent with an incorrect or missing after_model_callback.
+  Creates an LlmAgent with an `after_model_callback` configured.
+
+  Instructions:
+      Create an LlmAgent named "callback_agent" that registers the `my_callback` function
+      as its `after_model_callback`.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in callback execution.
+      An instance of LlmAgent with a configured after-model callback.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

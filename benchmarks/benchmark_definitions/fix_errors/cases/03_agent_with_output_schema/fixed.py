@@ -12,7 +12,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent that enforces JSON output using `output_schema`.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "output_schema_agent" that uses `BasicOutputSchema`
+      to enforce structured JSON output.
 
   Args:
       model_name: The name of the LLM model to use.

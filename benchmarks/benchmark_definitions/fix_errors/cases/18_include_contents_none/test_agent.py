@@ -16,17 +16,17 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-try:
-  import agent
-except ImportError:
-  agent = None
+import unfixed
+import fixed
+
+def test_create_agent_unfixed_fails():
+  with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
+    unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
-  if agent is None:
-    pytest.fail("No agent module")
-  root_agent = agent.create_agent(MODEL_NAME)
+  root_agent = fixed.create_agent(MODEL_NAME)
 
   # First turn: Agent should introduce itself
   response1 = await run_agent_test(
@@ -43,3 +43,5 @@ async def test_create_agent_passes():
   assert "stateless" in response2.lower()
   assert "remember" in response2.lower()
   assert "what is your name" not in response2.lower()
+  assert root_agent.name == "stateless_agent", "Agent name mismatch."
+  assert root_agent.include_contents == "none", "Agent should be stateless (include_contents='none')."

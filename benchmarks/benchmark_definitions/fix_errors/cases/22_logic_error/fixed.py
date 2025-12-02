@@ -4,9 +4,11 @@ from google.adk.agents import LlmAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates an LlmAgent with a correct instruction to respond with "Hello World!".
+  Creates an LlmAgent with an instruction to respond with "Hello World!".
 
-  This function represents the correct implementation (ground truth) for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "logic_agent".
+      Instruct it to always respond with the exact string "Hello World!".
 
   Args:
       model_name: The name of the LLM model to use.

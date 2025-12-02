@@ -170,8 +170,12 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
             BenchmarkErrorType.MODEL_ANSWER_DID_NOT_MATCH_TEMPLATE,
         )
 
-      # 2. Write the generated code to 'agent.py' in the temp dir
-      (tmp_path / "agent.py").write_text(code_to_test, encoding="utf-8")
+      # 2. Write the generated code to 'fixed.py' in the temp dir (as candidate)
+      (tmp_path / "fixed.py").write_text(code_to_test, encoding="utf-8")
+
+      # 2b. Write the unfixed code to 'unfixed.py' in the temp dir
+      unfixed_content = read_file(project_root / benchmark_case.unfixed_file)
+      (tmp_path / "unfixed.py").write_text(unfixed_content, encoding="utf-8")
 
       # 3. Read and write the test file to the temp dir
       test_content = read_file(test_file_path)
@@ -215,23 +219,26 @@ class PytestBenchmarkRunner(BenchmarkRunner[FixErrorBenchmarkCase]):
       # In this legacy mode, code_to_test should contain the full file.
       target_test_file.write_text(code_to_test, encoding="utf-8")
 
-    # Prepare environment with PYTHONPATH including the temp directory
+    # Prepare environment with PYTHONPATH including the temp directory and project root
     env = os.environ.copy()
     pythonpath = env.get("PYTHONPATH", "")
+    # Add both tmp_path (for fixed.py/unfixed.py) and project_root (for benchmarks package)
+    additional_paths = f"{str(tmp_path)}{os.pathsep}{str(project_root)}"
     if pythonpath:
-      env["PYTHONPATH"] = f"{pythonpath}{os.pathsep}{str(tmp_path)}"
+      env["PYTHONPATH"] = f"{pythonpath}{os.pathsep}{additional_paths}"
     else:
-      env["PYTHONPATH"] = str(tmp_path)
+      env["PYTHONPATH"] = additional_paths
 
     proc = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
         "pytest",
         "--asyncio-mode=auto",
-        str(target_test_file),
+        "test_temp.py",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
+        cwd=str(tmp_path),
     )
     stdout, stderr = await proc.communicate()
 

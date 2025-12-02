@@ -17,12 +17,17 @@ class SimplePlugin(BasePlugin):
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy App instance with incorrect plugin configuration.
+  Creates an App instance that includes a basic plugin and a root LlmAgent.
+
+  Instructions:
+      Create an App named "my_app" with a root agent named "app_agent".
+      The app must include the provided `SimplePlugin`.
+      The root agent should respond to greetings.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in plugin integration.
+      An instance of App with a configured plugin.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

@@ -4,12 +4,16 @@ from google.adk.agents import BaseAgent
 
 def create_agent(model_name: str) -> BaseAgent:
   """
-  Creates a buggy LlmAgent, expected to raise NotImplementedError.
+  Creates an LlmAgent with `before_tool_callback` and `after_tool_callback`.
+
+  Instructions:
+      Create an LlmAgent named "callback_agent" with the `_mock_tool_func`.
+      Register `before_callback_func` and `after_callback_func` as the before/after tool callbacks.
 
   Args:
       model_name: The name of the LLM model to use.
 
   Returns:
-      An instance of BaseAgent, expected to fail in callback execution.
+      An instance of LlmAgent with configured tool callbacks.
   """
-  raise NotImplementedError("Agent not implemented for unfixed version.")
+  raise NotImplementedError("Agent implementation incomplete.")

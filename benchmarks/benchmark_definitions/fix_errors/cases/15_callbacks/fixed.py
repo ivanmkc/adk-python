@@ -15,7 +15,9 @@ def create_agent(model_name: str) -> BaseAgent:
   """
   Creates an LlmAgent with an `after_model_callback` configured.
 
-  This function represents the correct implementation for benchmark testing.
+  Instructions:
+      Create an LlmAgent named "callback_agent" that registers the `my_callback` function
+      as its `after_model_callback`.
 
   Args:
       model_name: The name of the LLM model to use.
