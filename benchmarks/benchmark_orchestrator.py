@@ -187,7 +187,7 @@ async def run_benchmarks(
       f" (max_concurrency={max_concurrency}) ---\n"
   )
   results = [
-      await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks))
+      await f for f in tqdm(asyncio.as_completed(tasks), total=len(tasks), desc="Running benchmarks against answer generators")
   ]
 
   if logger:
