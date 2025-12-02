@@ -1,7 +1,81 @@
 import ast
+import os
 from pathlib import Path
 import pytest
 import yaml
+from google import genai
+from pydantic import BaseModel, Field
+
+class FailureVerificationResult(BaseModel):
+  verifies_failure: bool = Field(
+      ...,
+      description="Whether the test function actively verifies that the code fails or produces an incorrect result.",
+  )
+  explanation: str = Field(
+      ..., description="Explanation of why the function does or does not verify failure."
+  )
+
+def _get_function_source(file_path: Path, func_name: str) -> str | None:
+    """Extracts the source code of a function from a file."""
+    try:
+        content = file_path.read_text()
+        tree = ast.parse(content)
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
+                return ast.get_source_segment(content, node)
+        return None
+    except Exception:
+        return None
+
+def _check_test_verifies_failure(client: genai.Client | None, file_path: Path) -> bool:
+  """
+  Checks if `test_create_agent_unfixed_fails` contains failure verification logic.
+  Uses an LLM if a client is provided; otherwise falls back to basic AST inspection.
+  """
+  func_source = _get_function_source(file_path, "test_create_agent_unfixed_fails")
+  if not func_source:
+      return False # Function not found
+
+  if not client:
+      # Fallback to heuristic AST check if no API key
+      print(f"  [Warning] No API Key. Using heuristic check for {file_path.name}")
+      return "assert" in func_source or "pytest.raises" in func_source or "pytest.fail" in func_source
+
+  prompt = f"""You are a code reviewer. Analyze the following Python test function `test_create_agent_unfixed_fails`. 
+This function is intended to verify that a broken piece of code (imported as `unfixed`) actually fails or exhibits incorrect behavior.
+
+**Criteria for "Verifies Failure":**
+- It DOES verify failure if it uses `pytest.raises(...)` to catch an expected exception.
+- It DOES verify failure if it uses `pytest.fail(...)` (e.g. if the code didn't raise as expected).
+- It DOES verify failure if it uses `assert` to verify that a value is *incorrect*, *missing*, or matches an error condition (e.g., `assert 'correct' not in output`, `assert result != expected`, `assert 'Error' in result`).
+- It DOES NOT verify failure if it simply runs the code without any checks.
+- It DOES NOT verify failure if it asserts that the code *works* successfully (e.g. `assert result is not None` when the code is supposedly broken).
+
+Function Source:
+```python
+{func_source}
+```
+
+Does this function explicitly check for failure according to the criteria?
+Reply with a JSON object containing 'verifies_failure' (boolean) and 'explanation' (string)."""
+
+  try:
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": FailureVerificationResult.model_json_schema(),
+        },
+    )
+    result = FailureVerificationResult.model_validate_json(response.text)
+    if not result.verifies_failure:
+        print(f"  [LLM Check Failed] {file_path.name}: {result.explanation}")
+    return result.verifies_failure
+  except Exception as e:
+    print(f"  [LLM Error] Failed to check {file_path.name}: {e}")
+    # Fallback to heuristic on error to avoid blocking CI
+    return "assert" in func_source or "pytest.raises" in func_source or "pytest.fail" in func_source
 
 
 def _check_function_exists(file_path: Path, func_name: str) -> bool:
@@ -14,45 +88,14 @@ def _check_function_exists(file_path: Path, func_name: str) -> bool:
         return True
     return False
   except SyntaxError:
+    if file_path.name == "unfixed.py":
+        print(f"  [Info] Syntax error in {file_path.name}. Assuming intentional for benchmark case.")
+        return True # Assume existence if we can't parse, to allow syntax error cases
     pytest.fail(
         f"Syntax error in {file_path}. Cannot parse for function existence."
     )
   except FileNotFoundError:
     # Should be caught by earlier checks, but defensive
-    return False
-
-
-def _check_test_verifies_failure(file_path: Path) -> bool:
-  """
-  Checks if `test_create_agent_unfixed_fails` in the file contains 
-  failure verification logic (asserts, pytest.raises, or pytest.fail).
-  """
-  try:
-    content = file_path.read_text()
-    tree = ast.parse(content)
-    
-    for node in ast.walk(tree):
-      if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "test_create_agent_unfixed_fails":
-        # Check body for Assert, or Call to pytest.raises / pytest.fail
-        for child in ast.walk(node):
-          if isinstance(child, ast.Assert):
-            return True
-          if isinstance(child, ast.With):
-            # Check for pytest.raises context manager
-            for item in child.items:
-              if isinstance(item.context_expr, ast.Call):
-                func = item.context_expr.func
-                # Check for pytest.raises
-                if isinstance(func, ast.Attribute) and func.attr == "raises":
-                   return True
-          if isinstance(child, ast.Call):
-             # Check for pytest.fail call
-             func = child.func
-             if isinstance(func, ast.Attribute) and func.attr == "fail":
-                 return True
-        return False # Function found but no failure check detected
-    return False # Function not found
-  except Exception:
     return False
 
 
@@ -63,13 +106,21 @@ def test_verify_fix_errors():
   1. All referenced `test_file`, `unfixed_file`, and `fixed_file` paths exist.
   2. `unfixed.py` and `fixed.py` each contain a `create_agent` function.
   3. `test_agent.py` contains `test_create_agent_passes` and `test_create_agent_unfixed_fails`.
-  4. `test_create_agent_unfixed_fails` actively checks for failure.
+  4. `test_create_agent_unfixed_fails` actively checks for failure (verified by LLM if key present).
   """
   base_dir = Path(__file__).parent
   yaml_path = base_dir / "benchmark.yaml"
 
   if not yaml_path.exists():
     pytest.fail(f"Error: {yaml_path} does not exist.")
+
+  # Initialize LLM Client
+  api_key = os.environ.get("GEMINI_API_KEY")
+  client = None
+  if api_key:
+      client = genai.Client(api_key=api_key)
+  else:
+      print("Warning: GEMINI_API_KEY not set. Skipping LLM-based verification of failure checks.")
 
   with open(yaml_path, "r") as f:
     data = yaml.safe_load(f)
@@ -144,9 +195,9 @@ def test_verify_fix_errors():
           f" {test_full_path.name}."
       )
     # 4. Verify `test_create_agent_unfixed_fails` checks for failure
-    elif not _check_test_verifies_failure(test_full_path):
+    elif not _check_test_verifies_failure(client, test_full_path):
        issues.append(
-          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (no assert, pytest.raises, or pytest.fail)."
+          f"Benchmark '{name}': 'test_create_agent_unfixed_fails' does not seem to verify failure (checked with LLM)."
        )
 
   if issues:

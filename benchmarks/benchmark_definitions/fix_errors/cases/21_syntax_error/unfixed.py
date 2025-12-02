@@ -20,5 +20,5 @@ def create_agent(model_name: str) -> BaseAgent:
       name="syntax_agent",
       model=model_name,
       instruction="You are a helpful assistant.",
-  )
+  
   return root_agent

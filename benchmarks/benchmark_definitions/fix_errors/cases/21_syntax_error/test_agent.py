@@ -19,11 +19,8 @@ import asyncio
 
 
 def test_create_agent_unfixed_fails():
-  import unfixed
-  # The unfixed code in this case is actually valid python (simulating a "fixed" syntax error state for the benchmark input)
-  # So we just verify it runs.
-  root_agent = unfixed.create_agent(MODEL_NAME)
-  assert root_agent is not None
+  with pytest.raises(SyntaxError):
+    import unfixed
 
 
 @pytest.mark.asyncio
