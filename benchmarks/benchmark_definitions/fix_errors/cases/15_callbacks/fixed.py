@@ -1,13 +1,9 @@
 from __future__ import annotations
 from google.adk.agents import LlmAgent, BaseAgent
 
-callback_was_called = False
-
-
 def my_callback(**kwargs) -> None:
   """A simple callback that sets a flag."""
-  global callback_was_called
-  callback_was_called = True
+  my_callback.was_called = True
   print("Callback was executed.")
 
 
@@ -25,6 +21,9 @@ def create_agent(model_name: str) -> BaseAgent:
   Returns:
       An instance of LlmAgent with a configured after-model callback.
   """
+  # Initialize the flag on the function object
+  my_callback.was_called = False
+  
   root_agent = LlmAgent(
       name="callback_agent",
       model=model_name,

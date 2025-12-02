@@ -30,9 +30,6 @@ def test_create_agent_unfixed_fails():
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
-  # Reset callbacks
-  fixed.before_called = []
-  fixed.after_called = []
 
   root_agent = fixed.create_agent(MODEL_NAME)
 
@@ -97,8 +94,8 @@ async def test_create_agent_passes():
         if text_parts:
           final_response = "".join(text_parts)
 
-    assert fixed.before_called
-    assert fixed.after_called
+    assert root_agent.before_tool_callback.logs["before"]
+    assert root_agent.before_tool_callback.logs["after"]
     assert "UNIQUE_TOOL_OUTPUT_FOR_TEST: hello" in final_response
     assert root_agent.before_tool_callback is not None, "before_tool_callback missing."
     assert root_agent.after_tool_callback is not None, "after_tool_callback missing."

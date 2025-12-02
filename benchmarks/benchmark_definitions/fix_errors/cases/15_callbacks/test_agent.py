@@ -32,6 +32,6 @@ async def test_create_agent_passes():
   )
 
   assert "Hello" in response or "Hi" in response
-  assert fixed.callback_was_called, "The after_model_callback was not called."
+  assert root_agent.after_model_callback.was_called, "The after_model_callback was not called."
   assert root_agent.after_model_callback is not None, "Agent should have an after_model_callback."
   assert root_agent.name == "callback_agent", "Agent name mismatch."
