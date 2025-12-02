@@ -74,7 +74,6 @@ async def main():
   # Execute the benchmarks
   benchmark_run_results = await run_comparison()
 
-  # %%
   raw_results_df = pd.DataFrame([r.model_dump() for r in benchmark_run_results])
 
   if not raw_results_df.empty:
