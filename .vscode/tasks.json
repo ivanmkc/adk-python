@@ -26,7 +26,7 @@
         {
             "label": "Run All Benchmarks",
             "type": "shell",
-            "command": "env/bin/pytest benchmarks/test_benchmarks.py",
+            "command": "python3 -m pytest benchmarks/tests/integration/test_ground_truth_answer_generator.py --import-mode=importlib",
             "group": "test",
             "presentation": {
                 "reveal": "always",

@@ -30,7 +30,6 @@ from pydantic import Field
 if TYPE_CHECKING:
   from benchmarks.benchmark_runner import BaseBenchmarkRunner
 
-
 class BenchmarkType(str, enum.Enum):
   """The type of benchmark."""
 
@@ -277,8 +276,7 @@ class TraceLogEvent(pydantic.BaseModel):
   type: str = Field(
       ...,
       description=(
-          "The type of event (e.g., 'tool_code', 'tool_output',"
-          " 'model_response')."
+          "The type of event (e.g., 'tool_code', 'tool_output', 'model_response')."
       ),
   )
   timestamp: Optional[str] = Field(
@@ -389,7 +387,6 @@ AnswerOutput = Annotated[
     ],
     Field(discriminator="benchmark_type"),
 ]
-
 
 class GeneratedAnswer(pydantic.BaseModel):
   """
