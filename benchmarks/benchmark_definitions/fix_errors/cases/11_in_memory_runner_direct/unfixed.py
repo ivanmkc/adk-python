@@ -10,6 +10,10 @@ def create_agent(model_name: str) -> BaseAgent:
       Create an LlmAgent named "runnable_agent" that responds to "Hello, runner."
       with a greeting containing "Hello".
 
+      Requirements:
+      - The agent should be able to respond to 'Hello, runner.' with a response containing 'Hello'.
+      - The final solution must be assigned to a variable named `agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

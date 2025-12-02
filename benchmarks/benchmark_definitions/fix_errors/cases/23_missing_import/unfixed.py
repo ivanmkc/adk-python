@@ -10,6 +10,11 @@ def create_agent(model_name: str) -> BaseAgent:
       Create an LlmAgent named "import_agent".
       Ensure all necessary modules (like LlmAgent) are imported.
 
+      Requirements:
+      - The agent should be a valid LlmAgent instance.
+      - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
+      - The final solution must be assigned to a variable named `root_agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

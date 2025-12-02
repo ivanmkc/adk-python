@@ -40,23 +40,18 @@ def _get_docstring(file_path: Path, func_name: str) -> str | None:
     except Exception:
         return None
 
-async def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path, yaml_requirements: list[str]) -> AlignmentCheckResult:
-    """Verifies that test assertions match the requirements and instructions."""
+async def _check_requirements_alignment(client: genai.Client, unfixed_path: Path, test_path: Path) -> AlignmentCheckResult:
+    """Verifies that test assertions match the instructions in unfixed.py."""
     test_source = _get_function_source(test_path, "test_create_agent_passes")
     instructions = _get_docstring(unfixed_path, "create_agent")
     
     if not test_source or not instructions:
         return AlignmentCheckResult(is_aligned=True, explanation="Could not load source or docstring.", missing_requirements=[])
 
-    requirements_text = "\n".join(f"- {req}" for req in yaml_requirements)
-    
     prompt = f"""You are a QA Lead. Verify if the test code aligns with the requirements provided to the candidate.
 
 **Candidate Instructions (from docstring):**
 {instructions}
-
-**Formal Requirements (from YAML):**
-{requirements_text}
 
 **Test Code (Verification Logic):**
 ```python
@@ -64,8 +59,8 @@ async def _check_requirements_alignment(client: genai.Client, unfixed_path: Path
 ```
 
 **Task:**
-1. Does the test code verify the requirements listed?
-2. **CRITICAL:** Does the test assert conditions that are *NOT* mentioned in the Instructions or Requirements? (Hidden requirements are unfair).
+1. Does the test code verify the requirements listed in the Candidate Instructions?
+2. **CRITICAL:** Does the test assert conditions that are *NOT* mentioned in the Instructions? (Hidden requirements are unfair).
    - Example of Hidden Requirement: Test asserts `agent.name == "my_agent"` but instructions never specified the name.
    - Example of Aligned: Test asserts `agent.name == "my_agent"` and instructions said "Create an agent named 'my_agent'".
 
@@ -278,8 +273,7 @@ async def test_verify_benchmark_case(benchmark_case, llm_client):
     # 5. Advanced Semantic Checks (only if API key is present)
     if llm_client:
         # Check Alignment
-        yaml_reqs = benchmark_case.get("requirements", [])
-        alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path, yaml_reqs)
+        alignment_res = await _check_requirements_alignment(llm_client, unfixed_full_path, test_full_path)
         if not alignment_res.is_aligned:
             print(
                 f"[WARNING] Benchmark '{name}': Alignment Issue. {alignment_res.explanation} Missing reqs: {alignment_res.missing_requirements}"

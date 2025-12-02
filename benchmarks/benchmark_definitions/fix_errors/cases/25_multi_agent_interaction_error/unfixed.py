@@ -12,6 +12,11 @@ def create_agent(model_name: str) -> BaseAgent:
       2. "reader_agent": Reads from "{correct_key}" and outputs the content.
       Ensure the producer sets the correct output key so the consumer can read it.
 
+      Requirements:
+      - The `writer_agent` should output 'secret_message'.
+      - The `reader_agent` should correctly read and output 'secret_message' from the session state.
+      - The final solution must be assigned to a variable named `root_agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

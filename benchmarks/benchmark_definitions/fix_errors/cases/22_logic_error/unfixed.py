@@ -10,6 +10,11 @@ def create_agent(model_name: str) -> BaseAgent:
       Create an LlmAgent named "logic_agent".
       Instruct it to always respond with the exact string "Hello World!".
 
+      Requirements:
+      - The agent should be a valid LlmAgent instance.
+      - The agent should respond to the greeting 'Say hello.' with a response containing 'Hello World!'.
+      - The final solution must be assigned to a variable named `root_agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

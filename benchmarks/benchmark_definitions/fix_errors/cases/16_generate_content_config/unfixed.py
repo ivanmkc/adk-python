@@ -11,6 +11,11 @@ def create_agent(model_name: str) -> BaseAgent:
       Create an LlmAgent named "config_agent" that responds with "Hello world!".
       Configure the agent to use a temperature of 0.0 via `generate_content_config`.
 
+      Requirements:
+      - The agent should be initialized with a `generate_content_config` that sets `temperature` to 0.
+      - The agent should respond to 'Say hello.' with a response containing 'Hello world!'.
+      - The final solution must be assigned to a variable named `agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

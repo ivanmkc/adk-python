@@ -10,6 +10,10 @@ def create_agent(model_name: str) -> BaseAgent:
       Create a LoopAgent named "loop_coordinator" that runs a sub-agent named
       "looper_agent" for 2 iterations.
 
+      Requirements:
+      - The final response should contain the word 'loop'.
+      - The final solution must be assigned to a variable named `root_agent`.
+
   Args:
       model_name: The name of the LLM model to use.
 

@@ -8,6 +8,11 @@ def create_agent(model_name: str) -> BaseAgent:
 
   Instructions:
       Create a helpful LlmAgent named "single_agent" that responds to greetings.
+      
+      Requirements:
+      - The agent should respond to the greeting 'Hello' with a response containing 'Hello'.
+      - The agent MUST use the model 'gemini-2.5-flash' (passed as a string literal).
+      - The final solution must be assigned to a variable named `root_agent`.
 
   Args:
       model_name: The name of the LLM model to use.

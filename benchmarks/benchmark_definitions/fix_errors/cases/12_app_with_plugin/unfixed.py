@@ -24,6 +24,11 @@ def create_agent(model_name: str) -> BaseAgent:
       The app must include the provided `SimplePlugin`.
       The root agent should respond to greetings.
 
+      Requirements:
+      - The app must define a plugin that inherits from `BasePlugin`.
+      - The final response should contain the word 'Hello'.
+      - The final solution must be assigned to a variable named `app`.
+
   Args:
       model_name: The name of the LLM model to use.
 
