@@ -53,12 +53,10 @@ Before running experiments, it's crucial to ensure the benchmark data and runner
 
 These tests are not for evaluating candidates; they are for **validating the framework itself**. They work by running the `GroundTruthAnswerGenerator`—which is expected to be perfect—and asserting that it achieves a 100% pass rate. If these tests fail, it indicates a problem with the benchmark definitions or the runners, not the candidate generator.
 
-**To run the validation tests:**
-<!-- TODO: Is this still valid? Why not use python -m pytest like below? -->
+ **To run the validation tests:**
 ```bash
-env/bin/pytest benchmarks/test_benchmarks.py
-```
-A successful run is a prerequisite for meaningful evaluation of other answer generators.
+python -m pytest benchmarks/tests/integration/test_ground_truth_answer_generator.py --import-mode=importlib
+```A successful run is a prerequisite for meaningful evaluation of other answer generators.
 
 ### Running Benchmark Tests
 To run all the benchmark tests directly, you can use the following command from the root of the project. **Crucially, you must use the `--import-mode=importlib` flag.** This flag ensures that Python's import system correctly handles the non-unique module names (`fixed.py`, `unfixed.py`) present in each test case directory.
