@@ -15,16 +15,16 @@ from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-import unfixed
-import fixed
 
 def test_create_agent_unfixed_fails():
+  import unfixed
   with pytest.raises(ValidationError):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
+  import fixed
   root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(

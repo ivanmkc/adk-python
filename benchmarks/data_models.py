@@ -27,6 +27,8 @@ from typing import Union
 import pydantic
 from pydantic import Field
 
+# TODO: Resolve circular imports properly, not with forward references.
+
 if TYPE_CHECKING:
   from benchmarks.benchmark_runner import BaseBenchmarkRunner
 
@@ -87,27 +89,17 @@ class BaseBenchmarkCase(pydantic.BaseModel, abc.ABC):
 class FixErrorBenchmarkCase(BaseBenchmarkCase):
   """Represents a single fix_error benchmark case."""
 
+  # TODO: Add docstrings
   name: str
-
   description: str
-
   benchmark_type: Literal[BenchmarkType.FIX_ERROR] = BenchmarkType.FIX_ERROR
-
   test_file: Path
-
   agent_file: Path | None = (
       None  # DEPRECATED: Use unfixed_file and fixed_file instead
   )
-
   unfixed_file: Path | None = None
   fixed_file: Path | None = None
-
-  # DEPRECATED: These fields will be replaced by code_context.
-  start_line: int | None = None
-
-  end_line: int | None = None
-
-  # NEW FIELDS
+  # TODO: These might be redundant with since the test_file contains requirements
   requirements: list[str] | None = None
 
   def get_identifier(self) -> str:
@@ -143,6 +135,7 @@ class StringMatchAnswer(pydantic.BaseModel):
 class AnswerTemplate(str, enum.Enum):
   """The template for the answer."""
 
+  # TODO: remove extra newlines
   CLASS_DEFINITION = "class_definition"
 
   PARAMETER_DEFINITION = "parameter_definition"
@@ -159,6 +152,7 @@ class AnswerTemplate(str, enum.Enum):
 class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
   """Represents a single API understanding benchmark case (from adk_faq.yaml)."""
 
+  # TODO: Remove extra newlines and add docstrings
   category: str
 
   question: str
@@ -175,6 +169,7 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
 
   file: Path
 
+  # TODO: Remove if not needed anymore. Else add docstring describing its purpose.
   @pydantic.field_validator("answers", mode="before")
   @classmethod
   def answers_to_list(cls, v: Any) -> Any:
@@ -185,12 +180,11 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
     return v
 
   def get_identifier(self) -> str:
-
     return self.question
 
   @property
   def runner(self) -> "ApiUnderstandingRunner":
-
+    # TODO: Resolve circular imports properly, not with these scoped imports.
     from benchmarks.benchmark_runner import ApiUnderstandingRunner
 
     return ApiUnderstandingRunner()
@@ -199,6 +193,7 @@ class ApiUnderstandingBenchmarkCase(BaseBenchmarkCase):
 class MultipleChoiceBenchmarkCase(BaseBenchmarkCase):
   """Represents a single multiple choice benchmark case."""
 
+  # TODO: Add docstrings
   question: str
   options: dict[str, str]  # e.g., {"A": "Option A", "B": "Option B"}
   correct_answer: str  # e.g., "B"
@@ -212,6 +207,7 @@ class MultipleChoiceBenchmarkCase(BaseBenchmarkCase):
     return self.question[:50] + "..."
 
   @property
+  # TODO: Remove circular imports properly, not with these forward references.
   def runner(self) -> "MultipleChoiceRunner":
     from benchmarks.benchmark_runner import MultipleChoiceRunner
 

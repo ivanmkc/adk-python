@@ -21,21 +21,18 @@ from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 from benchmarks.test_helpers import MODEL_NAME
 
-import unfixed
-import fixed
-
 def test_create_agent_unfixed_fails():
+  import unfixed
   with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
     unfixed.create_agent(MODEL_NAME)
 
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
+  import fixed
   # Reset callbacks
   fixed.before_called = []
   fixed.after_called = []
-
-  root_agent = fixed.create_agent(MODEL_NAME)
 
   # Manually run the agent logic with mocks
   with patch(

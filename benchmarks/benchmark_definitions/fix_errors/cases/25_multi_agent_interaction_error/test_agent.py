@@ -18,10 +18,9 @@ from google.adk.agents import BaseAgent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-import unfixed
-import fixed
 
 def test_create_agent_unfixed_fails():
+  import unfixed
   # Interaction error: output_key is missing
   root_agent = unfixed.create_agent(MODEL_NAME)
   writer = next((sub for sub in root_agent.sub_agents if sub.name == "writer_agent"), None)
@@ -31,6 +30,7 @@ def test_create_agent_unfixed_fails():
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
+  import fixed
   root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(

@@ -17,10 +17,9 @@ from google.adk.agents import Agent
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 import asyncio
 
-import unfixed
-import fixed
 
 def test_create_agent_unfixed_fails():
+  import unfixed
   # The unfixed code in this case is actually valid python (simulating a "fixed" syntax error state for the benchmark input)
   # So we just verify it runs.
   root_agent = unfixed.create_agent(MODEL_NAME)
@@ -29,6 +28,7 @@ def test_create_agent_unfixed_fails():
 
 @pytest.mark.asyncio
 async def test_create_agent_passes():
+  import fixed
   root_agent = fixed.create_agent(MODEL_NAME)
 
   assert isinstance(

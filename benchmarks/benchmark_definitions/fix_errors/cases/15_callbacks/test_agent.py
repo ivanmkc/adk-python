@@ -14,10 +14,9 @@ Test Verification:
 import pytest
 from benchmarks.test_helpers import run_agent_test, MODEL_NAME
 
-import unfixed
-import fixed
 
 def test_create_agent_unfixed_fails():
+  import unfixed
   with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
     unfixed.create_agent(MODEL_NAME)
 
@@ -25,7 +24,7 @@ def test_create_agent_unfixed_fails():
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   # Reset the flag in the agent module
-  fixed.callback_was_called = False
+  import fixed
 
   root_agent = fixed.create_agent(MODEL_NAME)
   response = await run_agent_test(

@@ -15,19 +15,16 @@ import pytest
 import os
 from benchmarks.test_helpers import run_agent_test
 
-import unfixed
-import fixed
 
 def test_create_agent_unfixed_fails():
+  import unfixed
   with pytest.raises(NotImplementedError, match="Agent implementation incomplete."):
     unfixed.create_agent("gemini-2.5-flash")
 
 
-@pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
-)
 @pytest.mark.asyncio
 async def test_create_agent_passes():
+  import fixed
   root_agent = fixed.create_agent("gemini-2.5-flash")
   response = await run_agent_test(root_agent, "Hello")
   assert "Hello" in response
