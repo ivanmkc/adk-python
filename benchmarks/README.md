@@ -60,13 +60,14 @@ env/bin/pytest benchmarks/test_benchmarks.py
 A successful run is a prerequisite for meaningful evaluation of other answer generators.
 
 ### Running Benchmark Tests
-To run all the benchmark tests directly, you can use the following command from the root of the project:
+To run all the benchmark tests directly, you can use the following command from the root of the project. **Crucially, you must use the `--import-mode=importlib` flag.** This flag ensures that Python's import system correctly handles the non-unique module names (`fixed.py`, `unfixed.py`) present in each test case directory.
+
 ```bash
-python -m pytest ./benchmarks/
+python -m pytest ./benchmarks/ --import-mode=importlib
 ```
 To run tests in parallel, which can significantly speed up execution, use the following command:
 ```bash
-python -m pytest -n auto ./benchmarks/
+python -m pytest -n auto ./benchmarks/ --import-mode=importlib
 ```
 
 ### Verification Tools

@@ -14,6 +14,18 @@ Each test case consists of a dedicated subdirectory (e.g., `cases/01_my_case/`) 
 
 An entry in `benchmark.yaml` points to this directory and defines the problem description and requirements.
 
+## Running the Benchmarks
+
+To run the benchmarks and verify the test cases, use `pytest` from the project root. **Crucially, you must use the `--import-mode=importlib` flag.** This flag ensures that Python's import system correctly handles the non-unique module names (`fixed.py`, `unfixed.py`) present in each test case directory by treating them as distinct modules based on their file path.
+
+```bash
+# Run all fix_errors benchmarks
+python -m pytest benchmarks/benchmark_definitions/fix_errors/ --import-mode=importlib
+
+# Run a specific test case
+python -m pytest benchmarks/benchmark_definitions/fix_errors/cases/01_single_llm_agent/test_agent.py --import-mode=importlib
+```
+
 ## Standards for Creating `fix_error` Test Cases
 
 To ensure consistency and focus the LLM on the relevant task, all `fix_error` test cases **must** adhere to the following:
@@ -41,7 +53,7 @@ By following these standards, we ensure that the LLM is only presented with the 
 1.  **Directory Structure:**
     *   Create a new directory in `benchmarks/benchmark_definitions/fix_errors/cases/` (e.g., `26_new_error_case`).
     *   The directory MUST contain three files: `unfixed.py`, `fixed.py`, and `test_agent.py`.
-    *   (Optional) Include `__init__.py` if needed, but usually not required for the case folder itself.
+    *   **Do NOT include `__init__.py` files** in the case subdirectories. This prevents package name collisions and ensures the `importlib` import mode works as expected.
 
 2.  **`unfixed.py` (The Problem):**
     *   Define a function `create_agent(model_name: str) -> BaseAgent`.

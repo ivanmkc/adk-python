@@ -34,6 +34,8 @@ async def test_create_agent_passes():
   fixed.before_called = []
   fixed.after_called = []
 
+  root_agent = fixed.create_agent(MODEL_NAME)
+
   # Manually run the agent logic with mocks
   with patch(
       "google.adk.models.google_llm.Gemini.generate_content_async"

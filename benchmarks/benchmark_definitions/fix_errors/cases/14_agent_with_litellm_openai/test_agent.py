@@ -22,6 +22,9 @@ def test_create_agent_unfixed_fails():
     unfixed.create_agent("gemini-2.5-flash")
 
 
+@pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY is not set."
+)
 @pytest.mark.asyncio
 async def test_create_agent_passes():
   import fixed
